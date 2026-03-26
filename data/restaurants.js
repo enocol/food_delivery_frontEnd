@@ -3,7 +3,7 @@ export const RESTAURANTS = [
     id: 'rest-1',
     name: 'Ndole House Douala',
     image:
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
+      require('../assets/restaurants/photo-1.png'),
     eta: '25-35 min',
     rating: 4.7,
     cuisine: 'Cameroonian',
@@ -14,7 +14,7 @@ export const RESTAURANTS = [
         description: 'Classic bitterleaf stew with beef and ripe plantain.',
         price: 3500,
         image:
-          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1000&q=80',
+          require('../assets/restaurants/photo-1.png'),
       },
       {
         id: 'item-2',
@@ -38,7 +38,7 @@ export const RESTAURANTS = [
     id: 'rest-2',
     name: 'Yassa Corner Yaounde',
     image:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+     require('../assets/restaurants/photo-2.png'),
     eta: '20-30 min',
     rating: 4.5,
     cuisine: 'West African Grill',
@@ -73,7 +73,7 @@ export const RESTAURANTS = [
     id: 'rest-3',
     name: 'Brioche Fast Bites',
     image:
-      'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80',
+      require('../assets/restaurants/photo-3.png'),
     eta: '15-25 min',
     rating: 4.3,
     cuisine: 'Street Food',
@@ -98,6 +98,50 @@ export const RESTAURANTS = [
         id: 'item-9',
         name: 'Fried Plantain Pack',
         description: 'Golden plantain with mini pepper sauce pot.',
+        price: 1800,
+        image:
+          'https://images.unsplash.com/photo-1604908177522-40256d8d22ee?auto=format&fit=crop&w=1000&q=80',
+      },
+    ],
+  },
+
+  {
+    id: 'rest-4',
+    name: "NI's Kitchen Douala",
+    image: require('../assets/restaurants/nis-kitchen.png'),
+      
+    eta: '15-25 min',
+    rating: 4.3,
+    cuisine: 'Cameroonian traditional',
+    menu: [
+      {
+        id: 'item-7',
+        name: 'Corn Chaff',
+        description: 'Fresh corn chaff with spices.',
+        price: 1500,
+        image:
+          'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1000&q=80',
+      },
+      {
+        id: 'item-8',
+        name: 'Tanchop Soup',
+        description: 'Traditional Cameroonian soup with spices.',
+        price: 2400,
+        image:
+          'https://images.unsplash.com/photo-1520072959219-c595dc870360?auto=format&fit=crop&w=1000&q=80',
+      },
+      {
+        id: 'item-9',
+        name: 'Fried Rice and Chicken',
+        description: 'Traditional Cameroonian fried rice with chicken.',
+        price: 1800,
+        image:
+          'https://images.unsplash.com/photo-1604908177522-40256d8d22ee?auto=format&fit=crop&w=1000&q=80',
+      },
+      {
+        id: 'item-10',
+        name: 'Eru and Water Fufu',
+        description: 'Traditional Cameroonian dish with Eru and Water Fufu.',
         price: 1800,
         image:
           'https://images.unsplash.com/photo-1604908177522-40256d8d22ee?auto=format&fit=crop&w=1000&q=80',

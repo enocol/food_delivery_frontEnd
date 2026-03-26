@@ -3,9 +3,11 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    marginTop: -40,
   },
   gradientBackground: {
     flex: 1,
+
   },
   headerTitle: {
     fontWeight: '800',
@@ -26,12 +28,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     borderRadius: 35,
   },
+
+
   tabBarBackground: {
     flex: 1,
     marginHorizontal: 4,
+    borderRadius: 24,
    
-    borderWidth: 1,
-    borderColor: 'rgba(239, 226, 214, 0.92)',
+    borderWidth: 5,
+    borderColor: '#ffffff',
     shadowColor: '#2f2318',
     shadowOpacity: 0.14,
     shadowRadius: 18,
@@ -100,24 +105,47 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '900',
     color: '#2f2a25',
-    paddingHorizontal: 16,
-    marginTop: 16,
+    paddingHorizontal: 10,
   },
-  heroSubtitle: {
-    fontSize: 14,
+  foodFilterWrap: {
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  foodFilterScrollContent: {
+    paddingHorizontal: 14,
+    gap: 8,
+  },
+  foodFilterChip: {
+    borderWidth: 1,
+    borderColor: '#f0d9bf',
+    backgroundColor: '#fffaf2',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  foodFilterChipActive: {
+    backgroundColor: '#bd3f1b',
+    borderColor: '#bd3f1b',
+  },
+  foodFilterChipText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: '#5a5249',
-    paddingHorizontal: 16,
-    marginTop: 6,
-    marginBottom: 12,
   },
+  foodFilterChipTextActive: {
+    color: '#fff',
+  },
+
   restaurantList: {
     paddingHorizontal: 14,
     paddingBottom: 20,
+    
   },
   restaurantCard: {
     borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 14,
+    marginTop: 14,
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -127,7 +155,8 @@ const styles = StyleSheet.create({
   },
   restaurantImage: {
     width: '100%',
-    height: 150,
+    height: 350,
+    objectFit: 'cover',
   },
   restaurantContent: {
     padding: 12,
@@ -269,9 +298,26 @@ const styles = StyleSheet.create({
   detailsContainer: {
     paddingBottom: 20,
   },
+  detailsTopControls: {
+    position: 'relative',
+    top: 50,
+    left: 12,
+    zIndex: 10,
+  },
+  detailsBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 250, 242, 0.9)',
+    borderWidth: 1,
+    borderColor: '#eadfd4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   detailsHeroImage: {
     width: '100%',
-    height: 210,
+    height: 350,
+    objectFit: 'cover',
   },
   detailsTitle: {
     fontSize: 26,
@@ -343,11 +389,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginRight: 16,
   },
   cartHeaderIcon: {
     fontWeight: '800',
-    color: '#303030',
-    fontSize: 12,
+    color: '#bd3f1b',
+    fontSize: 24,
+   
   },
   cartBadge: {
     backgroundColor: '#bd3f1b',

@@ -1,24 +1,15 @@
 import React from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
-import CartHeaderButton from '../components/CartHeaderButton';
 import { RESTAURANTS } from '../data/restaurants';
 import { formatXaf } from '../utils/formatXaf';
 import styles from '../components/styles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RestaurantDetailsScreen({ route, navigation }) {
-  const { cartCount, addToCart, openCartSheet } = useCart();
+  const { addToCart } = useCart();
   const restaurant = RESTAURANTS.find((it) => it.id === route.params?.restaurantId);
-
-  React.useLayoutEffect(() => {
-    if (!restaurant) {
-      return;
-    }
-    navigation.setOptions({
-      title: restaurant.name,
-      headerRight: () => <CartHeaderButton count={cartCount} onPress={openCartSheet} />,
-    });
-  }, [navigation, restaurant, cartCount, openCartSheet]);
 
   if (!restaurant) {
     return (
@@ -29,10 +20,17 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.detailsContainer}>
-      <Image source={{ uri: restaurant.image }} style={styles.detailsHeroImage} />
-      <Text style={styles.detailsTitle}>{restaurant.name}</Text>
-      <Text style={styles.detailsMeta}>{restaurant.cuisine} • {restaurant.eta}</Text>
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.detailsTopControls}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.detailsBackButton}>
+          <Ionicons name="chevron-back" size={30} color="#000000" />
+        </Pressable>
+      </View>
+
+      <ScrollView style={styles.screen} contentContainerStyle={styles.detailsContainer}>
+        <Image source={restaurant.image} style={styles.detailsHeroImage} />
+        <Text style={styles.detailsTitle}>{restaurant.name}</Text>
+        <Text style={styles.detailsMeta}>{restaurant.cuisine} • {restaurant.eta}</Text>
 
       {restaurant.menu.map((item) => (
         <View key={item.id} style={styles.menuCard}>
@@ -48,5 +46,6 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
         </View>
       ))}
     </ScrollView>
+    </SafeAreaView>
   );
 }

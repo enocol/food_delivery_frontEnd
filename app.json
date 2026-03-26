@@ -1,18 +1,19 @@
 {
   "expo": {
-    "name": "Front",
-    "slug": "Front",
+    "name": "",
+    "slug": "mbolo-eats",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/splash-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#FF8C42"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+     
     },
     "android": {
       "adaptiveIcon": {

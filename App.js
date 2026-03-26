@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import AnimatedTabBarButton from './components/AnimatedTabBarButton';
 import CartBottomSheet from './components/CartBottomSheet';
 import styles from './components/styles';
@@ -23,7 +23,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: '#ffffff',
-        tabBarInactiveTintColor: '#6f675e',
+        tabBarInactiveTintColor: '#000000',
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabBarItem,
@@ -47,16 +47,16 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'Home', tabBarLabel: 'Home' }} />
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: '', tabBarLabel: '', headerShown: true }} />
       <Tab.Screen
         name="SearchTab"
         component={SearchScreen}
-        options={{ title: 'Search', tabBarLabel: 'Search' }}
+        options={{ title: 'Search', tabBarLabel: '' }}
       />
       <Tab.Screen
         name="ProfileTab"
         component={ProfileScreen}
-        options={{ title: 'Profile', tabBarLabel: 'Profile' }}
+        options={{ title: 'Profile', tabBarLabel: '' }}
       />
     </Tab.Navigator>
   );
@@ -177,19 +177,20 @@ export default function App() {
         <Stack.Navigator
           initialRouteName="MainTabs"
           screenOptions={{
-            headerTintColor: '#1f2937',
+            headerTintColor: "orange",
             headerShadowVisible: false,
             headerTitleStyle: styles.headerTitle,
-            contentStyle: { backgroundColor: '#fffdf7' },
+            headerShown: false,
           }}
+          
         >
           <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
           <Stack.Screen
             name="RestaurantDetails"
             component={RestaurantDetailsScreen}
-            options={{ title: 'Restaurant' }}
+            options={{ title: 'Restaurant', headerShown: false }}
           />
-          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
+          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout', headerShown: true }} />
         </Stack.Navigator>
       </NavigationContainer>
 
