@@ -107,7 +107,7 @@ export default function CheckoutScreen({ navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#f2f7f2', '#fffdf7']} style={styles.screen}>
+    <LinearGradient colors={['#f2f7f2', '#fffdf7']} style={styles.checkoutscreen}>
       <KeyboardAwareScrollView
         enableOnAndroid
         keyboardShouldPersistTaps="handled"

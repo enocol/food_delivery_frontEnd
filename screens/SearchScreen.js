@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { RESTAURANTS } from '../data/restaurants';
 import useRootCartHeader from '../components/useRootCartHeader';
 import styles from '../components/styles';
+import { toImageSource } from '../utils/imageSource';
 
 export default function SearchScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
@@ -53,7 +54,7 @@ export default function SearchScreen({ navigation }) {
               style={styles.searchResultCard}
               onPress={() => navigation.getParent()?.navigate('RestaurantDetails', { restaurantId: restaurant.id })}
             >
-              <Image source={{ uri: restaurant.image }} style={styles.searchResultImage} />
+              <Image source={toImageSource(restaurant.image)} style={styles.searchResultImage} />
               <View style={styles.searchResultContent}>
                 <Text style={styles.searchResultTitle}>{restaurant.name}</Text>
                 <Text style={styles.metaText}>{restaurant.cuisine}</Text>

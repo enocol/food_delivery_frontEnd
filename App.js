@@ -190,7 +190,7 @@ export default function App() {
             component={RestaurantDetailsScreen}
             options={{ title: 'Restaurant', headerShown: false }}
           />
-          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout', headerShown: true }} />
+          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: '', headerShown: true, headerTransparent: true }} />
         </Stack.Navigator>
       </NavigationContainer>
 

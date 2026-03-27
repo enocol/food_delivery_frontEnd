@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, Text, TouchableOpacity, View } from 'reac
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
 import { RESTAURANTS } from '../data/restaurants';
+import { toImageSource } from '../utils/imageSource';
 import { formatXaf } from '../utils/formatXaf';
 import styles from '../components/styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,7 +35,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
 
       {restaurant.menu.map((item) => (
         <View key={item.id} style={styles.menuCard}>
-          <Image source={{ uri: item.image }} style={styles.menuImage} />
+          <Image source={toImageSource(item.image)} style={styles.menuImage} />
           <View style={styles.menuTextWrap}>
             <Text style={styles.menuName}>{item.name}</Text>
             <Text style={styles.menuDescription}>{item.description}</Text>

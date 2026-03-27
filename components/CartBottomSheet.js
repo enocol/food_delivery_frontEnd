@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Animated, Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCart } from '../context/CartContext';
+import { toImageSource } from '../utils/imageSource';
 import { formatXaf } from '../utils/formatXaf';
 import styles from './styles';
 
@@ -130,7 +131,7 @@ export default function CartBottomSheet({ visible, onClose, onCheckout }) {
               <View style={styles.cartListSheet}>
                 {entries.map((item) => (
                   <View style={styles.cartItemCard} key={item.id}>
-                    <Image source={{ uri: item.image }} style={styles.cartItemImage} />
+                    <Image source={toImageSource(item.image)} style={styles.cartItemImage} />
                     <View style={styles.cartItemTextWrap}>
                       <Text style={styles.cartItemName}>{item.name}</Text>
                       <Text style={styles.cartItemRestaurant}>{item.restaurantName}</Text>
