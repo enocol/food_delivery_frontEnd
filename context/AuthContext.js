@@ -4,8 +4,15 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
 } from 'firebase/auth';
+import * as Crypto from 'expo-crypto';
 import { auth } from '../utils/firebase';
+import { generateOtp, sendOtpEmail, storeOtp, verifyOtp } from '../utils/otpService';
+
+// Salt used to derive a deterministic Firebase password from an email address.
+// This never changes — do not modify after users have been created.
+const AUTH_SALT = 'mbolo-eats-auth-v1';
 
 const AuthContext = createContext(null);
 
@@ -17,22 +24,20 @@ function mapAuthError(error) {
   switch (error.code) {
     case 'auth/invalid-email':
       return 'Email address is invalid.';
-    case 'auth/missing-password':
-      return 'Password is required.';
-    case 'auth/weak-password':
-      return 'Password is too weak. Use at least 6 characters.';
-    case 'auth/email-already-in-use':
-      return 'That email is already in use. Try signing in instead.';
-    case 'auth/user-not-found':
-    case 'auth/invalid-credential':
-      return 'No account found with those credentials.';
-    case 'auth/wrong-password':
-      return 'Password is incorrect.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled.';
     case 'auth/too-many-requests':
-      return 'Too many attempts detected. Please wait and try again.';
+      return 'Too many attempts. Please wait a moment and try again.';
     default:
       return error.message || 'Authentication failed. Please try again.';
   }
+}
+
+async function deriveFirebasePassword(email) {
+  return Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    email.toLowerCase().trim() + AUTH_SALT
+  );
 }
 
 export function AuthProvider({ children }) {
@@ -49,23 +54,50 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const signInWithEmail = async (email, password) => {
+  const sendOtpCode = async (email) => {
     setAuthActionLoading(true);
     try {
-      return await signInWithEmailAndPassword(auth, email.trim(), password);
+      const otp = generateOtp();
+      await storeOtp(email.trim(), otp);
+      await sendOtpEmail(email.trim(), otp);
     } catch (error) {
-      throw new Error(mapAuthError(error));
+      throw new Error(error.message || 'Could not send the code. Please try again.');
     } finally {
       setAuthActionLoading(false);
     }
   };
 
-  const signUpWithEmail = async (email, password) => {
+  const verifyAndSignIn = async (email, code) => {
     setAuthActionLoading(true);
     try {
-      return await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const valid = await verifyOtp(email.trim(), code);
+      if (!valid) {
+        throw new Error('The code is incorrect or has expired. Request a new one.');
+      }
+
+      const password = await deriveFirebasePassword(email);
+
+      try {
+        return await signInWithEmailAndPassword(auth, email.trim(), password);
+      } catch (signInError) {
+        if (
+          signInError.code === 'auth/user-not-found' ||
+          signInError.code === 'auth/invalid-credential'
+        ) {
+          return await createUserWithEmailAndPassword(auth, email.trim(), password);
+        }
+        if (signInError.code === 'auth/wrong-password') {
+          throw new Error(
+            'This email is linked to another device. Please sign in on your original device or contact support.'
+          );
+        }
+        throw new Error(mapAuthError(signInError));
+      }
     } catch (error) {
-      throw new Error(mapAuthError(error));
+      if (error.code) {
+        throw new Error(mapAuthError(error));
+      }
+      throw error;
     } finally {
       setAuthActionLoading(false);
     }
@@ -85,8 +117,8 @@ export function AuthProvider({ children }) {
       user,
       authLoading,
       authActionLoading,
-      signInWithEmail,
-      signUpWithEmail,
+      sendOtpCode,
+      verifyAndSignIn,
       signOutUser,
     }),
     [user, authLoading, authActionLoading]

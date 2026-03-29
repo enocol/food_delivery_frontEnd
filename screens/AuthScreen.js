@@ -14,41 +14,41 @@ import { useAuth } from '../context/AuthContext';
 import styles from '../components/styles';
 
 export default function AuthScreen() {
-  const { authActionLoading, signInWithEmail, signUpWithEmail } = useAuth();
-  const [isSignUpMode, setSignUpMode] = useState(false);
+  const { authActionLoading, sendOtpCode, verifyAndSignIn } = useAuth();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSendCode = async () => {
     if (!email.trim()) {
       Alert.alert('Email required', 'Please enter your email address.');
       return;
     }
 
-    if (!password) {
-      Alert.alert('Password required', 'Please enter your password.');
+    try {
+      await sendOtpCode(email.trim());
+      setCodeSent(true);
+      Alert.alert('Code sent', 'Check your inbox for a 6-digit code and enter it below.');
+    } catch (error) {
+      Alert.alert('Could not send code', error.message);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!email.trim()) {
+      Alert.alert('Email required', 'Please enter your email address.');
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Weak password', 'Use at least 6 characters for your password.');
-      return;
-    }
-
-    if (isSignUpMode && password !== confirmPassword) {
-      Alert.alert('Password mismatch', 'Password and confirmation do not match.');
+    if (!otp.trim()) {
+      Alert.alert('Code required', 'Please enter the 6-digit code from your email.');
       return;
     }
 
     try {
-      if (isSignUpMode) {
-        await signUpWithEmail(email.trim(), password);
-      } else {
-        await signInWithEmail(email.trim(), password);
-      }
+      await verifyAndSignIn(email.trim(), otp.trim());
     } catch (error) {
-      Alert.alert(isSignUpMode ? 'Sign-up failed' : 'Sign-in failed', error.message);
+      Alert.alert('Sign-in failed', error.message);
     }
   };
 
@@ -58,11 +58,13 @@ export default function AuthScreen() {
         <ScrollView contentContainerStyle={styles.authWrap}>
           <View style={styles.authHeroCard}>
             <Text style={styles.authTitle}>Welcome to Mbolo Eats</Text>
-            <Text style={styles.authSubtitle}>Sign in with email and password to continue your orders.</Text>
+            <Text style={styles.authSubtitle}>
+              Enter your email to receive a 6-digit sign-in code.
+            </Text>
           </View>
 
           <View style={styles.authCard}>
-            <Text style={styles.authSectionTitle}>{isSignUpMode ? 'Create account' : 'Sign in'}</Text>
+            <Text style={styles.authSectionTitle}>Sign in with email code</Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
@@ -72,49 +74,45 @@ export default function AuthScreen() {
               autoCorrect={false}
               style={styles.authInput}
             />
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Password"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.authInput}
-            />
-            {isSignUpMode ? (
+
+            {codeSent ? (
               <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm password"
-                secureTextEntry
-                autoCapitalize="none"
+                value={otp}
+                onChangeText={(text) => setOtp(text.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6-digit code"
+                keyboardType="number-pad"
+                maxLength={6}
                 autoCorrect={false}
                 style={styles.authInput}
               />
             ) : null}
 
-            <Pressable style={styles.authPrimaryButton} onPress={handleSubmit} disabled={authActionLoading}>
+            <Pressable
+              style={styles.authPrimaryButton}
+              onPress={codeSent ? handleVerifyCode : handleSendCode}
+              disabled={authActionLoading}
+            >
               {authActionLoading ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
                 <Text style={styles.authPrimaryButtonText}>
-                  {isSignUpMode ? 'Create account' : 'Sign in'}
+                  {codeSent ? 'Verify code and sign in' : 'Send code to my email'}
                 </Text>
               )}
             </Pressable>
 
-            <Pressable
-              style={styles.authSecondaryButton}
-              onPress={() => {
-                setSignUpMode((current) => !current);
-                setConfirmPassword('');
-              }}
-              disabled={authActionLoading}
-            >
-              <Text style={styles.authSecondaryButtonText}>
-                {isSignUpMode ? 'Already have an account? Sign in' : 'No account yet? Create one'}
-              </Text>
-            </Pressable>
+            {codeSent ? (
+              <Pressable
+                style={styles.authSecondaryButton}
+                onPress={() => {
+                  setCodeSent(false);
+                  setOtp('');
+                }}
+                disabled={authActionLoading}
+              >
+                <Text style={styles.authSecondaryButtonText}>Use a different email</Text>
+              </Pressable>
+            ) : null}
           </View>
         </ScrollView>
       </LinearGradient>
