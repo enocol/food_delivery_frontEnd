@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 
 const styles = StyleSheet.create({
   screen: {
@@ -7,6 +7,9 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
+    marginTop: 25,
+    justifyContent: 'center',
+    
   },
   gradientBackground: {
     flex: 1,
@@ -19,12 +22,15 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     position: 'absolute',
-    bottom: 0,
-    height: 100,
-    backgroundColor: '#fff',
+    bottom: 20,
+    height: 80,
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 10,
+    borderTopWidth: 0,
+    borderRadius: 24,
+    marginHorizontal: 16,
 
    
   },
@@ -39,8 +45,8 @@ const styles = StyleSheet.create({
   },
 
   tabBarItem: {
-    color: '#c4cbbe',
-    fontSize: 25,
+    color: '#ffffff',
+    fontSize: 35,
   },
   tabButtonInner: {
     flex: 1,
@@ -580,13 +586,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   paymentPickerCard: {
-    marginHorizontal: 12,
+   justifyContent: 'center',
     marginBottom: 14,
+    marginTop: 29,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#dbe4d7',
     borderRadius: 14,
     padding: 12,
+    flex: 1,
   },
   paymentPickerTitle: {
     fontSize: 15,
@@ -646,6 +654,14 @@ const styles = StyleSheet.create({
     color: '#2f6f43',
     fontWeight: '700',
   },
+checkoutContainer: {
+    flex: 0.8,
+    justifyContent: 'center',
+    backgroundColor: 'red',
+  },
+
+
+
   checkoutLabel: {
     color: '#d8e8d2',
     fontSize: 12,
@@ -683,6 +699,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f3b2a',
     paddingVertical: 14,
     alignItems: 'center',
+    
   },
   checkoutScreenCtaDisabled: {
     opacity: 0.6,

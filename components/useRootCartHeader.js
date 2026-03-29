@@ -1,6 +1,6 @@
 import React from 'react';
 import CartHeaderButton from './CartHeaderButton';
-import { View, Image, Text } from 'react-native';
+import { View, Image, Text, Platform } from 'react-native';
 
 export default function useRootCartHeader(
   navigation,
@@ -20,8 +20,8 @@ export default function useRootCartHeader(
       ...(title !== undefined ? { title } : null),
       ...(headerHeight ? { headerStyle: { height: headerHeight, backgroundColor: headerBackgroundColor } } : null),
       headerRight: () => <CartHeaderButton count={cartCount} onPress={onCartPress} />,
-      headerLeft: () => <View style={{ width: "65%", height: 40, marginLeft: 8, justifyContent: 'center', alignItems: 'center' }}>
-       <Image source={require('../assets/splash-icon.png')} style={{ width: "100%", height: 50, marginRight: 4 }} />
+      headerLeft: () => <View style={{ width: Platform.OS === 'ios' ? "100%" : "70%", height: 70,  justifyContent: 'center', alignItems: 'center' }}>
+       <Image source={require('../assets/splash-icon.png')} style={{ width: "100%", height: 70,}} />
       </View>, // Placeholder to keep title centered when cart button is shown
     });
   }, [navigation, cartCount, onCartPress, title, headerHeight, headerBackgroundColor]);

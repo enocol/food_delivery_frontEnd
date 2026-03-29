@@ -27,7 +27,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: '#ff6600',
-        tabBarInactiveTintColor: '#444444',
+        tabBarInactiveTintColor: '#c4cbbe',
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabBarItem,
         tabBarButton: (props) => <AnimatedTabBarButton {...props} />,
@@ -54,12 +54,12 @@ function MainTabs() {
       <Tab.Screen
         name="SearchTab"
         component={SearchScreen}
-        options={{ title: 'Search', tabBarLabel: '' }}
+        options={{ title: '', tabBarLabel: '', headerShown: true, headerTransparent: false, headerTitle: '' }}
       />
       <Tab.Screen
         name="ProfileTab"
         component={ProfileScreen}
-        options={{ title: 'Profile', tabBarLabel: '' }}
+        options={{ title: '', tabBarLabel: '', headerShown: true, headerTransparent: false, headerTitle: '' }}
       />
     </Tab.Navigator>
   );
