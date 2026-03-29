@@ -2,8 +2,11 @@ import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,   
+  },
+
+  safeArea: {
     flex: 1,
-    marginTop: -40,
   },
   gradientBackground: {
     flex: 1,
@@ -16,46 +19,35 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     position: 'absolute',
-    left: 16,
-    right: 16,
     bottom: 0,
-    height: 80,
-    paddingTop: 10,
-    paddingBottom: 10,
-    borderTopWidth: 0,
-    backgroundColor: 'orange',
-    elevation: 0,
-    shadowOpacity: 0,
-    borderRadius: 35,
-  },
+    height: 100,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 20,
 
+   
+  },
 
   tabBarBackground: {
     flex: 1,
-    marginHorizontal: 4,
-    borderRadius: 24,
-   
-    borderWidth: 5,
-    borderColor: '#ffffff',
     shadowColor: '#2f2318',
     shadowOpacity: 0.14,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 12,
   },
+
   tabBarItem: {
-  
-    marginHorizontal: 4,
-    marginVertical: 5,
-    paddingTop: 2,
+    color: '#c4cbbe',
+    fontSize: 25,
   },
   tabButtonInner: {
     flex: 1,
-  
     overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
+   
   },
+
   tabButtonActiveOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#bd3f1b',
@@ -63,22 +55,23 @@ const styles = StyleSheet.create({
   },
   tabButtonContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
+
   tabBarLabel: {
     fontSize: 12,
     fontWeight: '800',
-    marginBottom: 4,
   },
+
   sheetHost: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'flex-end',
   },
+
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#1a120d',
   },
+
   cartSheet: {
     height: '78%',
     borderTopLeftRadius: 24,
@@ -87,118 +80,153 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dfe5d9',
   },
+
   cartAwareContent: {
     paddingBottom: 24,
   },
+
   sheetHandleWrap: {
     alignItems: 'center',
     paddingTop: 10,
     paddingBottom: 2,
   },
+
   sheetHandle: {
     width: 56,
     height: 5,
     borderRadius: 3,
     backgroundColor: '#c4cbbe',
   },
+
   heroTitle: {
     fontSize: 30,
     fontWeight: '900',
     color: '#2f2a25',
     paddingHorizontal: 10,
   },
+
   foodFilterWrap: {
     paddingTop: 8,
     paddingBottom: 4,
   },
+
   foodFilterScrollContent: {
     paddingHorizontal: 14,
     gap: 8,
   },
+
   foodFilterChip: {
-    borderWidth: 1,
     borderColor: '#f0d9bf',
-    backgroundColor: '#fffaf2',
     borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    padding: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
   },
+
   foodFilterChipActive: {
-    backgroundColor: '#bd3f1b',
+    backgroundColor: "Transparent",
     borderColor: '#bd3f1b',
+    borderWidth: 0.5,
   },
+
   foodFilterChipText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#5a5249',
-  },
-  foodFilterChipTextActive: {
-    color: '#fff',
-  },
-
-  restaurantList: {
-    paddingHorizontal: 14,
-    paddingBottom: 20,
+    color: '#000000',
     
   },
+
+  foodFilterChipTextActive: {
+  color: '#6b6359',
+  },
+
+  foodFilterIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginBottom: 4,
+  },
+
+  foodFilterItem: {
+    alignItems: 'center',
+    width: 100,
+  },
+
+  // restaurantList: {
+  //   paddingHorizontal: 0,
+  //   paddingBottom: 20,
+  //   marginBottom: 20,
+    
+  // },
+
   restaurantCard: {
     borderRadius: 18,
     overflow: 'hidden',
-    marginBottom: 14,
-    marginTop: 14,
+    paddingBottom: 10,
+    marginTop: 25,
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    borderWidth: 1,
+    borderColor: '#dbe4d7',
     elevation: 3,
+    width: '100%',
   },
+
   restaurantImage: {
     width: '100%',
     height: 350,
     objectFit: 'cover',
   },
+
   restaurantContent: {
     padding: 12,
   },
+
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
   },
+
   restaurantName: {
     fontSize: 18,
     fontWeight: '800',
     color: '#2d2a27',
     flex: 1,
   },
+
   rating: {
     fontSize: 14,
     color: '#7a5610',
     fontWeight: '700',
   },
+
   metaText: {
     fontSize: 13,
     color: '#5a5249',
     marginTop: 3,
   },
+
   searchHeaderBlock: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
   },
+
   sectionTitle: {
     fontSize: 28,
     fontWeight: '900',
     color: '#202420',
   },
+
   sectionSubtitle: {
     fontSize: 14,
     color: '#637063',
     marginTop: 5,
     marginBottom: 12,
   },
+
   searchInput: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -209,6 +237,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#202420',
   },
+
   searchResultsWrap: {
     paddingHorizontal: 14,
     paddingBottom: 20,
@@ -640,10 +669,21 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
+  checkoutScreenCtaDisabled: {
+    opacity: 0.6,
+  },
   checkoutScreenCtaText: {
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '800',
+  },
+  checkoutStatusText: {
+    marginHorizontal: 10,
+    marginTop: 4,
+    marginBottom: 4,
+    fontSize: 13,
+    color: '#425045',
+    fontWeight: '700',
   },
   centered: {
     flex: 1,

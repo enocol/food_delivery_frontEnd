@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import styles from '../components/styles';
 import { useCart } from '../context/CartContext';
+import { saveOrderToDatabase } from '../utils/fakeOrderDb';
+import { requestMobileMoneyPayment } from '../utils/fakePaymentApi';
 import { formatXaf } from '../utils/formatXaf';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PAYMENT_METHODS = [
   { id: 'mtn-momo', label: 'MTN MoMo' },
@@ -17,6 +21,8 @@ export default function CheckoutScreen({ navigation }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('mtn-momo');
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   const itemCount = Object.values(cartItems).reduce((sum, item) => sum + item.qty, 0);
 
@@ -85,7 +91,11 @@ export default function CheckoutScreen({ navigation }) {
     return 'Unknown';
   };
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
+    if (isProcessing) {
+      return;
+    }
+
     if (itemCount === 0) {
       Alert.alert('Cart empty', 'Add at least one item before placing your order.');
       navigation.goBack();
@@ -100,14 +110,79 @@ export default function CheckoutScreen({ navigation }) {
       }
     }
 
-    setPhoneError('');
-    clearCart();
-    Alert.alert('Order placed', 'Your order has been confirmed successfully.');
-    navigation.navigate('MainTabs');
+    const orderRef = `ORDER-${Date.now()}`;
+    const normalizedPhone = mobileMoneyPhone.replace(/\D/g, '');
+
+    try {
+      setPhoneError('');
+      setIsProcessing(true);
+      setStatusMessage('Starting payment...');
+
+      let paymentResult;
+
+      if (selectedPaymentMethod === 'cash-on-delivery') {
+        paymentResult = {
+          ok: true,
+          provider: 'cash-on-delivery',
+          transactionId: `COD-${Date.now()}`,
+          paidAt: null,
+        };
+      } else {
+        const provider = selectedPaymentMethod === 'mtn-momo' ? 'mtn' : 'orange';
+        setStatusMessage(`Sending ${provider.toUpperCase()} payment request...`);
+
+        paymentResult = await requestMobileMoneyPayment({
+          provider,
+          phone: normalizedPhone,
+          amountXaf: cartTotal,
+          orderRef,
+        });
+      }
+
+      if (!paymentResult.ok) {
+        Alert.alert('Payment failed', paymentResult.message || 'Unable to complete payment.');
+        setStatusMessage('Payment failed.');
+        return;
+      }
+
+      setStatusMessage('Saving order to database...');
+      const orderRecord = await saveOrderToDatabase({
+        orderRef,
+        paymentMethod: selectedPaymentMethod,
+        payment: paymentResult,
+        customerPhone: normalizedPhone || null,
+        totals: {
+          itemCount,
+          cartTotal,
+        },
+        items: Object.values(cartItems).map((item) => ({
+          id: item.id,
+          name: item.name,
+          qty: item.qty,
+          price: item.price,
+          restaurantName: item.restaurantName,
+        })),
+      });
+
+      clearCart();
+      setStatusMessage('Order saved successfully.');
+      Alert.alert(
+        'Order placed',
+        `Payment confirmed and order saved.\nOrder ID: ${orderRecord.id}\nTransaction: ${paymentResult.transactionId}`
+      );
+      navigation.navigate('MainTabs');
+    } catch (error) {
+      Alert.alert('Checkout error', 'Something went wrong while processing your order.');
+      setStatusMessage('Checkout failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <LinearGradient colors={['#f2f7f2', '#fffdf7']} style={styles.checkoutscreen}>
+    <SafeAreaView style={styles.safeArea}>
+    
+      <LinearGradient colors={['#f2f7f2', '#fffdf7']} style={styles.screen}>
       <KeyboardAwareScrollView
         enableOnAndroid
         keyboardShouldPersistTaps="handled"
@@ -166,10 +241,17 @@ export default function CheckoutScreen({ navigation }) {
           ) : null}
         </View>
 
-        <Pressable style={styles.checkoutScreenCta} onPress={placeOrder}>
-          <Text style={styles.checkoutScreenCtaText}>Place Order</Text>
+        {statusMessage ? <Text style={styles.checkoutStatusText}>{statusMessage}</Text> : null}
+
+        <Pressable
+          style={[styles.checkoutScreenCta, isProcessing ? styles.checkoutScreenCtaDisabled : null]}
+          onPress={placeOrder}
+          disabled={isProcessing}
+        >
+          <Text style={styles.checkoutScreenCtaText}>{isProcessing ? 'Processing...' : 'Place Order'}</Text>
         </Pressable>
       </KeyboardAwareScrollView>
     </LinearGradient>
+  </SafeAreaView>
   );
 }

@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+
 import { Ionicons } from '@expo/vector-icons';
 import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text } from 'react-native';
+import { Pressable, View, Text, StyleSheet } from 'react-native';
 import AnimatedTabBarButton from './components/AnimatedTabBarButton';
 import CartBottomSheet from './components/CartBottomSheet';
 import styles from './components/styles';
@@ -22,9 +23,8 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: '#ffffff',
-        tabBarInactiveTintColor: '#000000',
-        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarActiveTintColor: '#ff6600',
+        tabBarInactiveTintColor: '#444444',
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabBarItem,
         tabBarButton: (props) => <AnimatedTabBarButton {...props} />,
@@ -43,7 +43,7 @@ function MainTabs() {
             iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <Ionicons name={iconName} size={focused ? 24 : size ?? 22} color={color} />;
+          return <Ionicons name={iconName} size={focused ? 30 : size ?? 30} color={color} />;
         },
       })}
     >
@@ -63,6 +63,7 @@ function MainTabs() {
 }
 
 export default function App() {
+
   const [cartItems, setCartItems] = useState({});
   const [isCartSheetOpen, setCartSheetOpen] = useState(false);
 
@@ -71,7 +72,8 @@ export default function App() {
     [cartItems]
   );
 
-  React.useEffect(() => {
+  
+  useEffect(() => {
     if (cartCount === 0) {
       setCartSheetOpen(false);
     }
@@ -171,13 +173,14 @@ export default function App() {
     closeCartSheet,
   };
 
+ 
+
   return (
     <CartContext.Provider value={cartValue}>
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName="MainTabs"
           screenOptions={{
-            headerTintColor: "orange",
             headerShadowVisible: false,
             headerTitleStyle: styles.headerTitle,
             headerShown: false,
@@ -188,9 +191,25 @@ export default function App() {
           <Stack.Screen
             name="RestaurantDetails"
             component={RestaurantDetailsScreen}
-            options={{ title: 'Restaurant', headerShown: false }}
+            options={{ title: 'Restaurant', headerBackLabelVisible: false, headerTransparent: true }}
           />
-          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: '', headerShown: true, headerTransparent: true }} />
+          <Stack.Screen
+            name="Checkout"
+            component={CheckoutScreen}
+            options={({ navigation }) => ({
+              title: '',
+              headerShown: true,
+              headerTransparent: true,
+              headerTitle: '',
+              headerBackTitle: '',
+              headerBackLabelVisible: false,
+              headerLeft: () => (
+                <Pressable onPress={() => navigation.goBack()} style={{ paddingHorizontal: 4 }}>
+                  <Ionicons name="chevron-back" size={30} color="#000000" />
+                </Pressable>
+              ),
+            })}
+          />
         </Stack.Navigator>
       </NavigationContainer>
 
@@ -202,3 +221,5 @@ export default function App() {
     </CartContext.Provider>
   );
 }
+
+

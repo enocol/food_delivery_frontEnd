@@ -21,7 +21,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       <View style={styles.detailsTopControls}>
         <Pressable onPress={() => navigation.goBack()} style={styles.detailsBackButton}>
           <Ionicons name="chevron-back" size={30} color="#000000" />
@@ -47,6 +47,6 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
         </View>
       ))}
     </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

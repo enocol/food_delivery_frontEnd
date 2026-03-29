@@ -8,20 +8,34 @@ import { RESTAURANTS } from '../data/restaurants';
 import useRootCartHeader from '../components/useRootCartHeader';
 import styles from '../components/styles';
 
-const FOOD_FILTERS = ['All', 'Achu', 'Fried Rice', 'Corn Chaff', 'Eru', 'Grilled Fish', 'Koki', 'Mbanga', 'Ndole', 'Pepper Soup', 'Suya', 'Street Food'];
+const FOOD_FILTERS = ['Achu', 'Fried Rice', 'Corn Chaff', 'Eru', 'Grilled Fish', 'Koki', 'Mbanga', 'Ndole', 'Pepper Soup', 'Suya', 'Street Food'];
 
 const FILTER_ALIASES = {
   'Fried Rice': ['fried rice', 'friend rice'],
 };
 
+const FOOD_FILTER_IMAGES = {
+  'Achu': require('../assets/foods/achu.png'),
+  'Fried Rice': require('../assets/foods/fried-rice.png'),
+  'Corn Chaff': require('../assets/foods/corn-chaff.png'),
+  'Eru': require('../assets/foods/eru.png'),
+  'Grilled Fish': require('../assets/foods/grilled-fish.png'),
+  'Koki'  : require('../assets/foods/koki.png'),
+  // 'Mbanga': require('../assets/foods/mbanga.png'),
+  'Ndole': require('../assets/foods/ndole.png'),
+  'Pepper Soup': require('../assets/foods/pepper-soup.png'),
+  // 'Suya': require('../assets/foods/suya.png'),
+  // 'Street Food': require('../assets/foods/street-food.png'),
+};
+
 export default function HomeScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
-  const [selectedFood, setSelectedFood] = useState('All');
+  const [selectedFood, setSelectedFood] = useState(null);
 
-  useRootCartHeader(navigation, cartCount, '', openCartSheet, { headerHeight: 80, headerBackgroundColor: '#ffffff' });
+  useRootCartHeader(navigation, cartCount, '', openCartSheet, { headerHeight: 100, headerBackgroundColor: 'orange' });
 
   const filteredRestaurants = useMemo(() => {
-    if (selectedFood === 'All') {
+    if (!selectedFood) {
       return RESTAURANTS;
     }
 
@@ -36,7 +50,7 @@ export default function HomeScreen({ navigation }) {
   }, [selectedFood]);
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       <LinearGradient colors={['#fff7ec', '#fef3e2', '#f8f1e7']} style={styles.gradientBackground}>
         {/* <Text style={styles.heroTitle}>Order Food Across Cameroon</Text> */}
         <View style={styles.foodFilterWrap}>
@@ -47,16 +61,19 @@ export default function HomeScreen({ navigation }) {
           >
             {FOOD_FILTERS.map((food) => {
               const isActive = selectedFood === food;
+              const iconSource = FOOD_FILTER_IMAGES[food] ?? FOOD_FILTER_IMAGES.Achu;
               return (
-                <Pressable
-                  key={food}
-                  onPress={() => setSelectedFood(food)}
-                  style={[styles.foodFilterChip, isActive ? styles.foodFilterChipActive : null]}
-                >
+                <View key={food} style={styles.foodFilterItem}>
+                  <Pressable
+                    onPress={() => setSelectedFood((prev) => (prev === food ? null : food))}
+                    style={[styles.foodFilterChip, isActive ? styles.foodFilterChipActive : null]}
+                  >
+                    <Image source={iconSource} style={styles.foodFilterIcon} />
+                  </Pressable>
                   <Text style={[styles.foodFilterChipText, isActive ? styles.foodFilterChipTextActive : null]}>
                     {food}
                   </Text>
-                </Pressable>
+                </View>
               );
             })}
           </ScrollView>
@@ -93,6 +110,6 @@ export default function HomeScreen({ navigation }) {
         />
       </LinearGradient>
       <StatusBar style="dark" />
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,19 +1,13 @@
 {
   "expo": {
-    "name": "",
+    "name": "Mbolo Eats",
     "slug": "mbolo-eats",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/splash-icon.png",
+    "icon": "./assets/icon-transparent.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#FF8C42"
-    },
     "ios": {
-      "supportsTablet": true,
-     
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
