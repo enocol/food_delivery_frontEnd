@@ -32,7 +32,7 @@ export default function HomeScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
   const [selectedFood, setSelectedFood] = useState(null);
 
-  useRootCartHeader(navigation, cartCount, '', openCartSheet, { headerHeight: 100, headerBackgroundColor: 'orange' });
+  useRootCartHeader(navigation, cartCount, '', openCartSheet, { headerHeight: 100, headerBackgroundColor: '#fff7ec' });
 
   const filteredRestaurants = useMemo(() => {
     if (!selectedFood) {

@@ -16,6 +16,7 @@ import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import RestaurantDetailsScreen from './screens/RestaurantDetailsScreen';
 import SearchScreen from './screens/SearchScreen';
+import { normalizeImageForState } from './utils/imageSource';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -116,6 +117,7 @@ function AppContent() {
         ...current,
         [item.id]: {
           ...item,
+          image: normalizeImageForState(item.image),
           qty: 1,
           restaurantId: restaurant.id,
           restaurantName: restaurant.name,

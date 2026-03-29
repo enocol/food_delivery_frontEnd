@@ -5,7 +5,7 @@
     "scheme": "mboloeats",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon-transparent.png",
+    "icon": "./assets/splash-icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
