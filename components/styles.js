@@ -306,6 +306,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6a6258',
   },
+  profileSignOutButton: {
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#2f2318',
+  },
+  profileSignOutButtonDisabled: {
+    opacity: 0.6,
+  },
+  profileSignOutText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
   infoCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -701,6 +716,80 @@ const styles = StyleSheet.create({
     color: '#5f5e5e',
     marginTop: 6,
     textAlign: 'center',
+  },
+  authWrap: {
+    padding: 16,
+    gap: 14,
+  },
+  authHeroCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#eadfd4',
+  },
+  authTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#23201c',
+  },
+  authSubtitle: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#6a6258',
+    lineHeight: 20,
+  },
+  authCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#eadfd4',
+    gap: 10,
+  },
+  authSectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#23201c',
+  },
+  authInput: {
+    backgroundColor: '#fffdf9',
+    borderWidth: 1,
+    borderColor: '#e4d9cd',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    fontSize: 14,
+    color: '#23201c',
+  },
+  authPrimaryButton: {
+    marginTop: 2,
+    backgroundColor: '#bd3f1b',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  authPrimaryButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  authSecondaryButton: {
+    borderWidth: 1,
+    borderColor: '#e1d6ca',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  authSecondaryButtonDisabled: {
+    opacity: 0.55,
+  },
+  authSecondaryButtonText: {
+    color: '#2f2318',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
 

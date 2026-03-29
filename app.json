@@ -2,6 +2,7 @@
   "expo": {
     "name": "Mbolo Eats",
     "slug": "mbolo-eats",
+    "scheme": "mboloeats",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon-transparent.png",
@@ -15,10 +16,14 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.anonymous.mboloeats"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }

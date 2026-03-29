@@ -8,7 +8,9 @@ import { Pressable, View, Text, StyleSheet } from 'react-native';
 import AnimatedTabBarButton from './components/AnimatedTabBarButton';
 import CartBottomSheet from './components/CartBottomSheet';
 import styles from './components/styles';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartContext } from './context/CartContext';
+import AuthScreen from './screens/AuthScreen';
 import CheckoutScreen from './screens/CheckoutScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -62,7 +64,8 @@ function MainTabs() {
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { user, authLoading } = useAuth();
 
   const [cartItems, setCartItems] = useState({});
   const [isCartSheetOpen, setCartSheetOpen] = useState(false);
@@ -175,6 +178,18 @@ export default function App() {
 
  
 
+  if (authLoading) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.emptyTitle}>Loading account...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
+
   return (
     <CartContext.Provider value={cartValue}>
       <NavigationContainer ref={navigationRef}>
@@ -219,6 +234,14 @@ export default function App() {
         onCheckout={openCheckoutScreen}
       />
     </CartContext.Provider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

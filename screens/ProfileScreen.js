@@ -1,16 +1,35 @@
 import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { formatXaf } from '../utils/formatXaf';
 import useRootCartHeader from '../components/useRootCartHeader';
 import styles from '../components/styles';
 
 export default function ProfileScreen({ navigation }) {
   const { cartCount, cartTotal, openCartSheet } = useCart();
+  const { user, signOutUser, authActionLoading } = useAuth();
 
   useRootCartHeader(navigation, cartCount, 'Profile', openCartSheet);
+
+  const profileName = user?.displayName || 'Mbolo member';
+  const profileMeta = user?.email || user?.phoneNumber || 'Connected account';
+  const initials = profileName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((namePart) => namePart[0].toUpperCase())
+    .join('');
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+    } catch (error) {
+      Alert.alert('Sign out failed', error.message || 'Please try again.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -18,10 +37,17 @@ export default function ProfileScreen({ navigation }) {
         <ScrollView contentContainerStyle={styles.profileWrap}>
           <View style={styles.profileCard}>
             <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>RM</Text>
+              <Text style={styles.avatarText}>{initials || 'ME'}</Text>
             </View>
-            <Text style={styles.profileName}>Ryzen Member</Text>
-            <Text style={styles.profileMeta}>Douala, Cameroon</Text>
+            <Text style={styles.profileName}>{profileName}</Text>
+            <Text style={styles.profileMeta}>{profileMeta}</Text>
+            <Pressable
+              style={[styles.profileSignOutButton, authActionLoading && styles.profileSignOutButtonDisabled]}
+              onPress={handleSignOut}
+              disabled={authActionLoading}
+            >
+              <Text style={styles.profileSignOutText}>Sign out</Text>
+            </Pressable>
           </View>
 
           <View style={styles.infoCard}>
