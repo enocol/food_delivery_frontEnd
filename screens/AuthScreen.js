@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   View,
+  Image, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -54,68 +55,68 @@ export default function AuthScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <LinearGradient colors={['#fff8f0', '#f8efe8']} style={styles.gradientBackground}>
-        <ScrollView contentContainerStyle={styles.authWrap}>
-          <View style={styles.authHeroCard}>
-            <Text style={styles.authTitle}>Welcome to Mbolo Eats</Text>
-            <Text style={styles.authSubtitle}>
-              Enter your email to receive a 6-digit sign-in code.
-            </Text>
-          </View>
+      <View style={{ flex: 1, paddingTop: 100 }}>
+        <Image source={require('../assets/splash-icon.png')} style={{ width: "100%", height: 120 }} />
+        <LinearGradient colors={['#fff8f0', '#f8efe8']} style={styles.gradientBackground}>
+          <View style={styles.authWrap}>
+            <View style={styles.authCard}>
+              <Text style={styles.authTitle}>Sign In</Text>
+              <Text style={styles.authSubtitle}>
+                Enter your email to receive a 6-digit sign-in code.
+              </Text>
 
-          <View style={styles.authCard}>
-            <Text style={styles.authSectionTitle}>Sign in with email code</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email address"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.authInput}
-            />
-
-            {codeSent ? (
               <TextInput
-                value={otp}
-                onChangeText={(text) => setOtp(text.replace(/\D/g, '').slice(0, 6))}
-                placeholder="6-digit code"
-                keyboardType="number-pad"
-                maxLength={6}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Email address"
+                keyboardType="email-address"
+                autoCapitalize="none"
                 autoCorrect={false}
                 style={styles.authInput}
               />
-            ) : null}
 
-            <Pressable
-              style={styles.authPrimaryButton}
-              onPress={codeSent ? handleVerifyCode : handleSendCode}
-              disabled={authActionLoading}
-            >
-              {authActionLoading ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.authPrimaryButtonText}>
-                  {codeSent ? 'Verify code and sign in' : 'Send code to my email'}
-                </Text>
-              )}
-            </Pressable>
+              {codeSent ? (
+                <TextInput
+                  value={otp}
+                  onChangeText={(text) => setOtp(text.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="6-digit code"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  autoCorrect={false}
+                  style={styles.authInput}
+                />
+              ) : null}
 
-            {codeSent ? (
               <Pressable
-                style={styles.authSecondaryButton}
-                onPress={() => {
-                  setCodeSent(false);
-                  setOtp('');
-                }}
+                style={styles.authPrimaryButton}
+                onPress={codeSent ? handleVerifyCode : handleSendCode}
                 disabled={authActionLoading}
               >
-                <Text style={styles.authSecondaryButtonText}>Use a different email</Text>
+                {authActionLoading ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={styles.authPrimaryButtonText}>
+                    {codeSent ? 'Verify code and sign in' : 'Send code to my email'}
+                  </Text>
+                )}
               </Pressable>
-            ) : null}
+
+              {codeSent ? (
+                <Pressable
+                  style={styles.authSecondaryButton}
+                  onPress={() => {
+                    setCodeSent(false);
+                    setOtp('');
+                  }}
+                  disabled={authActionLoading}
+                >
+                  <Text style={styles.authSecondaryButtonText}>Use a different email</Text>
+                </Pressable>
+              ) : null}
+            </View>
           </View>
-        </ScrollView>
-      </LinearGradient>
+        </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }

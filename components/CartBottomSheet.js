@@ -12,6 +12,31 @@ export default function CartBottomSheet({ visible, onClose, onCheckout }) {
   const [isMounted, setIsMounted] = useState(visible);
   const translateY = React.useRef(new Animated.Value(420)).current;
   const dragY = React.useRef(new Animated.Value(0)).current;
+  const MAX_PULL_DOWN = 42;
+  const DISMISS_SETTLE_Y = 64;
+  const isDismissingRef = React.useRef(false);
+
+  const runDismiss = React.useCallback(
+    (startOffset = 0) => {
+      if (isDismissingRef.current) {
+        return;
+      }
+
+      isDismissingRef.current = true;
+      dragY.setValue(0);
+      translateY.setValue(Math.max(0, startOffset));
+
+      Animated.timing(translateY, {
+        toValue: 420,
+        duration: 180,
+        useNativeDriver: true,
+      }).start(() => {
+        isDismissingRef.current = false;
+        onClose();
+      });
+    },
+    [dragY, onClose, translateY]
+  );
 
   const panResponder = useMemo(
     () =>
@@ -19,67 +44,43 @@ export default function CartBottomSheet({ visible, onClose, onCheckout }) {
         onMoveShouldSetPanResponder: (_, gesture) =>
           gesture.dy > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
         onPanResponderMove: (_, gesture) => {
-          dragY.setValue(gesture.dy > 0 ? gesture.dy : gesture.dy * 0.2);
+          // Keep only a small, direct pull-down follow with no animated bounce.
+          const nextDragY = Math.max(0, Math.min(gesture.dy, MAX_PULL_DOWN));
+          dragY.setValue(nextDragY);
         },
         onPanResponderRelease: (_, gesture) => {
-          const shouldClose = gesture.dy > 110 || gesture.vy > 1.1;
+          const shouldClose = gesture.dy > 32 || gesture.vy > 1.1;
 
           if (shouldClose) {
-            Animated.timing(dragY, {
-              toValue: 420,
-              duration: 170,
-              useNativeDriver: true,
-            }).start(() => {
-              dragY.setValue(0);
-              onClose();
-            });
+            const startOffset = Math.max(DISMISS_SETTLE_Y, Math.min(gesture.dy, 120));
+            runDismiss(startOffset);
             return;
           }
 
-          Animated.spring(dragY, {
-            toValue: 0,
-            damping: 16,
-            stiffness: 220,
-            mass: 0.85,
-            useNativeDriver: true,
-          }).start();
+          dragY.setValue(0);
         },
         onPanResponderTerminate: () => {
-          Animated.spring(dragY, {
-            toValue: 0,
-            damping: 16,
-            stiffness: 220,
-            mass: 0.85,
-            useNativeDriver: true,
-          }).start();
+          dragY.setValue(0);
         },
       }),
-    [dragY, onClose]
+    [dragY, runDismiss]
   );
 
   React.useEffect(() => {
     if (visible) {
       dragY.setValue(0);
       setIsMounted(true);
-      Animated.spring(translateY, {
+      translateY.setValue(420);
+      Animated.timing(translateY, {
         toValue: 0,
-        damping: 18,
-        stiffness: 220,
-        mass: 0.92,
+        duration: 180,
         useNativeDriver: true,
       }).start();
       return;
     }
 
-    Animated.timing(translateY, {
-      toValue: 420,
-      duration: 180,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) {
-        setIsMounted(false);
-      }
-    });
+    translateY.setValue(420);
+    setIsMounted(false);
   }, [visible, translateY, dragY]);
 
   if (!isMounted) {
@@ -94,7 +95,7 @@ export default function CartBottomSheet({ visible, onClose, onCheckout }) {
 
   return (
     <View style={styles.sheetHost} pointerEvents="box-none">
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={() => runDismiss()}>
         <Animated.View style={[styles.sheetBackdrop, { opacity: backdropOpacity }]} />
       </Pressable>
 
@@ -115,7 +116,7 @@ export default function CartBottomSheet({ visible, onClose, onCheckout }) {
                   <Text style={styles.clearText}>Clear all</Text>
                 </Pressable>
               ) : null}
-              <Pressable onPress={onClose} style={styles.sheetCloseButton}>
+              <Pressable onPress={() => runDismiss()} style={styles.sheetCloseButton}>
                 <Text style={styles.sheetCloseText}>Close</Text>
               </Pressable>
             </View>

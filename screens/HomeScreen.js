@@ -21,10 +21,10 @@ const FOOD_FILTER_IMAGES = {
   'Eru': require('../assets/foods/eru.png'),
   'Grilled Fish': require('../assets/foods/grilled-fish.png'),
   'Koki'  : require('../assets/foods/koki.png'),
-  // 'Mbanga': require('../assets/foods/mbanga.png'),
+  'Mbanga': require('../assets/foods/mbanga.png'),
   'Ndole': require('../assets/foods/ndole.png'),
   'Pepper Soup': require('../assets/foods/pepper-soup.png'),
-  // 'Suya': require('../assets/foods/suya.png'),
+  'Suya': require('../assets/foods/suya.png'),
   // 'Street Food': require('../assets/foods/street-food.png'),
 };
 
