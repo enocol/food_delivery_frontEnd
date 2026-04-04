@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
 
   restaurantImage: {
     width: "100%",
-    height: 550,
-    objectFit: "cover",
+    height: 260,
+    backgroundColor: "#ffffff",
   },
 
   restaurantContent: {
