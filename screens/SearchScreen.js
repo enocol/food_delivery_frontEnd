@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Image,
@@ -11,37 +11,53 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
-import { RESTAURANTS } from "../data/restaurants";
 import useRootCartHeader from "../components/useRootCartHeader";
 import styles from "../components/styles";
 import { toImageSource } from "../utils/imageSource";
+import { fetchRestaurants } from "../utils/restaurantApi";
 
 export default function SearchScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
   const [query, setQuery] = useState("");
+  const [restaurants, setRestaurants] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useRootCartHeader(navigation, cartCount, "Search", openCartSheet);
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredResults = RESTAURANTS.filter((restaurant) => {
-    if (!normalizedQuery) {
-      return true;
-    }
+  useEffect(() => {
+    let isActive = true;
 
-    const matchesRestaurant = restaurant.name
-      .toLowerCase()
-      .includes(normalizedQuery);
-    const matchesCuisine = restaurant.cuisine
-      .toLowerCase()
-      .includes(normalizedQuery);
-    const matchesMenu = restaurant.menu.some(
-      (item) =>
-        item.name.toLowerCase().includes(normalizedQuery) ||
-        item.description.toLowerCase().includes(normalizedQuery),
-    );
+    const timeoutId = setTimeout(async () => {
+      setIsLoading(true);
+      setError("");
 
-    return matchesRestaurant || matchesCuisine || matchesMenu;
-  });
+      try {
+        const data = await fetchRestaurants({ search: query });
+        if (!isActive) {
+          return;
+        }
+
+        setRestaurants(data);
+      } catch (loadError) {
+        if (!isActive) {
+          return;
+        }
+
+        setRestaurants([]);
+        setError(loadError.message || "Failed to search restaurants");
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      isActive = false;
+      clearTimeout(timeoutId);
+    };
+  }, [query]);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -64,7 +80,7 @@ export default function SearchScreen({ navigation }) {
         </View>
 
         <ScrollView contentContainerStyle={styles.searchResultsWrap}>
-          {filteredResults.map((restaurant) => (
+          {restaurants.map((restaurant) => (
             <TouchableOpacity
               key={restaurant.id}
               activeOpacity={0.88}
@@ -82,22 +98,24 @@ export default function SearchScreen({ navigation }) {
               <View style={styles.searchResultContent}>
                 <Text style={styles.searchResultTitle}>{restaurant.name}</Text>
                 <Text style={styles.metaText}>{restaurant.cuisine}</Text>
-                <Text style={styles.metaText}>
-                  {restaurant.menu
-                    .slice(0, 2)
-                    .map((item) => item.name)
-                    .join(" • ")}
-                </Text>
+                <Text style={styles.metaText}>{restaurant.eta}</Text>
               </View>
             </TouchableOpacity>
           ))}
 
-          {filteredResults.length === 0 ? (
+          {!isLoading && restaurants.length === 0 ? (
             <View style={styles.emptySearchCard}>
               <Text style={styles.emptyTitle}>No matching results.</Text>
               <Text style={styles.emptySub}>
-                Try another meal name or restaurant keyword.
+                {error || "Try another meal name or restaurant keyword."}
               </Text>
+            </View>
+          ) : null}
+
+          {isLoading && restaurants.length === 0 ? (
+            <View style={styles.emptySearchCard}>
+              <Text style={styles.emptyTitle}>Searching restaurants...</Text>
+              <Text style={styles.emptySub}>Results will appear here.</Text>
             </View>
           ) : null}
         </ScrollView>

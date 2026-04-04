@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
-import { RESTAURANTS } from "../data/restaurants";
 import useRootCartHeader from "../components/useRootCartHeader";
 import styles from "../components/styles";
+import { toImageSource } from "../utils/imageSource";
+import { fetchRestaurants } from "../utils/restaurantApi";
 
 const FOOD_FILTERS = [
   "Achu",
@@ -56,7 +57,7 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
       onPress={() => onPress(item.id)}
     >
       <Image
-        source={item.image}
+        source={toImageSource(item.image)}
         style={styles.restaurantImage}
         resizeMode="contain"
       />
@@ -75,27 +76,53 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
 export default function HomeScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
   const [selectedFood, setSelectedFood] = useState(null);
+  const [restaurants, setRestaurants] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
     headerHeight: 100,
     headerBackgroundColor: "#fff7ec",
   });
 
-  const filteredRestaurants = useMemo(() => {
-    if (!selectedFood) {
-      return RESTAURANTS;
-    }
+  useEffect(() => {
+    let isActive = true;
 
-    const aliases = FILTER_ALIASES[selectedFood] ?? [
-      selectedFood.toLowerCase(),
-    ];
+    const loadRestaurants = async () => {
+      setIsLoading(true);
+      setError("");
 
-    return RESTAURANTS.filter((restaurant) =>
-      restaurant.menu.some((item) => {
-        const menuName = item.name.toLowerCase();
-        return aliases.some((alias) => menuName.includes(alias));
-      }),
-    );
+      try {
+        const aliases = selectedFood
+          ? (FILTER_ALIASES[selectedFood] ?? [selectedFood])
+          : [];
+        const search = aliases[0];
+        const data = await fetchRestaurants({ search });
+
+        if (!isActive) {
+          return;
+        }
+
+        setRestaurants(data);
+      } catch (loadError) {
+        if (!isActive) {
+          return;
+        }
+
+        setRestaurants([]);
+        setError(loadError.message || "Failed to load restaurants");
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadRestaurants();
+
+    return () => {
+      isActive = false;
+    };
   }, [selectedFood]);
 
   const handleOpenRestaurant = useCallback(
@@ -157,7 +184,7 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <FlatList
-          data={filteredRestaurants}
+          data={restaurants}
           keyExtractor={keyExtractor}
           renderItem={renderRestaurantItem}
           contentContainerStyle={styles.restaurantList}
@@ -167,8 +194,12 @@ export default function HomeScreen({ navigation }) {
           removeClippedSubviews
           ListEmptyComponent={
             <View style={styles.emptySearchCard}>
-              <Text style={styles.emptyTitle}>No restaurants found.</Text>
-              <Text style={styles.emptySub}>Try another food filter.</Text>
+              <Text style={styles.emptyTitle}>
+                {isLoading ? "Loading restaurants..." : "No restaurants found."}
+              </Text>
+              <Text style={styles.emptySub}>
+                {error || "Try another food filter."}
+              </Text>
             </View>
           }
         />
