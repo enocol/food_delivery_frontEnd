@@ -8,7 +8,11 @@
     "icon": "./assets/splash-icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Mbolo Eats needs your location to track delivery orders.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Mbolo Eats needs your location to track delivery orders."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +21,11 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.anonymous.mboloeats"
+      "package": "com.anonymous.mboloeats",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

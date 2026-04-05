@@ -6,26 +6,31 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import styles from "../components/styles";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { saveOrderToDatabase } from "../utils/fakeOrderDb";
+import { createOrder } from "../utils/orderApi";
 import { requestMobileMoneyPayment } from "../utils/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
+import {
+  getCurrentLocation,
+  getLocationAddress,
+} from "../utils/locationService";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const PAYMENT_METHODS = [
   { id: "mtn-momo", label: "MTN MoMo" },
-  { id: "orange-money", label: "Orange Money" },
-  { id: "cash-on-delivery", label: "Cash on Delivery" },
+  { id: "orange-mobile-money", label: "Orange Money" },
+  { id: "cash", label: "Cash on Delivery" },
 ];
 
 export default function CheckoutScreen({ navigation }) {
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { firebaseUid } = useAuth();
+  const { firebaseUid, getAuthToken } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState("mtn-momo");
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
 
   const itemCount = Object.values(cartItems).reduce(
     (sum, item) => sum + item.qty,
@@ -70,7 +75,7 @@ export default function CheckoutScreen({ navigation }) {
       };
     }
 
-    if (paymentMethod === "orange-money" && !/^69/.test(local)) {
+    if (paymentMethod === "orange-mobile-money" && !/^69/.test(local)) {
       return {
         isValid: false,
         message:
@@ -114,7 +119,7 @@ export default function CheckoutScreen({ navigation }) {
       return;
     }
 
-    if (selectedPaymentMethod !== "cash-on-delivery") {
+    if (selectedPaymentMethod !== "cash") {
       const validation = validateCameroonPhone(
         mobileMoneyPhone,
         selectedPaymentMethod,
@@ -135,10 +140,10 @@ export default function CheckoutScreen({ navigation }) {
 
       let paymentResult;
 
-      if (selectedPaymentMethod === "cash-on-delivery") {
+      if (selectedPaymentMethod === "cash") {
         paymentResult = {
           ok: true,
-          provider: "cash-on-delivery",
+          provider: "cash",
           transactionId: `COD-${Date.now()}`,
           paidAt: null,
         };
@@ -167,12 +172,44 @@ export default function CheckoutScreen({ navigation }) {
       }
 
       setStatusMessage("Saving order to database...");
-      const orderRecord = await saveOrderToDatabase({
-        firebase_uid: firebaseUid,
+      const token = await getAuthToken();
+
+      let deliveryAddress = userLocation;
+      if (!deliveryAddress) {
+        setStatusMessage("Getting delivery location...");
+        try {
+          const location = await getCurrentLocation();
+          const address = await getLocationAddress(
+            location.latitude,
+            location.longitude,
+          );
+          deliveryAddress = {
+            ...location,
+            ...address,
+          };
+          setUserLocation(deliveryAddress);
+        } catch (locationError) {
+          Alert.alert(
+            "Location error",
+            "Could not get your current location. Please enable location services and try again.",
+          );
+          setStatusMessage("Location error. Please try again.");
+          return;
+        }
+      }
+
+      const paymentMethodLabel =
+        PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod)?.label ||
+        selectedPaymentMethod;
+
+      const orderRecord = await createOrder(token, firebaseUid, {
         orderRef,
         paymentMethod: selectedPaymentMethod,
+        paymentMethodCode: selectedPaymentMethod,
+        paymentMethodLabel,
         payment: paymentResult,
         customerPhone: normalizedPhone || null,
+        deliveryAddress,
         totals: {
           itemCount,
           cartTotal,
@@ -191,13 +228,14 @@ export default function CheckoutScreen({ navigation }) {
       setStatusMessage("Order saved successfully.");
       Alert.alert(
         "Order placed",
-        `Payment confirmed and order saved.\nOrder ID: ${orderRecord.id}\nTransaction: ${paymentResult.transactionId}`,
+        `Payment confirmed and order saved.\nOrder ID: ${orderRecord.id || orderRecord.orderRef}\nTransaction: ${paymentResult.transactionId}`,
       );
       navigation.navigate("MainTabs");
     } catch (error) {
+      console.error("Order creation error:", error);
       Alert.alert(
         "Checkout error",
-        "Something went wrong while processing your order.",
+        error.message || "Something went wrong while processing your order.",
       );
       setStatusMessage("Checkout failed. Please try again.");
     } finally {
@@ -235,7 +273,7 @@ export default function CheckoutScreen({ navigation }) {
                     style={styles.paymentOptionRow}
                     onPress={() => {
                       setSelectedPaymentMethod(method.id);
-                      if (method.id === "cash-on-delivery") {
+                      if (method.id === "cash") {
                         setPhoneError("");
                       }
                     }}
@@ -257,7 +295,7 @@ export default function CheckoutScreen({ navigation }) {
                 );
               })}
 
-              {selectedPaymentMethod !== "cash-on-delivery" ? (
+              {selectedPaymentMethod !== "cash" ? (
                 <>
                   <TextInput
                     value={mobileMoneyPhone}

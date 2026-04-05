@@ -321,6 +321,22 @@ const styles = StyleSheet.create({
     color: "#5f5a53",
     marginBottom: 8,
   },
+  profileLocationButton: {
+    marginTop: 6,
+    alignSelf: "flex-start",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: "#2f2318",
+  },
+  profileLocationButtonDisabled: {
+    opacity: 0.6,
+  },
+  profileLocationButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
   detailsContainer: {
     paddingBottom: 20,
   },
