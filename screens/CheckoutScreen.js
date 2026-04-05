@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import styles from "../components/styles";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { saveOrderToDatabase } from "../utils/fakeOrderDb";
 import { requestMobileMoneyPayment } from "../utils/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
@@ -18,6 +19,7 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutScreen({ navigation }) {
   const { cartItems, cartTotal, clearCart } = useCart();
+  const { firebaseUid } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState("mtn-momo");
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
@@ -166,6 +168,7 @@ export default function CheckoutScreen({ navigation }) {
 
       setStatusMessage("Saving order to database...");
       const orderRecord = await saveOrderToDatabase({
+        firebase_uid: firebaseUid,
         orderRef,
         paymentMethod: selectedPaymentMethod,
         payment: paymentResult,
