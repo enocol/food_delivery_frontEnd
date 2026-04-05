@@ -18,6 +18,10 @@ import {
 import AnimatedTabBarButton from "./components/AnimatedTabBarButton";
 import CartBottomSheet from "./components/CartBottomSheet";
 import styles from "./components/styles";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
 import AuthScreen from "./screens/AuthScreen";
@@ -32,13 +36,14 @@ const Tab = createBottomTabNavigator();
 const navigationRef = createNavigationContainerRef();
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: "#ff6600",
         tabBarInactiveTintColor: "#ffffff",
         tabBarShowLabel: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { bottom: 16 + insets.bottom }],
         tabBarItemStyle: {
           flex: 1,
           justifyContent: "center",
@@ -219,8 +224,10 @@ function AuthenticatedApp() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
