@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -19,14 +19,13 @@ import AnimatedTabBarButton from "./components/AnimatedTabBarButton";
 import CartBottomSheet from "./components/CartBottomSheet";
 import styles from "./components/styles";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { CartContext } from "./context/CartContext";
+import { CartProvider, useCart } from "./context/CartContext";
 import AuthScreen from "./screens/AuthScreen";
 import CheckoutScreen from "./screens/CheckoutScreen";
 import HomeScreen from "./screens/HomeScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import RestaurantDetailsScreen from "./screens/RestaurantDetailsScreen";
 import SearchScreen from "./screens/SearchScreen";
-import { normalizeImageForState } from "./utils/imageSource";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -109,119 +108,6 @@ function MainTabs() {
 function AppContent() {
   const { user, authLoading } = useAuth();
 
-  const [cartItems, setCartItems] = useState({});
-  const [isCartSheetOpen, setCartSheetOpen] = useState(false);
-
-  const cartCount = useMemo(
-    () => Object.values(cartItems).reduce((sum, item) => sum + item.qty, 0),
-    [cartItems],
-  );
-
-  useEffect(() => {
-    if (cartCount === 0) {
-      setCartSheetOpen(false);
-    }
-  }, [cartCount]);
-
-  const cartTotal = useMemo(
-    () =>
-      Object.values(cartItems).reduce(
-        (sum, item) => sum + item.price * item.qty,
-        0,
-      ),
-    [cartItems],
-  );
-
-  const openCartSheet = () => {
-    if (cartCount > 0) {
-      setCartSheetOpen(true);
-    }
-  };
-
-  const closeCartSheet = () => setCartSheetOpen(false);
-
-  const openCheckoutScreen = () => {
-    setCartSheetOpen(false);
-    if (navigationRef.isReady()) {
-      navigationRef.navigate("Checkout");
-    }
-  };
-
-  const addToCart = (item, restaurant) => {
-    setCartItems((current) => {
-      const existing = current[item.id];
-      if (existing) {
-        return {
-          ...current,
-          [item.id]: { ...existing, qty: existing.qty + 1 },
-        };
-      }
-
-      return {
-        ...current,
-        [item.id]: {
-          ...item,
-          image: normalizeImageForState(item.image),
-          qty: 1,
-          restaurantId: restaurant.id,
-          restaurantName: restaurant.name,
-        },
-      };
-    });
-    setCartSheetOpen(true);
-  };
-
-  const increaseQty = (itemId) => {
-    setCartItems((current) => {
-      const existing = current[itemId];
-      if (!existing) {
-        return current;
-      }
-
-      return {
-        ...current,
-        [itemId]: { ...existing, qty: existing.qty + 1 },
-      };
-    });
-  };
-
-  const decreaseQty = (itemId) => {
-    setCartItems((current) => {
-      const existing = current[itemId];
-      if (!existing) {
-        return current;
-      }
-
-      if (existing.qty <= 1) {
-        const updated = { ...current };
-        delete updated[itemId];
-        return updated;
-      }
-
-      return {
-        ...current,
-        [itemId]: { ...existing, qty: existing.qty - 1 },
-      };
-    });
-  };
-
-  const clearCart = () => {
-    setCartItems({});
-    setCartSheetOpen(false);
-  };
-
-  const cartValue = {
-    cartItems,
-    cartCount,
-    cartTotal,
-    addToCart,
-    increaseQty,
-    decreaseQty,
-    clearCart,
-    openCartSheet,
-    closeCartSheet,
-  };
-
   if (authLoading) {
     return (
       <View style={styles.centered}>
@@ -235,7 +121,30 @@ function AppContent() {
   }
 
   return (
-    <CartContext.Provider value={cartValue}>
+    <CartProvider>
+      <AuthenticatedApp />
+    </CartProvider>
+  );
+}
+
+function AuthenticatedApp() {
+  const { cartCount, isCartSheetOpen, closeCartSheet } = useCart();
+
+  useEffect(() => {
+    if (cartCount === 0) {
+      closeCartSheet();
+    }
+  }, [cartCount, closeCartSheet]);
+
+  const openCheckoutScreen = () => {
+    closeCartSheet();
+    if (navigationRef.isReady()) {
+      navigationRef.navigate("Checkout");
+    }
+  };
+
+  return (
+    <>
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName="MainTabs"
@@ -304,7 +213,7 @@ function AppContent() {
         onClose={closeCartSheet}
         onCheckout={openCheckoutScreen}
       />
-    </CartContext.Provider>
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -19,6 +20,25 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [addingItemId, setAddingItemId] = useState(null);
+
+  const handleAddToCart = async (item) => {
+    if (!restaurant || addingItemId) {
+      return;
+    }
+
+    setAddingItemId(String(item.id));
+    try {
+      await addToCart(item, restaurant);
+    } catch (addError) {
+      Alert.alert(
+        "Could not add item",
+        addError?.message || "Please try again.",
+      );
+    } finally {
+      setAddingItemId(null);
+    }
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -115,9 +135,12 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
             </View>
             <TouchableOpacity
               style={styles.addButton}
-              onPress={() => addToCart(item, restaurant)}
+              onPress={() => handleAddToCart(item)}
+              disabled={addingItemId === String(item.id)}
             >
-              <Text style={styles.addButtonText}>Add</Text>
+              <Text style={styles.addButtonText}>
+                {addingItemId === String(item.id) ? "Adding..." : "Add"}
+              </Text>
             </TouchableOpacity>
           </View>
         ))}
