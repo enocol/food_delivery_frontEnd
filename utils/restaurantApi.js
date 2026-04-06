@@ -1,9 +1,9 @@
 import { Platform } from "react-native";
 
-const DEFAULT_API_BASE_URL =
-  Platform.OS === "ios"
-    ? "http://192.168.0.152:5000/api"
-    : "http://192.168.0.152:5000/api";
+const DEFAULT_API_BASE_URL = "http://192.168.0.152:5000/api";
+// Platform.OS === "ios"
+//   ? "http://192.168.0.152:5000/api"
+//   : "http://192.168.0.152:5000/api";
 const DEFAULT_RESTAURANT_IMAGE =
   "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80";
 
