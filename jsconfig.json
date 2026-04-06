@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "checkJs": false,
+    "target": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "exclude": [
+    "node_modules",
+    "android",
+    "ios"
+  ]
+}

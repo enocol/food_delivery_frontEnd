@@ -1,0 +1,4 @@
+{
+  "js/ts.tsserver.experimental.enableProjectDiagnostics": false,
+  "js/ts.validate.enabled": true
+}
