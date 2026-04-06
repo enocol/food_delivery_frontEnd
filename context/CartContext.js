@@ -36,6 +36,17 @@ function mapCartSchemaError(error) {
   return error;
 }
 
+function isTransientCartLoadError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("econnreset") ||
+    message.includes("network request failed") ||
+    message.includes("fetch failed") ||
+    message.includes("etimedout") ||
+    message.includes("socket hang up")
+  );
+}
+
 function toItemMap(cartPayload) {
   const items =
     cartPayload?.items ||
@@ -110,6 +121,11 @@ export function CartProvider({ children }) {
         console.warn(
           "[CartContext] Backend schema mismatch: user_id is NOT NULL on carts/cart_items, but backend uses firebase_uid-only inserts. Populate user_id server-side or drop legacy NOT NULL constraints.",
         );
+      } else if (isTransientCartLoadError(error)) {
+        console.warn(
+          "[CartContext] Temporary network issue while loading cart. Keeping current cart state.",
+        );
+        return;
       } else {
         console.warn("[CartContext] Failed to load cart:", error.message);
       }

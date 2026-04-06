@@ -28,9 +28,26 @@ function logCartApi(message, meta) {
   console.log(`[cartApi] ${message}`);
 }
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function isTransientNetworkError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("econnreset") ||
+    message.includes("network request failed") ||
+    message.includes("fetch failed") ||
+    message.includes("etimedout") ||
+    message.includes("socket hang up")
+  );
+}
+
 async function requestJson(
   path,
-  { method = "GET", token, body, firebaseUid } = {},
+  { method = "GET", token, body, firebaseUid, retries } = {},
 ) {
   logCartApi(`${method} ${path}`, {
     hasToken: Boolean(token),
@@ -40,19 +57,47 @@ async function requestJson(
 
   const headers = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
   };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   if (firebaseUid) {
     headers["X-User-Id"] = firebaseUid;
     headers["X-Firebase-Uid"] = firebaseUid;
   }
 
-  const response = await fetch(path, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const retryCount =
+    typeof retries === "number" ? retries : method === "GET" ? 2 : 0;
+
+  let response;
+  for (let attempt = 0; attempt <= retryCount; attempt += 1) {
+    try {
+      response = await fetch(path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      break;
+    } catch (error) {
+      if (attempt >= retryCount || !isTransientNetworkError(error)) {
+        throw error;
+      }
+
+      const backoff = 250 * (attempt + 1);
+      logCartApi(`retry ${method} ${path}`, {
+        attempt: attempt + 1,
+        backoff,
+        reason: error?.message || "transient network error",
+      });
+      await wait(backoff);
+    }
+  }
+
+  if (!response) {
+    throw new Error("Cart request failed before receiving a response.");
+  }
 
   logCartApi(`response ${method} ${path}`, {
     status: response.status,

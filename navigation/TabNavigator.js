@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import styles from "../components/styles";
 import HomeScreen from "../screens/HomeScreen";
+import OrdersScreen from "../screens/OrdersScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import SearchScreen from "../screens/SearchScreen";
 
@@ -38,6 +39,8 @@ export default function TabNavigator() {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "SearchTab") {
             iconName = focused ? "search" : "search-outline";
+          } else if (route.name === "OrdersTab") {
+            iconName = focused ? "receipt" : "receipt-outline";
           } else if (route.name === "ProfileTab") {
             iconName = focused ? "person" : "person-outline";
           }
@@ -64,6 +67,17 @@ export default function TabNavigator() {
       <Tab.Screen
         name="SearchTab"
         component={SearchScreen}
+        options={{
+          title: "",
+          tabBarLabel: "",
+          headerShown: true,
+          headerTransparent: false,
+          headerTitle: "",
+        }}
+      />
+      <Tab.Screen
+        name="OrdersTab"
+        component={OrdersScreen}
         options={{
           title: "",
           tabBarLabel: "",

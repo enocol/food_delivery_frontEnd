@@ -12,6 +12,9 @@ const ORDERS_ENDPOINT =
   process.env.EXPO_PUBLIC_ORDERS_ENDPOINT ||
   `${API_BASE_URL.replace(/\/+$/, "")}/orders`;
 
+const ORDERS_BY_USER_ENDPOINT =
+  process.env.EXPO_PUBLIC_ORDERS_BY_USER_ENDPOINT || `${ORDERS_ENDPOINT}/user`;
+
 const ORDER_DEBUG_ENABLED =
   __DEV__ && process.env.EXPO_PUBLIC_DEBUG_ORDER_API === "true";
 
@@ -40,8 +43,11 @@ async function requestJson(
 
   const headers = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
   };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   if (firebaseUid) {
     headers["X-Firebase-Uid"] = firebaseUid;
@@ -83,6 +89,34 @@ function unwrapOrder(payload) {
   return payload;
 }
 
+function unwrapOrders(payload) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.orders)) {
+    return payload.orders;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  if (Array.isArray(payload?.data?.orders)) {
+    return payload.data.orders;
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+
+  if (Array.isArray(payload?.results)) {
+    return payload.results;
+  }
+
+  return [];
+}
+
 export async function createOrder(token, firebaseUid, orderPayload) {
   const response = await requestJson(ORDERS_ENDPOINT, {
     method: "POST",
@@ -91,4 +125,20 @@ export async function createOrder(token, firebaseUid, orderPayload) {
     body: orderPayload,
   });
   return unwrapOrder(response);
+}
+
+export async function fetchCustomerOrders(token, firebaseUid) {
+  if (!firebaseUid) {
+    return [];
+  }
+
+  const response = await requestJson(
+    `${ORDERS_BY_USER_ENDPOINT}/${encodeURIComponent(firebaseUid)}`,
+    {
+      method: "GET",
+      token,
+      firebaseUid,
+    },
+  );
+  return unwrapOrders(response);
 }
