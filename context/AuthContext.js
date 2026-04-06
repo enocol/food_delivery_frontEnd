@@ -19,7 +19,7 @@ import {
   storeOtp,
   verifyOtp,
 } from "../utils/otpService";
-import { syncUserWithNeon } from "../utils/userApi";
+import { syncUserWithNeon } from "../apis/userApi";
 
 // Salt used to derive a deterministic Firebase credential from an email address.
 // This never changes — do not modify after users have been created.

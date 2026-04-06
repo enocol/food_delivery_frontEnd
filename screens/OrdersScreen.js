@@ -13,7 +13,7 @@ import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import styles from "../components/styles";
 import { formatXaf } from "../utils/formatXaf";
-import { fetchCustomerOrders } from "../utils/orderApi";
+import { fetchCustomerOrders } from "../apis/orderApi";
 
 function toDateLabel(dateValue) {
   if (!dateValue) {
@@ -124,15 +124,17 @@ export default function OrdersScreen({ navigation }) {
     const status = item?.status || item?.payment?.status || "confirmed";
 
     return (
-      <View style={styles.orderCard}>
-        <View style={styles.orderRowBetween}>
-          <Text style={styles.orderMetaText}>{toDateLabel(createdAt)}</Text>
-          <Text style={styles.orderStatusText}>{status}</Text>
-        </View>
+      <View>
+        <View style={styles.orderCard}>
+          <View style={styles.orderRowBetween}>
+            <Text style={styles.orderMetaText}>{toDateLabel(createdAt)}</Text>
+            <Text style={styles.orderStatusText}>{status}</Text>
+          </View>
 
-        <View style={styles.orderRowBetween}>
-          <Text style={styles.orderSummaryText}>{itemCount} item(s)</Text>
-          <Text style={styles.orderTotalText}>{formatXaf(total)}</Text>
+          <View style={styles.orderRowBetween}>
+            <Text style={styles.orderSummaryText}>{itemCount} item(s)</Text>
+            <Text style={styles.orderTotalText}>{formatXaf(total)}</Text>
+          </View>
         </View>
       </View>
     );
@@ -184,6 +186,9 @@ export default function OrdersScreen({ navigation }) {
         contentContainerStyle={styles.ordersListContent}
         refreshing={refreshing}
         onRefresh={() => loadOrders({ refresh: true })}
+        ListHeaderComponent={
+          <Text style={styles.ordersHeading}>Order History</Text>
+        }
       />
     );
   };

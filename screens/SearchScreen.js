@@ -14,7 +14,7 @@ import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import styles from "../components/styles";
 import { toImageSource } from "../utils/imageSource";
-import { fetchRestaurants } from "../utils/restaurantApi";
+import { fetchRestaurants } from "../apis/restaurantApi";
 
 export default function SearchScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();

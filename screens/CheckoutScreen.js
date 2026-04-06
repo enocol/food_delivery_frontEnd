@@ -6,8 +6,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import styles from "../components/styles";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { createOrder } from "../utils/orderApi";
-import { requestMobileMoneyPayment } from "../utils/fakePaymentApi";
+import { createOrder } from "../apis/orderApi";
+import { requestMobileMoneyPayment } from "../apis/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
 import {
   getCurrentLocation,

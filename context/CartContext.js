@@ -15,7 +15,7 @@ import {
   fetchActiveCart,
   removeCartItem,
   updateCartItemQty,
-} from "../utils/cartApi";
+} from "../apis/cartApi";
 
 export const CartContext = createContext(null);
 

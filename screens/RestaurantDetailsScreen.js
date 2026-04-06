@@ -13,7 +13,7 @@ import { useCart } from "../context/CartContext";
 import { toImageSource } from "../utils/imageSource";
 import { formatXaf } from "../utils/formatXaf";
 import styles from "../components/styles";
-import { fetchRestaurantMenu } from "../utils/restaurantApi";
+import { fetchRestaurantMenu } from "../apis/restaurantApi";
 
 export default function RestaurantDetailsScreen({ route, navigation }) {
   const { addToCart } = useCart();

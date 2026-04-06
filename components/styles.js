@@ -775,6 +775,20 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     gap: 10,
   },
+  ordersHeading: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#202420",
+    marginBottom: 16,
+  },
+
+  orderIdText: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#202420",
+    textAlign: "center",
+    marginBottom: 10,
+  },
   orderCard: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
