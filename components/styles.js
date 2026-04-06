@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   },
 
   foodFilterWrap: {
-    padding: 10,
+    padding: 5,
   },
 
   foodFilterScrollContent: {
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   restaurantList: {
     paddingBottom: 120,
     gap: 30,
-    backgroundColor: "#fff",
+    flexGrow: 1,
   },
 
   restaurantCard: {
@@ -245,12 +245,15 @@ const styles = StyleSheet.create({
     color: "#202420",
   },
   emptySearchCard: {
-    marginTop: 20,
     backgroundColor: "#fff",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#eadfd4",
+    borderColor: "orange",
     padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    marginTop: 30,
   },
   profileWrap: {
     padding: 16,

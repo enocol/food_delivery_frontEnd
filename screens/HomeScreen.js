@@ -16,38 +16,11 @@ import useRootCartHeader from "../components/useRootCartHeader";
 import styles from "../components/styles";
 import { toImageSource } from "../utils/imageSource";
 import { fetchRestaurants } from "../utils/restaurantApi";
-
-const FOOD_FILTERS = [
-  "Achu",
-  "Fried Rice",
-  "Corn Chaff",
-  "Eru",
-  "Grilled Fish",
-  "Koki",
-  "Mbanga",
-  "Ndole",
-  "Pepper Soup",
-  "Suya",
-  "Street Food",
-];
-
-const FILTER_ALIASES = {
-  "Fried Rice": ["fried rice", "friend rice"],
-};
-
-const FOOD_FILTER_IMAGES = {
-  Achu: require("../assets/foods/achu.png"),
-  "Fried Rice": require("../assets/foods/fried-rice.png"),
-  "Corn Chaff": require("../assets/foods/corn-chaff.png"),
-  Eru: require("../assets/foods/eru.png"),
-  "Grilled Fish": require("../assets/foods/grilled-fish.png"),
-  Koki: require("../assets/foods/koki.png"),
-  Mbanga: require("../assets/foods/mbanga.png"),
-  Ndole: require("../assets/foods/ndole.png"),
-  "Pepper Soup": require("../assets/foods/pepper-soup.png"),
-  Suya: require("../assets/foods/suya.png"),
-  // 'Street Food': require('../assets/foods/street-food.png'),
-};
+import {
+  FOOD_FILTERS,
+  FILTER_ALIASES,
+  FOOD_FILTER_IMAGES,
+} from "../data/foodFilters";
 
 const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
   return (
@@ -82,7 +55,7 @@ export default function HomeScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
     headerHeight: 100,
-    headerBackgroundColor: "#fff7ec",
+    headerBackgroundColor: "orange",
   });
 
   useEffect(() => {

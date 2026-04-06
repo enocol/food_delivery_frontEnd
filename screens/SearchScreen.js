@@ -25,6 +25,11 @@ export default function SearchScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "Search", openCartSheet);
 
+  useRootCartHeader(navigation, cartCount, "", openCartSheet, {
+    headerHeight: 100,
+    headerBackgroundColor: "orange",
+  });
+
   useEffect(() => {
     let isActive = true;
 

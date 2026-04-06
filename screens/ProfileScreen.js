@@ -21,7 +21,12 @@ export default function ProfileScreen({ navigation }) {
   const [locationCoords, setLocationCoords] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
 
-  useRootCartHeader(navigation, cartCount, "Profile", openCartSheet);
+  // useRootCartHeader(navigation, cartCount, "Profile", openCartSheet);
+
+  useRootCartHeader(navigation, cartCount, "Profile", openCartSheet, {
+    headerHeight: 100,
+    headerBackgroundColor: "orange",
+  });
 
   const loadCurrentLocation = useCallback(async () => {
     try {

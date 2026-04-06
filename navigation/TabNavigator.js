@@ -30,7 +30,7 @@ export default function TabNavigator() {
         },
         headerTitleStyle: styles.headerTitle,
         headerShadowVisible: true,
-        sceneStyle: { backgroundColor: "#fff" },
+        sceneStyle: { backgroundColor: "#fff", flex: 1 },
         tabBarIcon: ({ color, focused, size }) => {
           let iconName = "home-outline";
 
@@ -55,7 +55,11 @@ export default function TabNavigator() {
       <Tab.Screen
         name="HomeTab"
         component={HomeScreen}
-        options={{ title: "", tabBarLabel: "", headerShown: true }}
+        options={{
+          title: "",
+          tabBarLabel: "",
+          headerShown: true,
+        }}
       />
       <Tab.Screen
         name="SearchTab"
