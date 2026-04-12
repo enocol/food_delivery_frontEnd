@@ -781,6 +781,12 @@ const styles = StyleSheet.create({
     color: "#202420",
     marginBottom: 16,
   },
+  orderRestaurantText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#2f2318",
+    marginBottom: 6,
+  },
 
   orderIdText: {
     fontSize: 20,

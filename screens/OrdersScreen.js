@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, memo, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   ActivityIndicator,
@@ -63,6 +63,72 @@ function getOrderTotal(order) {
   return 0;
 }
 
+function getRestaurantName(order) {
+  if (
+    typeof order?.restaurantName === "string" &&
+    order.restaurantName.trim()
+  ) {
+    return order.restaurantName.trim();
+  }
+
+  if (
+    typeof order?.restaurant_name === "string" &&
+    order.restaurant_name.trim()
+  ) {
+    return order.restaurant_name.trim();
+  }
+
+  if (
+    typeof order?.restaurant?.name === "string" &&
+    order.restaurant.name.trim()
+  ) {
+    return order.restaurant.name.trim();
+  }
+
+  if (Array.isArray(order?.items) && order.items.length > 0) {
+    const firstWithName = order.items.find(
+      (item) =>
+        typeof item?.restaurantName === "string" && item.restaurantName.trim(),
+    );
+
+    if (firstWithName?.restaurantName) {
+      return firstWithName.restaurantName.trim();
+    }
+  }
+
+  return "Restaurant unavailable";
+}
+
+const OrderCard = memo(function OrderCard({ item }) {
+  const createdAt = item?.createdAt || item?.created_at;
+  const itemCount = getItemCount(item);
+  const total = getOrderTotal(item);
+  const status = item?.status || item?.payment?.status || "confirmed";
+  const restaurantName = getRestaurantName(item);
+
+  return (
+    <View style={styles.orderCard}>
+      <Text style={styles.orderRestaurantText}>{restaurantName}</Text>
+      <View style={styles.orderRowBetween}>
+        <Text style={styles.orderMetaText}>{toDateLabel(createdAt)}</Text>
+        <Text style={styles.orderStatusText}>{status}</Text>
+      </View>
+      <View style={styles.orderRowBetween}>
+        <Text style={styles.orderSummaryText}>{itemCount} item(s)</Text>
+        <Text style={styles.orderTotalText}>{formatXaf(total)}</Text>
+      </View>
+    </View>
+  );
+});
+
+const ORDER_LIST_HEADER = (
+  <Text style={styles.ordersHeading}>Order History</Text>
+);
+
+function keyExtractor(item, index) {
+  return String(item?.id || item?.orderRef || index);
+}
+
 export default function OrdersScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
   const { firebaseUid, getAuthToken } = useAuth();
@@ -117,28 +183,12 @@ export default function OrdersScreen({ navigation }) {
     });
   }, [orders]);
 
-  const renderOrder = ({ item }) => {
-    const createdAt = item?.createdAt || item?.created_at;
-    const itemCount = getItemCount(item);
-    const total = getOrderTotal(item);
-    const status = item?.status || item?.payment?.status || "confirmed";
+  const renderOrder = useCallback(({ item }) => <OrderCard item={item} />, []);
 
-    return (
-      <View>
-        <View style={styles.orderCard}>
-          <View style={styles.orderRowBetween}>
-            <Text style={styles.orderMetaText}>{toDateLabel(createdAt)}</Text>
-            <Text style={styles.orderStatusText}>{status}</Text>
-          </View>
-
-          <View style={styles.orderRowBetween}>
-            <Text style={styles.orderSummaryText}>{itemCount} item(s)</Text>
-            <Text style={styles.orderTotalText}>{formatXaf(total)}</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
+  const handleRefresh = useCallback(
+    () => loadOrders({ refresh: true }),
+    [loadOrders],
+  );
 
   const renderContent = () => {
     if (loading) {
@@ -179,16 +229,16 @@ export default function OrdersScreen({ navigation }) {
     return (
       <FlatList
         data={sortedOrders}
-        keyExtractor={(item, index) =>
-          String(item?.id || item?.orderRef || index)
-        }
+        keyExtractor={keyExtractor}
         renderItem={renderOrder}
         contentContainerStyle={styles.ordersListContent}
         refreshing={refreshing}
-        onRefresh={() => loadOrders({ refresh: true })}
-        ListHeaderComponent={
-          <Text style={styles.ordersHeading}>Order History</Text>
-        }
+        onRefresh={handleRefresh}
+        ListHeaderComponent={ORDER_LIST_HEADER}
+        removeClippedSubviews
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
       />
     );
   };
