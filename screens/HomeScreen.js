@@ -91,6 +91,8 @@ export default function HomeScreen({ navigation }) {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [restaurants, setRestaurants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshNonce, setRefreshNonce] = useState(0);
   const [error, setError] = useState("");
   const [deliveryLocation, setDeliveryLocation] = useState(
     "Fetching location...",
@@ -240,6 +242,7 @@ export default function HomeScreen({ navigation }) {
       } finally {
         if (isActive) {
           setIsLoading(false);
+          setIsRefreshing(false);
         }
       }
     };
@@ -249,7 +252,12 @@ export default function HomeScreen({ navigation }) {
     return () => {
       isActive = false;
     };
-  }, [selectedFood, debouncedSearchQuery]);
+  }, [selectedFood, debouncedSearchQuery, refreshNonce]);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    setRefreshNonce((value) => value + 1);
+  }, []);
 
   const handleOpenRestaurant = useCallback(
     (restaurantId) => {
@@ -377,6 +385,8 @@ export default function HomeScreen({ navigation }) {
           data={restaurants}
           keyExtractor={keyExtractor}
           renderItem={renderRestaurantItem}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
           contentContainerStyle={styles.restaurantList}
           initialNumToRender={4}
           maxToRenderPerBatch={4}
