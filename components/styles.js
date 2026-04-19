@@ -86,17 +86,57 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     position: "absolute",
-    backgroundColor: "#000000",
+    backgroundColor: "rgba(246, 250, 255, 0.62)",
     height: 75,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#dbe4d7",
+    borderColor: "rgba(255, 255, 255, 0.86)",
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 20,
     paddingTop: Platform.OS === "android" ? 20 : 15,
     bottom: 16,
-    elevation: 5,
+    overflow: "hidden",
+    elevation: 18,
+    shadowColor: "#2a2119",
+    shadowOpacity: 0.2,
+    shadowOffset: {
+      width: 0,
+      height: 12,
+    },
+    shadowRadius: 24,
+  },
+
+  tabBarGlassWrap: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+
+  tabBarGlassBlur: {
+    flex: 1,
+  },
+
+  tabBarGlassAndroidFallback: {
+    flex: 1,
+  },
+
+  tabBarGlassTopShine: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  tabBarGlassBottomTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  tabBarGlassOrb: {
+    ...StyleSheet.absoluteFillObject,
+    top: -22,
+    left: "18%",
+    width: 140,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255,255,255,0.28)",
   },
 
   tabButtonContent: {
