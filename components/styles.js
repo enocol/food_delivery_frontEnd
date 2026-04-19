@@ -155,37 +155,38 @@ const styles = StyleSheet.create({
   },
 
   foodFilterWrap: {
-    padding: 5,
+    paddingVertical: 6,
   },
 
   foodFilterScrollContent: {
     paddingHorizontal: 14,
-    gap: 8,
+    gap: 10,
   },
 
   foodFilterChip: {
+    backgroundColor: "#fffaf3",
+    borderWidth: 1,
     borderColor: "#f0d9bf",
-    borderRadius: 18,
-    padding: 5,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
   },
 
   foodFilterChipActive: {
-    backgroundColor: "Transparent",
+    backgroundColor: "#bd3f1b",
     borderColor: "#bd3f1b",
-    borderWidth: 0.5,
   },
 
   foodFilterChipText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#000000",
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#3f2b1d",
   },
 
   foodFilterChipTextActive: {
-    color: "#6b6359",
+    color: "#ffffff",
   },
 
   foodFilterIcon: {
@@ -197,7 +198,6 @@ const styles = StyleSheet.create({
 
   foodFilterItem: {
     alignItems: "center",
-    width: 100,
   },
 
   restaurantList: {

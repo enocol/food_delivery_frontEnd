@@ -18,16 +18,34 @@ import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import styles from "../components/styles";
 import { toImageSource } from "../utils/imageSource";
-import { fetchRestaurants } from "../apis/restaurantApi";
+import { fetchRestaurantMenu, fetchRestaurants } from "../apis/restaurantApi";
 import {
   getCurrentLocation,
   getLocationAddress,
 } from "../utils/locationService";
-import {
-  FOOD_FILTERS,
-  FILTER_ALIASES,
-  FOOD_FILTER_IMAGES,
-} from "../data/foodFilters";
+import { FOOD_FILTERS, FILTER_ALIASES } from "../data/foodFilters";
+
+function getFilterTerms(food) {
+  return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
+    .map((term) =>
+      String(term || "")
+        .trim()
+        .toLowerCase(),
+    )
+    .filter(Boolean);
+}
+
+function menuItemMatchesFilter(menuItem, terms) {
+  const text = `${menuItem?.name || ""} ${menuItem?.description || ""}`
+    .trim()
+    .toLowerCase();
+
+  if (!text) {
+    return false;
+  }
+
+  return terms.some((term) => text.includes(term));
+}
 
 const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
   return (
@@ -55,7 +73,7 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
 
 export default function HomeScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
-  const [selectedFood, setSelectedFood] = useState(null);
+  const [selectedFood, setSelectedFood] = useState("All");
   const [restaurants, setRestaurants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -129,11 +147,33 @@ export default function HomeScreen({ navigation }) {
       setError("");
 
       try {
-        const aliases = selectedFood
-          ? (FILTER_ALIASES[selectedFood] ?? [selectedFood])
-          : [];
-        const search = aliases[0];
-        const data = await fetchRestaurants({ search });
+        const activeFilter =
+          selectedFood && selectedFood !== "All" ? selectedFood : null;
+        const allRestaurants = await fetchRestaurants();
+
+        let data = allRestaurants;
+
+        if (activeFilter) {
+          const terms = getFilterTerms(activeFilter);
+          const menuResponses = await Promise.allSettled(
+            allRestaurants.map((restaurant) =>
+              fetchRestaurantMenu(restaurant.id),
+            ),
+          );
+
+          data = allRestaurants.filter((restaurant, index) => {
+            const menuResponse = menuResponses[index];
+
+            if (menuResponse.status !== "fulfilled") {
+              return false;
+            }
+
+            const menuItems = menuResponse.value?.menu || [];
+            return menuItems.some((menuItem) =>
+              menuItemMatchesFilter(menuItem, terms),
+            );
+          });
+        }
 
         if (!isActive) {
           return;
@@ -241,29 +281,32 @@ export default function HomeScreen({ navigation }) {
           >
             {FOOD_FILTERS.map((food) => {
               const isActive = selectedFood === food;
-              const iconSource =
-                FOOD_FILTER_IMAGES[food] ?? FOOD_FILTER_IMAGES.Achu;
               return (
                 <View key={food} style={styles.foodFilterItem}>
                   <Pressable
                     onPress={() =>
-                      setSelectedFood((prev) => (prev === food ? null : food))
+                      setSelectedFood((prev) => {
+                        if (food === "All") {
+                          return "All";
+                        }
+
+                        return prev === food ? "All" : food;
+                      })
                     }
                     style={[
                       styles.foodFilterChip,
                       isActive ? styles.foodFilterChipActive : null,
                     ]}
                   >
-                    <Image source={iconSource} style={styles.foodFilterIcon} />
+                    <Text
+                      style={[
+                        styles.foodFilterChipText,
+                        isActive ? styles.foodFilterChipTextActive : null,
+                      ]}
+                    >
+                      {food}
+                    </Text>
                   </Pressable>
-                  <Text
-                    style={[
-                      styles.foodFilterChipText,
-                      isActive ? styles.foodFilterChipTextActive : null,
-                    ]}
-                  >
-                    {food}
-                  </Text>
                 </View>
               );
             })}

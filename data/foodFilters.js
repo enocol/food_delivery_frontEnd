@@ -1,4 +1,5 @@
 export const FOOD_FILTERS = [
+  "All",
   "Achu",
   "Fried Rice",
   "Corn Chaff",
