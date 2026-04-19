@@ -10,6 +10,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -47,6 +48,18 @@ function menuItemMatchesFilter(menuItem, terms) {
   return terms.some((term) => text.includes(term));
 }
 
+function restaurantMatchesQuery(restaurant, query) {
+  const text = `${restaurant?.name || ""} ${restaurant?.cuisine || ""}`
+    .trim()
+    .toLowerCase();
+
+  if (!text || !query) {
+    return false;
+  }
+
+  return text.includes(query);
+}
+
 const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
   return (
     <TouchableOpacity
@@ -74,6 +87,8 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
 export default function HomeScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
   const [selectedFood, setSelectedFood] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [restaurants, setRestaurants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -109,6 +124,16 @@ export default function HomeScreen({ navigation }) {
   });
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 250);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [searchQuery]);
+
+  useEffect(() => {
     let isActive = true;
 
     const loadDeliveryLocation = async () => {
@@ -142,6 +167,16 @@ export default function HomeScreen({ navigation }) {
       }
     };
 
+    loadDeliveryLocation();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
     const loadRestaurants = async () => {
       setIsLoading(true);
       setError("");
@@ -149,31 +184,46 @@ export default function HomeScreen({ navigation }) {
       try {
         const activeFilter =
           selectedFood && selectedFood !== "All" ? selectedFood : null;
+        const query = debouncedSearchQuery.trim().toLowerCase();
         const allRestaurants = await fetchRestaurants();
+        const selectedMenuTerms = activeFilter
+          ? getFilterTerms(activeFilter)
+          : [];
+        const queryTerms = query ? [query] : [];
+        const needsMenuLookup = Boolean(activeFilter || query);
 
-        let data = allRestaurants;
+        let menuResponses = [];
 
-        if (activeFilter) {
-          const terms = getFilterTerms(activeFilter);
-          const menuResponses = await Promise.allSettled(
+        if (needsMenuLookup) {
+          menuResponses = await Promise.allSettled(
             allRestaurants.map((restaurant) =>
               fetchRestaurantMenu(restaurant.id),
             ),
           );
-
-          data = allRestaurants.filter((restaurant, index) => {
-            const menuResponse = menuResponses[index];
-
-            if (menuResponse.status !== "fulfilled") {
-              return false;
-            }
-
-            const menuItems = menuResponse.value?.menu || [];
-            return menuItems.some((menuItem) =>
-              menuItemMatchesFilter(menuItem, terms),
-            );
-          });
         }
+
+        const data = allRestaurants.filter((restaurant, index) => {
+          const menuResponse = menuResponses[index];
+          const menuItems =
+            menuResponse?.status === "fulfilled"
+              ? menuResponse.value?.menu || []
+              : [];
+
+          const matchesSelectedMenu =
+            !activeFilter ||
+            menuItems.some((menuItem) =>
+              menuItemMatchesFilter(menuItem, selectedMenuTerms),
+            );
+
+          const matchesQuery =
+            !query ||
+            restaurantMatchesQuery(restaurant, query) ||
+            menuItems.some((menuItem) =>
+              menuItemMatchesFilter(menuItem, queryTerms),
+            );
+
+          return matchesSelectedMenu && matchesQuery;
+        });
 
         if (!isActive) {
           return;
@@ -194,13 +244,12 @@ export default function HomeScreen({ navigation }) {
       }
     };
 
-    loadDeliveryLocation();
     loadRestaurants();
 
     return () => {
       isActive = false;
     };
-  }, [selectedFood]);
+  }, [selectedFood, debouncedSearchQuery]);
 
   const handleOpenRestaurant = useCallback(
     (restaurantId) => {
@@ -313,6 +362,17 @@ export default function HomeScreen({ navigation }) {
           </ScrollView>
         </View>
 
+        <View style={styles.homeSearchWrap}>
+          <Ionicons name="search" size={18} color="#7f5a3e" />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search restaurant or menu"
+            placeholderTextColor="#8b8177"
+            style={styles.homeSearchInput}
+          />
+        </View>
+
         <FlatList
           data={restaurants}
           keyExtractor={keyExtractor}
@@ -349,7 +409,7 @@ export default function HomeScreen({ navigation }) {
                       : "No restaurants found."}
                   </Text>
                   <Text style={styles.emptySub}>
-                    {error || "Try another food filter."}
+                    {error || "Try another food filter or search term."}
                   </Text>
                 </View>
               )}

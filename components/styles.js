@@ -200,6 +200,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  homeSearchWrap: {
+    marginHorizontal: 14,
+    marginTop: 4,
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#fffaf3",
+    borderWidth: 1,
+    borderColor: "#ecd8c2",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+  },
+
+  homeSearchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: "#2f2a25",
+  },
+
   restaurantList: {
     paddingBottom: 120,
     gap: 30,

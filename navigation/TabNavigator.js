@@ -5,7 +5,6 @@ import styles from "../components/styles";
 import HomeScreen from "../screens/HomeScreen";
 import OrdersScreen from "../screens/OrdersScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import SearchScreen from "../screens/SearchScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -37,8 +36,6 @@ export default function TabNavigator() {
 
           if (route.name === "HomeTab") {
             iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "SearchTab") {
-            iconName = focused ? "search" : "search-outline";
           } else if (route.name === "OrdersTab") {
             iconName = focused ? "receipt" : "receipt-outline";
           } else if (route.name === "ProfileTab") {
@@ -62,17 +59,6 @@ export default function TabNavigator() {
           title: "",
           tabBarLabel: "",
           headerShown: true,
-        }}
-      />
-      <Tab.Screen
-        name="SearchTab"
-        component={SearchScreen}
-        options={{
-          title: "",
-          tabBarLabel: "",
-          headerShown: true,
-          headerTransparent: false,
-          headerTitle: "",
         }}
       />
       <Tab.Screen
