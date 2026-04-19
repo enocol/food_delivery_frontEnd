@@ -63,7 +63,7 @@ function mapMenuItem(item, fallbackImage) {
     description: item.description,
     price: Number(item.price) || 0,
     isAvailable: Boolean(item.isAvailable),
-    image: fallbackImage || DEFAULT_RESTAURANT_IMAGE,
+    image: item.imageUrl || fallbackImage || DEFAULT_RESTAURANT_IMAGE,
   };
 }
 

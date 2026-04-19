@@ -38,7 +38,7 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
     >
       <Image
         source={toImageSource(item.image)}
-        style={styles.restaurantImage}
+        style={styles.detailsHeroImage}
         resizeMode="contain"
       />
       <View style={styles.restaurantContent}>
