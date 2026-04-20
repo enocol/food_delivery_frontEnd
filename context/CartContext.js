@@ -9,6 +9,7 @@ import React, {
 import * as Haptics from "expo-haptics";
 import { Platform, Vibration } from "react-native";
 import { useAuth } from "./AuthContext";
+import { playCartTickSound } from "../utils/cartFeedback";
 import { normalizeImageForState } from "../utils/imageSource";
 import {
   addItemToCart,
@@ -54,6 +55,8 @@ async function triggerAddToCartFeedback() {
     return;
   }
 
+  void playCartTickSound();
+
   try {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   } catch {
@@ -66,6 +69,8 @@ async function triggerIncreaseQtyFeedback() {
     return;
   }
 
+  void playCartTickSound();
+
   try {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   } catch {
@@ -77,6 +82,8 @@ async function triggerDecreaseQtyFeedback() {
   if (Platform.OS === "web") {
     return;
   }
+
+  void playCartTickSound();
 
   try {
     await Haptics.selectionAsync();
