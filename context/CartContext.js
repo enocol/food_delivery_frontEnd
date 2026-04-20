@@ -6,6 +6,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import * as Haptics from "expo-haptics";
+import { Platform, Vibration } from "react-native";
 import { useAuth } from "./AuthContext";
 import { normalizeImageForState } from "../utils/imageSource";
 import {
@@ -45,6 +47,42 @@ function isTransientCartLoadError(error) {
     message.includes("etimedout") ||
     message.includes("socket hang up")
   );
+}
+
+async function triggerAddToCartFeedback() {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  try {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  } catch {
+    Vibration.vibrate(20);
+  }
+}
+
+async function triggerIncreaseQtyFeedback() {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  try {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  } catch {
+    Vibration.vibrate(12);
+  }
+}
+
+async function triggerDecreaseQtyFeedback() {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  try {
+    await Haptics.selectionAsync();
+  } catch {
+    Vibration.vibrate(10);
+  }
 }
 
 function toItemMap(cartPayload) {
@@ -195,6 +233,7 @@ export function CartProvider({ children }) {
       if (payload?.items) {
         setCartItems(toItemMap(payload));
         setCartSheetOpen(true);
+        void triggerAddToCartFeedback();
         return;
       }
 
@@ -221,6 +260,7 @@ export function CartProvider({ children }) {
         };
       });
       setCartSheetOpen(true);
+      void triggerAddToCartFeedback();
     },
     [ensureCart, firebaseUid],
   );
@@ -250,6 +290,7 @@ export function CartProvider({ children }) {
 
       if (payload?.items) {
         setCartItems(toItemMap(payload));
+        void triggerIncreaseQtyFeedback();
         return;
       }
 
@@ -257,6 +298,7 @@ export function CartProvider({ children }) {
         ...current,
         [key]: { ...current[key], qty: nextQty },
       }));
+      void triggerIncreaseQtyFeedback();
     },
     [cartItems, ensureCart, firebaseUid],
   );
@@ -282,6 +324,7 @@ export function CartProvider({ children }) {
 
         if (payload?.items) {
           setCartItems(toItemMap(payload));
+          void triggerDecreaseQtyFeedback();
           return;
         }
 
@@ -290,6 +333,7 @@ export function CartProvider({ children }) {
           delete updated[key];
           return updated;
         });
+        void triggerDecreaseQtyFeedback();
         return;
       }
 
@@ -307,6 +351,7 @@ export function CartProvider({ children }) {
       }
       if (payload?.items) {
         setCartItems(toItemMap(payload));
+        void triggerDecreaseQtyFeedback();
         return;
       }
 
@@ -314,6 +359,7 @@ export function CartProvider({ children }) {
         ...current,
         [key]: { ...current[key], qty: nextQty },
       }));
+      void triggerDecreaseQtyFeedback();
     },
     [cartItems, ensureCart, firebaseUid],
   );
