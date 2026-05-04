@@ -17,7 +17,7 @@ export default function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: "red",
-        tabBarInactiveTintColor: "#ffffff",
+        tabBarInactiveTintColor: "#000000",
         tabBarStyle: [styles.tabBar, { bottom: 16 + insets.bottom }],
         tabBarBackground: () => <View style={styles.tabBarGlassWrap}></View>,
 
