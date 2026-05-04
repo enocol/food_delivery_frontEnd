@@ -22,21 +22,24 @@ export default function StackNavigator() {
         screenOptions={{
           headerShadowVisible: false,
           headerTitleStyle: styles.headerTitle,
-          headerShown: false,
+          headerShown: true,
         }}
       >
         <Stack.Screen
           name="MainTabs"
           component={TabNavigator}
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+          }}
         />
         <Stack.Screen
           name="RestaurantDetails"
           component={RestaurantDetailsScreen}
           options={{
-            title: "Restaurant",
-            headerBackLabelVisible: false,
+            title: "",
             headerTransparent: true,
+            headerTitle: "",
+            headerBackVisible: false,
           }}
         />
         <Stack.Screen

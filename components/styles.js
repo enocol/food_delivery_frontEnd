@@ -9,13 +9,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 25,
     justifyContent: "center",
-    backgroundColor: "#fff",
     marginHorizontal: 12,
     borderRadius: 18,
     padding: 14,
   },
   gradientBackground: {
     flex: 1,
+    // borderRadius: 30,
+    // overflow: "hidden",
+    // padding: 1,
+    // marginHorizontal: 12,
   },
   headerTitle: {
     fontWeight: "800",
@@ -28,6 +31,8 @@ const styles = StyleSheet.create({
   },
   homeHeaderLocationWrap: {
     justifyContent: "center",
+
+    marginTop: 10,
   },
   homeHeaderLocationLabel: {
     fontSize: 12,
@@ -111,6 +116,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 24,
     overflow: "hidden",
+    backgroundColor: "goldenrod",
   },
 
   tabBarGlassBlur: {
@@ -256,8 +262,8 @@ const styles = StyleSheet.create({
 
   homeSearchInput: {
     flex: 1,
-    paddingVertical: 10,
-    fontSize: 14,
+    paddingVertical: 15,
+    fontSize: 20,
     color: "#2f2a25",
   },
 
@@ -398,6 +404,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
+    marginTop: 20,
   },
   avatarText: {
     color: "#fff",
@@ -832,8 +839,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   ordersListContent: {
+    marginTop: 20,
+    paddingTop: 40,
     padding: 16,
     paddingBottom: 120,
+
     gap: 10,
   },
   ordersHeading: {

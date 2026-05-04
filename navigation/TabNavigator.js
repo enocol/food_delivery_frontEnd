@@ -16,46 +16,11 @@ export default function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#ff6a00",
-        tabBarInactiveTintColor: "rgba(33, 24, 17, 0.95)",
-        tabBarShowLabel: false,
+        tabBarActiveTintColor: "red",
+        tabBarInactiveTintColor: "#ffffff",
         tabBarStyle: [styles.tabBar, { bottom: 16 + insets.bottom }],
-        tabBarBackground: () => (
-          <View style={styles.tabBarGlassWrap}>
-            <LinearGradient
-              colors={[
-                "rgba(255,255,255,0.74)",
-                "rgba(255,255,255,0.58)",
-                "rgba(214,233,250,0.62)",
-              ]}
-              start={{ x: 0.04, y: 0 }}
-              end={{ x: 0.96, y: 1 }}
-              style={styles.tabBarGlassAndroidFallback}
-            >
-              <LinearGradient
-                colors={[
-                  "rgba(255,255,255,0.78)",
-                  "rgba(255,255,255,0.34)",
-                  "rgba(255,255,255,0.14)",
-                ]}
-                start={{ x: 0.04, y: 0 }}
-                end={{ x: 0.96, y: 1 }}
-                style={styles.tabBarGlassTopShine}
-              />
-              <LinearGradient
-                colors={[
-                  "rgba(255,255,255,0.04)",
-                  "rgba(219,237,255,0.32)",
-                  "rgba(161,201,238,0.42)",
-                ]}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={styles.tabBarGlassBottomTint}
-              />
-              <View style={styles.tabBarGlassOrb} />
-            </LinearGradient>
-          </View>
-        ),
+        tabBarBackground: () => <View style={styles.tabBarGlassWrap}></View>,
+
         tabBarItemStyle: {
           flex: 1,
           justifyContent: "center",
@@ -66,9 +31,8 @@ export default function TabNavigator() {
           alignSelf: "center",
           margin: 0,
         },
-        headerTitleStyle: styles.headerTitle,
-        headerShadowVisible: true,
-        sceneStyle: { backgroundColor: "#fff", flex: 1 },
+
+        // sceneStyle: { backgroundColor: "red", flex: 1 },
         tabBarIcon: ({ color, focused, size }) => {
           let iconName = "home-outline";
 
@@ -97,6 +61,8 @@ export default function TabNavigator() {
           title: "",
           tabBarLabel: "",
           headerShown: true,
+          headerTransparent: false,
+          headerTitle: "",
         }}
       />
       <Tab.Screen
@@ -106,7 +72,7 @@ export default function TabNavigator() {
           title: "",
           tabBarLabel: "",
           headerShown: true,
-          headerTransparent: false,
+          headerTransparent: true,
           headerTitle: "",
         }}
       />
@@ -117,7 +83,7 @@ export default function TabNavigator() {
           title: "",
           tabBarLabel: "",
           headerShown: true,
-          headerTransparent: false,
+          headerTransparent: true,
           headerTitle: "",
         }}
       />

@@ -1,6 +1,6 @@
-import { registerRootComponent } from 'expo';
+import { registerRootComponent } from "expo";
 import { getAuth } from "firebase/auth";
-import App from './App';
+import App from "./App";
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
@@ -9,6 +9,6 @@ registerRootComponent(App);
 
 const auth = getAuth();
 
-auth.languageCode = 'it';
+auth.languageCode = "en";
 // To apply the default browser preference instead of explicitly setting it.
 // auth.useDeviceLanguage();

@@ -98,6 +98,7 @@ export default function HomeScreen({ navigation }) {
     "Fetching location...",
   );
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const renderHeaderLocation = useCallback(
     () => (
@@ -107,11 +108,11 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
         <View style={styles.homeHeaderLocationRow}>
-          <Ionicons name="location" size={14} color="#7c2d12" />
+          <Ionicons name="location" size={20} color="#7c2d12" />
           <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
             {deliveryLocation}
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#7c2d12" />
+          <Ionicons name="chevron-down" size={20} color="#7c2d12" />
         </View>
       </Pressable>
     ),
@@ -329,7 +330,6 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </Modal>
 
-        {/* <Text style={styles.heroTitle}>Order Food Across Cameroon</Text> */}
         <View style={styles.foodFilterWrap}>
           <ScrollView
             horizontal
@@ -370,14 +370,21 @@ export default function HomeScreen({ navigation }) {
           </ScrollView>
         </View>
 
-        <View style={styles.homeSearchWrap}>
-          <Ionicons name="search" size={18} color="#7f5a3e" />
+        <View
+          style={[
+            styles.homeSearchWrap,
+            isSearchFocused && { borderColor: "#000" },
+          ]}
+        >
+          <Ionicons name="search" size={24} color="#7f5a3e" />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search restaurant or menu"
             placeholderTextColor="#8b8177"
             style={styles.homeSearchInput}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
           />
         </View>
 
