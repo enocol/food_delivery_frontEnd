@@ -1,10 +1,10 @@
-import { Audio } from "expo-av";
+import { Audio } from "expo-audio";
 import { Platform } from "react-native";
 
 const CART_TICK_SOUND = require("../assets/sounds/cart-tick.wav");
 
 let audioModePromise = null;
-let cartTickSoundPromise = null;
+let cartTickPlayerPromise = null;
 
 async function ensureAudioMode() {
   if (Platform.OS === "web") {
@@ -13,9 +13,9 @@ async function ensureAudioMode() {
 
   if (!audioModePromise) {
     audioModePromise = Audio.setAudioModeAsync({
-      playsInSilentModeIOS: false,
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
+      playsInSilentMode: false,
+      shouldPlayInBackground: false,
+      interruptionMode: "mixWithOthers",
     }).catch((error) => {
       audioModePromise = null;
       throw error;
@@ -25,28 +25,25 @@ async function ensureAudioMode() {
   await audioModePromise;
 }
 
-async function getCartTickSound() {
+async function getCartTickPlayer() {
   if (Platform.OS === "web") {
     return null;
   }
 
-  if (!cartTickSoundPromise) {
-    cartTickSoundPromise = (async () => {
+  if (!cartTickPlayerPromise) {
+    cartTickPlayerPromise = (async () => {
       await ensureAudioMode();
 
-      const { sound } = await Audio.Sound.createAsync(CART_TICK_SOUND, {
-        shouldPlay: false,
-        volume: 0.32,
-      });
-
-      return sound;
+      const player = Audio.createAudioPlayer(CART_TICK_SOUND);
+      player.volume = 0.32;
+      return player;
     })().catch((error) => {
-      cartTickSoundPromise = null;
+      cartTickPlayerPromise = null;
       throw error;
     });
   }
 
-  return cartTickSoundPromise;
+  return cartTickPlayerPromise;
 }
 
 export async function playCartTickSound() {
@@ -55,15 +52,17 @@ export async function playCartTickSound() {
   }
 
   try {
-    const sound = await getCartTickSound();
+    const player = await getCartTickPlayer();
 
-    if (!sound) {
+    if (!player) {
       return;
     }
 
-    await sound.stopAsync().catch(() => undefined);
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
+    if (player.playing) {
+      player.pause();
+    }
+    await player.seekTo(0);
+    player.play();
   } catch {
     // Keep cart actions responsive even if sound playback is unavailable.
   }

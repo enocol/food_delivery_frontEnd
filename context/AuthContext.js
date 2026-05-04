@@ -6,24 +6,12 @@ import React, {
   useState,
 } from "react";
 import {
-  createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
+  signInWithPhoneNumber,
   signOut,
 } from "firebase/auth";
-import * as Crypto from "expo-crypto";
 import { auth } from "../utils/firebase";
-import {
-  generateOtp,
-  sendOtpEmail,
-  storeOtp,
-  verifyOtp,
-} from "../utils/otpService";
 import { syncUserWithNeon } from "../apis/userApi";
-
-// Salt used to derive a deterministic Firebase credential from an email address.
-// This never changes — do not modify after users have been created.
-const AUTH_SALT = "mbolo-eats-auth-v1";
 
 const AuthContext = createContext(null);
 
@@ -33,8 +21,17 @@ function mapAuthError(error) {
   }
 
   switch (error.code) {
-    case "auth/invalid-email":
-      return "Email address is invalid.";
+    case "auth/invalid-phone-number":
+      return "Phone number is invalid. Use E.164 format, e.g. +2376XXXXXXXX.";
+    case "auth/missing-phone-number":
+      return "Phone number is required.";
+    case "auth/invalid-verification-code":
+      return "The verification code is invalid.";
+    case "auth/code-expired":
+    case "auth/session-expired":
+      return "The verification code expired. Request a new code.";
+    case "auth/captcha-check-failed":
+      return "App verification failed. Please try again.";
     case "auth/user-disabled":
       return "This account has been disabled.";
     case "auth/too-many-requests":
@@ -44,58 +41,41 @@ function mapAuthError(error) {
   }
 }
 
-async function deriveFirebaseCredential(email) {
-  return Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    email.toLowerCase().trim() + AUTH_SALT,
-  );
+function formatAuthError(error) {
+  const message = mapAuthError(error);
+  if (!error?.code) {
+    return message;
+  }
+  return `[${error.code}] ${message}`;
 }
 
-function normalizeEmail(email) {
-  return email.toLowerCase().trim();
-}
-
-async function authenticateWithFirebase(email) {
-  const normalizedEmail = normalizeEmail(email);
-  const firebaseCredential = await deriveFirebaseCredential(normalizedEmail);
-
-  let result;
-  try {
-    result = await signInWithEmailAndPassword(
-      auth,
-      normalizedEmail,
-      firebaseCredential,
-    );
-  } catch (signInError) {
-    if (
-      signInError.code === "auth/user-not-found" ||
-      signInError.code === "auth/invalid-credential"
-    ) {
-      result = await createUserWithEmailAndPassword(
-        auth,
-        normalizedEmail,
-        firebaseCredential,
-      );
-    } else if (signInError.code === "auth/wrong-password") {
-      throw new Error(
-        "Could not complete sign-in. Request a new OTP code and try again.",
-      );
-    } else {
-      throw new Error(mapAuthError(signInError));
-    }
+function normalizePhoneNumber(phoneNumber) {
+  const raw = String(phoneNumber || "").trim();
+  if (!raw) {
+    return "";
   }
 
-  // Sync the authenticated Firebase user to the Neon users table.
-  // Fire-and-forget: a network failure here does not block sign-in.
-  syncUserWithNeon(result.user);
+  const compact = raw.replace(/[\s()-]/g, "");
+  const withPlus = compact.startsWith("00") ? `+${compact.slice(2)}` : compact;
 
-  return result;
+  if (withPlus.startsWith("+")) {
+    return withPlus;
+  }
+
+  // Default to Cameroon country code for local numbers.
+  const digits = withPlus.replace(/\D/g, "");
+  if (digits.length === 9) {
+    return `+237${digits}`;
+  }
+
+  return withPlus;
 }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authActionLoading, setAuthActionLoading] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
@@ -106,14 +86,29 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const sendOtpCode = async (email) => {
+  const sendPhoneCode = async (phoneNumber, applicationVerifier) => {
     setAuthActionLoading(true);
     try {
-      const normalizedEmail = normalizeEmail(email);
-      const otp = generateOtp();
-      await storeOtp(normalizedEmail, otp);
-      await sendOtpEmail(normalizedEmail, otp);
+      const normalizedPhone = normalizePhoneNumber(phoneNumber);
+      if (!normalizedPhone) {
+        throw new Error("Phone number is required.");
+      }
+
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        normalizedPhone,
+        applicationVerifier,
+      );
+      setConfirmationResult(confirmation);
+      return confirmation;
     } catch (error) {
+      if (error.code) {
+        console.warn("[AuthContext] sendPhoneCode failed", {
+          code: error.code,
+          message: error.message,
+        });
+        throw new Error(formatAuthError(error));
+      }
       throw new Error(
         error.message || "Could not send the code. Please try again.",
       );
@@ -122,21 +117,32 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const verifyAndSignIn = async (email, code) => {
+  const verifyPhoneCode = async (code) => {
     setAuthActionLoading(true);
     try {
-      const normalizedEmail = normalizeEmail(email);
-      const valid = await verifyOtp(normalizedEmail, code);
-      if (!valid) {
-        throw new Error(
-          "The code is incorrect or has expired. Request a new one.",
-        );
+      const normalizedCode = String(code || "").trim();
+      if (!normalizedCode) {
+        throw new Error("Verification code is required.");
       }
 
-      return await authenticateWithFirebase(normalizedEmail);
+      if (!confirmationResult) {
+        throw new Error("Request a verification code first.");
+      }
+
+      const result = await confirmationResult.confirm(normalizedCode);
+      setConfirmationResult(null);
+
+      // Sync the authenticated Firebase user to the Neon users table.
+      // Fire-and-forget: a network failure here does not block sign-in.
+      syncUserWithNeon(result.user);
+      return result;
     } catch (error) {
       if (error.code) {
-        throw new Error(mapAuthError(error));
+        console.warn("[AuthContext] verifyPhoneCode failed", {
+          code: error.code,
+          message: error.message,
+        });
+        throw new Error(formatAuthError(error));
       }
       throw error;
     } finally {
@@ -148,6 +154,7 @@ export function AuthProvider({ children }) {
     setAuthActionLoading(true);
     try {
       await signOut(auth);
+      setConfirmationResult(null);
     } finally {
       setAuthActionLoading(false);
     }
@@ -166,8 +173,8 @@ export function AuthProvider({ children }) {
       firebaseUid: user?.uid || null,
       authLoading,
       authActionLoading,
-      sendOtpCode,
-      verifyAndSignIn,
+      sendPhoneCode,
+      verifyPhoneCode,
       signOutUser,
       getAuthToken,
     }),

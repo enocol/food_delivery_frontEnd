@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 const DEFAULT_API_BASE_URL =
   Platform.OS === "ios"
     ? "http://192.168.0.152:5000/api"
-    : "http://localhost:5000/api";
+    : "http://192.168.0.152:5000/api";
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
@@ -35,13 +35,25 @@ export async function syncUserWithNeon(firebaseUser) {
   }
 
   try {
-    const response = await fetch(`${USERS_ENDPOINT}/sync`, {
+    let response = await fetch(`${USERS_ENDPOINT}/sync`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${idToken}`,
       },
     });
+
+    if (response.status === 401) {
+      // Token can be briefly stale right after auth state changes.
+      const refreshedToken = await firebaseUser.getIdToken(true);
+      response = await fetch(`${USERS_ENDPOINT}/sync`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshedToken}`,
+        },
+      });
+    }
 
     if (!response.ok) {
       const text = await response.text();

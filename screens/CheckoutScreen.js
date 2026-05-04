@@ -201,6 +201,7 @@ export default function CheckoutScreen({ navigation }) {
       const paymentMethodLabel =
         PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod)?.label ||
         selectedPaymentMethod;
+      console.log("Creating order with payload:", cartItems);
 
       const orderRecord = await createOrder(token, firebaseUid, {
         orderRef,
@@ -219,6 +220,7 @@ export default function CheckoutScreen({ navigation }) {
           name: item.name,
           qty: item.qty,
           price: item.price,
+          restaurant_id: item.restaurantId,
           restaurantName: item.restaurantName,
         })),
       });

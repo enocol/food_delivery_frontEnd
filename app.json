@@ -36,7 +36,8 @@
       "favicon": "./assets/splash-icon.png"
     },
     "plugins": [
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-audio"
     ]
   }
 }
