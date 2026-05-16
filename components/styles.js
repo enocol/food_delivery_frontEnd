@@ -319,6 +319,29 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
+  restaurantMetaRow: {
+    marginTop: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  likeButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "#e6d4bf",
+    backgroundColor: "#fff5ea",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  likeButtonPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
+  },
+
   searchHeaderBlock: {
     paddingHorizontal: 16,
     paddingTop: 16,

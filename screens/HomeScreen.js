@@ -16,10 +16,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
+import LikeButton from "../components/LikeButton";
 import styles from "../components/styles";
 import { toImageSource } from "../utils/imageSource";
 import { fetchRestaurantMenu, fetchRestaurants } from "../apis/restaurantApi";
+import { fetchLikes, likeRestaurant, unlikeRestaurant } from "../apis/likesApi";
 import {
   getCurrentLocation,
   getLocationAddress,
@@ -60,7 +63,12 @@ function restaurantMatchesQuery(restaurant, query) {
   return text.includes(query);
 }
 
-const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
+const RestaurantCard = React.memo(function RestaurantCard({
+  item,
+  onPress,
+  liked,
+  onToggleLike,
+}) {
   return (
     <TouchableOpacity
       activeOpacity={0.88}
@@ -78,7 +86,10 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
           <Text style={styles.rating}>{item.rating}</Text>
         </View>
         <Text style={styles.metaText}>{item.cuisine}</Text>
-        <Text style={styles.metaText}>{item.eta}</Text>
+        <View style={styles.restaurantMetaRow}>
+          <Text style={styles.metaText}>{item.eta}</Text>
+          <LikeButton liked={liked} onPress={() => onToggleLike(item.id)} />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -86,6 +97,7 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
 
 export default function HomeScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
+  const { firebaseUid } = useAuth();
   const [selectedFood, setSelectedFood] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -99,6 +111,34 @@ export default function HomeScreen({ navigation }) {
   );
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [likedRestaurantIds, setLikedRestaurantIds] = useState(() => ({}));
+
+  // Seed liked state from the server whenever a user is authenticated.
+  useEffect(() => {
+    if (!firebaseUid) {
+      setLikedRestaurantIds({});
+      return;
+    }
+
+    let isActive = true;
+
+    fetchLikes(firebaseUid)
+      .then((rows) => {
+        if (!isActive) return;
+        const map = {};
+        rows.forEach((row) => {
+          map[row.restaurantId] = true;
+        });
+        setLikedRestaurantIds(map);
+      })
+      .catch((error) =>
+        console.warn("[LikeButton] failed to load likes", error),
+      );
+
+    return () => {
+      isActive = false;
+    };
+  }, [firebaseUid]);
 
   const renderHeaderLocation = useCallback(
     () => (
@@ -267,11 +307,37 @@ export default function HomeScreen({ navigation }) {
     [navigation],
   );
 
+  const handleToggleLike = useCallback(
+    (restaurantId) => {
+      setLikedRestaurantIds((previous) => {
+        const isCurrentlyLiked = Boolean(previous[restaurantId]);
+        if (isCurrentlyLiked) {
+          unlikeRestaurant(firebaseUid, restaurantId).catch((error) =>
+            console.warn("[LikeButton] unlike failed", error),
+          );
+        } else {
+          likeRestaurant(firebaseUid, restaurantId).catch((error) =>
+            console.warn("[LikeButton] like failed", error),
+          );
+        }
+        return { ...previous, [restaurantId]: !isCurrentlyLiked };
+      });
+    },
+    [firebaseUid],
+  );
+
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
   const renderRestaurantItem = useCallback(
-    ({ item }) => <RestaurantCard item={item} onPress={handleOpenRestaurant} />,
-    [handleOpenRestaurant],
+    ({ item }) => (
+      <RestaurantCard
+        item={item}
+        onPress={handleOpenRestaurant}
+        liked={Boolean(likedRestaurantIds[item.id])}
+        onToggleLike={handleToggleLike}
+      />
+    ),
+    [handleOpenRestaurant, handleToggleLike, likedRestaurantIds],
   );
 
   let emptyStateIconName = "restaurant-outline";
