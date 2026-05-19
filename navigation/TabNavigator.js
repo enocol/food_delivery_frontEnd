@@ -1,12 +1,52 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { LinearGradient } from "expo-linear-gradient";
-import { View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import styles from "../components/styles";
+import sharedStyles from "../components/styles";
 import HomeScreen from "../screens/HomeScreen";
 import OrdersScreen from "../screens/OrdersScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    tabBar: {
+      position: "absolute",
+      backgroundColor: "rgba(246, 250, 255, 0.62)",
+      height: 75,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: "rgba(255, 255, 255, 0.86)",
+      alignItems: "center",
+      justifyContent: "center",
+      marginHorizontal: 20,
+      paddingTop: Platform.OS === "android" ? 20 : 15,
+      bottom: 16,
+      overflow: "hidden",
+      elevation: 18,
+      shadowColor: "#2a2119",
+      shadowOpacity: 0.2,
+      shadowOffset: { width: 0, height: 12 },
+      shadowRadius: 24,
+    },
+    tabBarGlassWrap: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderRadius: 24,
+      overflow: "hidden",
+      backgroundColor: "goldenrod",
+    },
+    tabBarLabel: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 12,
+      fontWeight: "800",
+    },
+  }),
+};
 
 const Tab = createBottomTabNavigator();
 

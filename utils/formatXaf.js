@@ -1,3 +1,4 @@
 export function formatXaf(amount) {
-  return `${amount.toLocaleString('fr-FR')} XAF`;
+  if (amount == null) return "";
+  return `${amount.toLocaleString("fr-FR")} XAF`;
 }

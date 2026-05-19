@@ -5,15 +5,11 @@ const DEFAULT_API_BASE_URL =
     ? "http://192.168.0.152:5000/api"
     : "http://192.168.0.152:5000/api";
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-const ORDERS_ENDPOINT =
-  process.env.EXPO_PUBLIC_ORDERS_ENDPOINT ||
-  `${API_BASE_URL.replace(/\/+$/, "")}/orders`;
+const ORDERS_ENDPOINT = `${API_BASE_URL.replace(/\/+$/, "")}/orders`;
 
-const ORDERS_BY_USER_ENDPOINT =
-  process.env.EXPO_PUBLIC_ORDERS_BY_USER_ENDPOINT || `${ORDERS_ENDPOINT}/user`;
+const ORDERS_BY_USER_ENDPOINT = `${ORDERS_ENDPOINT}/user`;
 
 const ORDER_DEBUG_ENABLED =
   __DEV__ && process.env.EXPO_PUBLIC_DEBUG_ORDER_API === "true";

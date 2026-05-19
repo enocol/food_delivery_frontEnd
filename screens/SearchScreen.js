@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Image,
-  Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -12,9 +12,69 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
-import styles from "../components/styles";
+import sharedStyles from "../components/styles";
 import { toImageSource } from "../utils/imageSource";
 import { fetchRestaurants } from "../apis/restaurantApi";
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    searchHeaderBlock: {
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 12,
+    },
+    sectionTitle: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 28,
+      fontWeight: "900",
+      color: "#202420",
+    },
+    sectionSubtitle: {
+      fontFamily: "Inter_400Regular",
+      fontSize: 14,
+      color: "#637063",
+      marginTop: 5,
+      marginBottom: 12,
+    },
+    searchInput: {
+      fontFamily: "Inter_400Regular",
+      backgroundColor: "#fff",
+      borderWidth: 1,
+      borderColor: "#dbe4d7",
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 14,
+      color: "#202420",
+    },
+    searchResultsWrap: {
+      paddingHorizontal: 14,
+      paddingBottom: 20,
+    },
+    searchResultCard: {
+      backgroundColor: "#fff",
+      borderRadius: 16,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: "#dbe4d7",
+      marginBottom: 12,
+    },
+    searchResultImage: {
+      width: "100%",
+      height: 130,
+    },
+    searchResultContent: {
+      padding: 12,
+    },
+    searchResultTitle: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 16,
+      fontWeight: "800",
+      color: "#202420",
+    },
+  }),
+};
 
 export default function SearchScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
@@ -22,8 +82,6 @@ export default function SearchScreen({ navigation }) {
   const [restaurants, setRestaurants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-
-  useRootCartHeader(navigation, cartCount, "Search", openCartSheet);
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
     headerHeight: 100,

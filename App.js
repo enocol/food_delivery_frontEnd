@@ -1,6 +1,19 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  useFonts,
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+} from "@expo-google-fonts/nunito";
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+} from "@expo-google-fonts/inter";
 import CartBottomSheet from "./components/CartBottomSheet";
 import styles from "./components/styles";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -33,12 +46,6 @@ function AppContent() {
 function AuthenticatedApp() {
   const { cartCount, isCartSheetOpen, closeCartSheet } = useCart();
 
-  useEffect(() => {
-    if (cartCount === 0) {
-      closeCartSheet();
-    }
-  }, [cartCount, closeCartSheet]);
-
   const openCheckoutScreen = () => {
     closeCartSheet();
     if (navigationRef.isReady()) {
@@ -46,19 +53,42 @@ function AuthenticatedApp() {
     }
   };
 
+  const handleOrderNow = () => {
+    closeCartSheet();
+    if (navigationRef.isReady()) {
+      navigationRef.navigate("MainTabs", { screen: "HomeTab" });
+    }
+  };
+
   return (
     <>
       <StackNavigator />
       <CartBottomSheet
-        visible={isCartSheetOpen && cartCount > 0}
+        visible={isCartSheetOpen}
         onClose={closeCartSheet}
         onCheckout={openCheckoutScreen}
+        onOrderNow={handleOrderNow}
       />
     </>
   );
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+  });
+
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1, backgroundColor: "#FF0000" }} />;
+  }
+
   return (
     <SafeAreaProvider>
       <AuthProvider>

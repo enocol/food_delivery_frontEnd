@@ -9,17 +9,19 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import LikeButton from "../components/LikeButton";
-import styles from "../components/styles";
+import sharedStyles from "../components/styles";
 import { toImageSource } from "../utils/imageSource";
 import { fetchRestaurantMenu, fetchRestaurants } from "../apis/restaurantApi";
 import { fetchLikes, likeRestaurant, unlikeRestaurant } from "../apis/likesApi";
@@ -160,7 +162,7 @@ export default function HomeScreen({ navigation }) {
   );
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
-    headerHeight: 100,
+    headerHeight: 130,
     headerBackgroundColor: "orange",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
@@ -504,3 +506,199 @@ export default function HomeScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    heroTitle: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 30,
+      fontWeight: "900",
+      color: "#2f2a25",
+      paddingHorizontal: 10,
+    },
+    emptyStateIconWrap: {
+      width: 78,
+      height: 78,
+      borderRadius: 39,
+      backgroundColor: "#fff4e8",
+      borderWidth: 1,
+      borderColor: "#ffd1a6",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 14,
+    },
+    homeHeaderLocationContainer: {
+      paddingLeft: 16,
+      maxWidth: Platform.OS === "ios" ? "80%" : "60%",
+    },
+    homeHeaderLocationWrap: {
+      justifyContent: "center",
+      marginTop: 10,
+    },
+    homeHeaderLocationLabel: {
+      fontFamily: "Nunito_700Bold",
+      fontSize: 12,
+      fontWeight: "700",
+      color: "#7c2d12",
+      marginBottom: 2,
+    },
+    homeHeaderLocationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    homeHeaderLocationText: {
+      fontFamily: "Nunito_800ExtraBold",
+      flexShrink: 1,
+      fontSize: 14,
+      fontWeight: "800",
+      color: "#2f2318",
+    },
+    homeLocationModalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(26, 18, 13, 0.45)",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    homeLocationModalCard: {
+      width: "100%",
+      maxWidth: 420,
+      backgroundColor: "#fffaf4",
+      borderRadius: 22,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: "#f3d7b8",
+    },
+    homeLocationModalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 14,
+    },
+    homeLocationModalTitle: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 18,
+      fontWeight: "900",
+      color: "#2f2318",
+    },
+    homeLocationModalRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
+    },
+    homeLocationModalText: {
+      fontFamily: "Inter_400Regular",
+      flex: 1,
+      fontSize: 15,
+      lineHeight: 22,
+      color: "#5f5a53",
+    },
+    foodFilterWrap: {
+      paddingVertical: 6,
+    },
+    foodFilterScrollContent: {
+      paddingHorizontal: 14,
+      gap: 10,
+    },
+    foodFilterChip: {
+      backgroundColor: "#fffaf3",
+      borderWidth: 1,
+      borderColor: "#f0d9bf",
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    foodFilterChipActive: {
+      backgroundColor: "#bd3f1b",
+      borderColor: "#bd3f1b",
+    },
+    foodFilterChipText: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 14,
+      fontWeight: "800",
+      color: "#3f2b1d",
+    },
+    foodFilterChipTextActive: {
+      color: "#ffffff",
+    },
+    foodFilterIcon: {
+      width: 80,
+      height: 50,
+      marginBottom: 4,
+    },
+    foodFilterItem: {
+      alignItems: "center",
+    },
+    homeSearchWrap: {
+      marginHorizontal: 14,
+      marginTop: 4,
+      marginBottom: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: "#fffaf3",
+      borderWidth: 1,
+      borderColor: "#ecd8c2",
+      borderRadius: 14,
+      paddingHorizontal: 12,
+    },
+    homeSearchInput: {
+      fontFamily: "Inter_400Regular",
+      flex: 1,
+      paddingVertical: 15,
+      fontSize: 20,
+      color: "#2f2a25",
+    },
+    restaurantList: {
+      paddingBottom: 120,
+      gap: 30,
+      flexGrow: 1,
+    },
+    restaurantCard: {
+      borderRadius: 18,
+      overflow: "hidden",
+      backgroundColor: "#dbe4d7",
+      borderWidth: 1,
+      borderColor: "#dbe4d7",
+      elevation: 3,
+      width: "100%",
+    },
+    restaurantImage: {
+      width: "100%",
+      height: 260,
+      backgroundColor: "#ffffff",
+    },
+    restaurantContent: {
+      padding: 12,
+    },
+    rowBetween: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 8,
+    },
+    restaurantName: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 18,
+      fontWeight: "800",
+      color: "#2d2a27",
+      flex: 1,
+    },
+    rating: {
+      fontFamily: "Nunito_700Bold",
+      fontSize: 14,
+      color: "#7a5610",
+      fontWeight: "700",
+    },
+    restaurantMetaRow: {
+      marginTop: 3,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+  }),
+};

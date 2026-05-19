@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Mbolo Eats",
+    "name": "",
     "slug": "mbolo-eats",
     "scheme": "mboloeats",
     "version": "1.0.0",
@@ -9,8 +9,8 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#E6F4FE"
+      "resizeMode": "contain",
+      "backgroundColor": "#FF0000"
     },
     "ios": {
       "supportsTablet": true,
@@ -37,7 +37,8 @@
     },
     "plugins": [
       "expo-web-browser",
-      "expo-audio"
+      "expo-audio",
+      "expo-font"
     ]
   }
 }

@@ -111,7 +111,7 @@ function toItemMap(cartPayload) {
       id: itemId,
       name: row.name || row.menu_item_name || row.title || "Item",
       description: row.description || "",
-      image: normalizeImageForState(row.image || row.image_url),
+      image: normalizeImageForState(row.image || row.imageUrl || row.image_url),
       price: Number(row.price || row.unitPrice || 0),
       qty: Number(row.qty || row.quantity || 0),
       restaurantId: row.restaurantId || row.restaurant_id || null,
@@ -386,10 +386,8 @@ export function CartProvider({ children }) {
   }, [cartId, firebaseUid, getAuthToken]);
 
   const openCartSheet = useCallback(() => {
-    if (Object.keys(cartItems).length > 0) {
-      setCartSheetOpen(true);
-    }
-  }, [cartItems]);
+    setCartSheetOpen(true);
+  }, []);
 
   const closeCartSheet = useCallback(() => {
     setCartSheetOpen(false);

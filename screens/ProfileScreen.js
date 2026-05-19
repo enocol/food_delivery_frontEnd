@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -10,7 +17,7 @@ import {
   getLocationAddress,
 } from "../utils/locationService";
 import useRootCartHeader from "../components/useRootCartHeader";
-import styles from "../components/styles";
+import sharedStyles from "../components/styles";
 
 export default function ProfileScreen({ navigation }) {
   const { cartCount, cartTotal, openCartSheet } = useCart();
@@ -145,3 +152,101 @@ export default function ProfileScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    profileWrap: {
+      padding: 16,
+      gap: 14,
+    },
+    profileCard: {
+      backgroundColor: "#fff",
+      borderRadius: 18,
+      padding: 20,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: "#eadfd4",
+    },
+    avatarCircle: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: "#bd3f1b",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
+      marginTop: 20,
+    },
+    avatarText: {
+      fontFamily: "Nunito_900Black",
+      color: "#fff",
+      fontSize: 22,
+      fontWeight: "900",
+    },
+    profileName: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 22,
+      fontWeight: "900",
+      color: "#23201c",
+    },
+    profileMeta: {
+      fontFamily: "Inter_400Regular",
+      marginTop: 4,
+      fontSize: 14,
+      color: "#6a6258",
+    },
+    profileSignOutButton: {
+      marginTop: 14,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      backgroundColor: "#2f2318",
+    },
+    profileSignOutButtonDisabled: {
+      opacity: 0.6,
+    },
+    profileSignOutText: {
+      fontFamily: "Nunito_800ExtraBold",
+      color: "#ffffff",
+      fontSize: 14,
+      fontWeight: "800",
+    },
+    infoCard: {
+      backgroundColor: "#fff",
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: "#eadfd4",
+    },
+    infoCardTitle: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 16,
+      fontWeight: "800",
+      color: "#23201c",
+      marginBottom: 10,
+    },
+    infoLine: {
+      fontFamily: "Inter_400Regular",
+      fontSize: 14,
+      color: "#5f5a53",
+      marginBottom: 8,
+    },
+    profileLocationButton: {
+      marginTop: 6,
+      alignSelf: "flex-start",
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      backgroundColor: "#2f2318",
+    },
+    profileLocationButtonDisabled: {
+      opacity: 0.6,
+    },
+    profileLocationButtonText: {
+      color: "#ffffff",
+      fontSize: 13,
+      fontWeight: "700",
+    },
+  }),
+};

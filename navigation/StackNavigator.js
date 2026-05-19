@@ -4,11 +4,24 @@ import {
   NavigationContainer,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Platform, Pressable } from "react-native";
-import styles from "../components/styles";
+import { Platform, Pressable, StyleSheet } from "react-native";
+import sharedStyles from "../components/styles";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import RestaurantDetailsScreen from "../screens/RestaurantDetailsScreen";
 import TabNavigator from "./TabNavigator";
+import { View } from "react-native-web";
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    headerTitle: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontWeight: "800",
+      fontSize: 18,
+      letterSpacing: 0.4,
+    },
+  }),
+};
 
 const Stack = createNativeStackNavigator();
 
@@ -39,7 +52,10 @@ export default function StackNavigator() {
             title: "",
             headerTransparent: true,
             headerTitle: "",
-            headerBackVisible: false,
+            headerBackVisible: true,
+            headerBackTitle: "",
+            headerBackButtonDisplayMode: "minimal",
+            headerTintColor: "#FF0000",
           }}
         />
         <Stack.Screen
@@ -53,7 +69,8 @@ export default function StackNavigator() {
             headerBackTitle: "",
             headerBackButtonDisplayMode: "minimal",
             headerBackTitleVisible: false,
-            headerBackVisible: Platform.OS !== "ios",
+            // headerBackVisible: Platform.OS !== "ios",
+            headerBackVisible: false, // We'll handle the back button manually for better control over styling and hit area
             headerLeftContainerStyle:
               Platform.OS === "ios"
                 ? {
@@ -69,10 +86,10 @@ export default function StackNavigator() {
                       activeOpacity={0.7}
                       style={{ paddingHorizontal: 6, paddingVertical: 6 }}
                     >
-                      <Ionicons name="chevron-back" size={30} color="#000000" />
+                      <Ionicons name="chevron-back" size={50} color="#FF0000" />
                     </Pressable>
                   )
-                : undefined,
+                : undefined, // Android uses the native back button from headerBackVisible
           })}
         />
       </Stack.Navigator>

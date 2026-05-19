@@ -1,6 +1,20 @@
-import React from 'react';
-import { Animated, Pressable, View } from 'react-native';
-import styles from './styles';
+import React from "react";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import sharedStyles from "./styles";
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    tabButtonContent: {
+      flex: 1,
+      width: "100%",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    tabButtonInner: {},
+    tabButtonActiveOverlay: {},
+  }),
+};
 
 export default function AnimatedTabBarButton({
   children,
@@ -49,9 +63,16 @@ export default function AnimatedTabBarButton({
   };
 
   return (
-    <Pressable testID={testID} onPress={onPress} onLongPress={onLongPress} style={style}>
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={style}
+    >
       <Animated.View style={[styles.tabButtonInner, animatedStyle]}>
-        <Animated.View style={[styles.tabButtonActiveOverlay, { opacity: progress }]} />
+        <Animated.View
+          style={[styles.tabButtonActiveOverlay, { opacity: progress }]}
+        />
         <View style={styles.tabButtonContent}>{children}</View>
       </Animated.View>
     </Pressable>

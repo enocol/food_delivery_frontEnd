@@ -8,6 +8,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -16,7 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { firebaseConfig } from "../utils/firebase";
-import styles from "../components/styles";
+import sharedStyles from "../components/styles";
 
 export default function AuthScreen() {
   const { authActionLoading, sendPhoneCode, verifyPhoneCode } = useAuth();
@@ -156,3 +157,76 @@ export default function AuthScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    authWrap: {
+      paddingTop: 30,
+      gap: 14,
+      flex: 1,
+      paddingHorizontal: 16,
+    },
+    authTitle: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 28,
+      fontWeight: "900",
+      color: "#23201c",
+    },
+    authSubtitle: {
+      fontFamily: "Inter_400Regular",
+      marginTop: 6,
+      fontSize: 14,
+      color: "#6a6258",
+      lineHeight: 20,
+    },
+    authCard: {
+      backgroundColor: "#fff",
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: "#eadfd4",
+      gap: 10,
+    },
+    authInput: {
+      backgroundColor: "#fff",
+      borderWidth: 1,
+      borderColor: "#e4d9cd",
+      paddingHorizontal: 12,
+      paddingVertical: 11,
+      fontSize: 18,
+      height: 60,
+    },
+    authPrimaryButton: {
+      marginTop: 2,
+      backgroundColor: "#1c069c",
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    authPrimaryButtonText: {
+      fontFamily: "Nunito_800ExtraBold",
+      color: "#ffffff",
+      fontSize: 18,
+      fontWeight: "800",
+    },
+    authSecondaryButton: {
+      borderWidth: 1,
+      borderColor: "#e1d6ca",
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: "center",
+      backgroundColor: "#ffffff",
+    },
+    authSecondaryButtonDisabled: {
+      opacity: 0.55,
+    },
+    authSecondaryButtonText: {
+      fontFamily: "Nunito_800ExtraBold",
+      color: "#2f2318",
+      fontSize: 14,
+      fontWeight: "800",
+    },
+  }),
+};

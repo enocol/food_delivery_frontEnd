@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -11,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
-import styles from "../components/styles";
+import sharedStyles from "../components/styles";
 import { formatXaf } from "../utils/formatXaf";
 import { fetchCustomerOrders } from "../apis/orderApi";
 
@@ -99,31 +100,55 @@ function getRestaurantName(order) {
   return "Restaurant unavailable";
 }
 
+function groupItemsByRestaurant(items) {
+  if (!Array.isArray(items)) return [];
+  const map = {};
+  const order = [];
+  for (const item of items) {
+    const key =
+      item?.restaurantName || item?.restaurant_name || "Unknown restaurant";
+    if (!map[key]) {
+      map[key] = [];
+      order.push(key);
+    }
+    map[key].push(item);
+  }
+  return order.map((name) => ({ restaurantName: name, items: map[name] }));
+}
+
 const OrderCard = memo(function OrderCard({ item }) {
   const createdAt = item?.createdAt || item?.created_at;
   const itemCount = getItemCount(item);
   const total = getOrderTotal(item);
   const status = item?.status || item?.payment?.status || "confirmed";
-  const restaurantName = getRestaurantName(item);
+  const groups = groupItemsByRestaurant(item?.items);
 
   return (
     <View style={styles.orderCard}>
-      <Text style={styles.orderRestaurantText}>{restaurantName}</Text>
       <View style={styles.orderRowBetween}>
         <Text style={styles.orderMetaText}>{toDateLabel(createdAt)}</Text>
         <Text style={styles.orderStatusText}>{status}</Text>
       </View>
-      <View style={styles.orderRowBetween}>
+      {groups.map((group) => (
+        <View key={group.restaurantName} style={styles.orderRestaurantGroup}>
+          <Text style={styles.orderRestaurantText}>{group.restaurantName}</Text>
+          {group.items.map((lineItem, idx) => (
+            <View key={idx} style={styles.orderItemRow}>
+              <Text style={styles.orderItemName} numberOfLines={1}>
+                · {lineItem.name}
+              </Text>
+              <Text style={styles.orderItemQty}>x{lineItem.qty}</Text>
+            </View>
+          ))}
+        </View>
+      ))}
+      <View style={[styles.orderRowBetween, styles.orderCardFooter]}>
         <Text style={styles.orderSummaryText}>{itemCount} item(s)</Text>
         <Text style={styles.orderTotalText}>{formatXaf(total)}</Text>
       </View>
     </View>
   );
 });
-
-const ORDER_LIST_HEADER = (
-  <Text style={styles.ordersHeading}>Order History</Text>
-);
 
 function keyExtractor(item, index) {
   return String(item?.id || item?.orderRef || index);
@@ -234,7 +259,9 @@ export default function OrdersScreen({ navigation }) {
         contentContainerStyle={styles.ordersListContent}
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        ListHeaderComponent={ORDER_LIST_HEADER}
+        ListHeaderComponent={
+          <Text style={styles.ordersHeading}>Order History</Text>
+        }
         removeClippedSubviews
         initialNumToRender={8}
         maxToRenderPerBatch={8}
@@ -254,3 +281,115 @@ export default function OrdersScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    ordersListContent: {
+      marginTop: 20,
+      paddingTop: 40,
+      padding: 16,
+      paddingBottom: 120,
+      gap: 10,
+    },
+    ordersHeading: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 28,
+      fontWeight: "900",
+      color: "#202420",
+      marginBottom: 16,
+    },
+    orderRestaurantGroup: {
+      marginTop: 10,
+    },
+    orderRestaurantText: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 13,
+      fontWeight: "800",
+      color: "#2f2318",
+      marginBottom: 4,
+    },
+    orderItemRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingLeft: 4,
+      marginBottom: 2,
+    },
+    orderItemName: {
+      fontFamily: "Inter_400Regular",
+      fontSize: 13,
+      color: "#5f5a53",
+      flex: 1,
+    },
+    orderItemQty: {
+      fontFamily: "Inter_500Medium",
+      fontSize: 13,
+      color: "#5f5a53",
+      marginLeft: 8,
+    },
+    orderCardFooter: {
+      marginTop: 10,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: "#eadfd4",
+    },
+    orderIdText: {
+      fontSize: 20,
+      fontWeight: "900",
+      color: "#202420",
+      textAlign: "center",
+      marginBottom: 10,
+    },
+    orderCard: {
+      backgroundColor: "#ffffff",
+      borderRadius: 16,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: "#eadfd4",
+    },
+    orderRowBetween: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 10,
+    },
+    orderStatusText: {
+      fontSize: 12,
+      fontWeight: "800",
+      color: "#2f6f43",
+      textTransform: "capitalize",
+    },
+    orderMetaText: {
+      fontFamily: "Inter_400Regular",
+      marginTop: 6,
+      fontSize: 13,
+      color: "#6a6258",
+    },
+    orderSummaryText: {
+      marginTop: 8,
+      fontSize: 13,
+      fontWeight: "700",
+      color: "#5f5a53",
+    },
+    orderTotalText: {
+      fontFamily: "Nunito_900Black",
+      marginTop: 8,
+      fontSize: 15,
+      fontWeight: "900",
+      color: "#2f2318",
+    },
+    orderRetryButton: {
+      marginTop: 12,
+      backgroundColor: "#2f2318",
+      borderRadius: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+    },
+    orderRetryButtonText: {
+      color: "#ffffff",
+      fontSize: 14,
+      fontWeight: "800",
+    },
+  }),
+};
