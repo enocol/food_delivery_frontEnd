@@ -14,6 +14,7 @@ import { useCart } from "../context/CartContext";
 import { toImageSource } from "../utils/imageSource";
 import { formatXaf } from "../utils/formatXaf";
 import sharedStyles from "./styles";
+import * as colors from "../utils/colors";
 
 const styles = {
   ...sharedStyles,
@@ -32,7 +33,7 @@ const styles = {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "#1a120d",
+      backgroundColor: colors.bgOverlay,
     },
     cartSheet: {
       height: "78%",
@@ -40,7 +41,7 @@ const styles = {
       borderTopRightRadius: 24,
       overflow: "hidden",
       borderWidth: 1,
-      borderColor: "#dfe5d9",
+      borderColor: colors.borderSheet,
     },
     cartAwareContent: {
       paddingBottom: 24,
@@ -54,7 +55,7 @@ const styles = {
       width: 56,
       height: 5,
       borderRadius: 3,
-      backgroundColor: "#c4cbbe",
+      backgroundColor: colors.handle,
     },
     cartHeaderRow: {
       flexDirection: "row",
@@ -73,20 +74,20 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 24,
       fontWeight: "900",
-      color: "#202420",
+      color: colors.textHeading,
     },
     clearText: {
-      color: "#9a2b1d",
+      color: colors.primaryDark,
       fontWeight: "700",
     },
     sheetCloseButton: {
-      backgroundColor: "#ece8de",
+      backgroundColor: colors.bgCream,
       borderRadius: 10,
       paddingHorizontal: 10,
       paddingVertical: 7,
     },
     sheetCloseText: {
-      color: "#3a352f",
+      color: colors.textClose,
       fontSize: 12,
       fontWeight: "800",
     },
@@ -99,10 +100,10 @@ const styles = {
       paddingBottom: 16,
     },
     cartItemCard: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderRadius: 14,
       borderWidth: 1,
-      borderColor: "#dbe4d7",
+      borderColor: colors.borderLight,
       padding: 10,
       marginBottom: 10,
       flexDirection: "row",
@@ -121,18 +122,18 @@ const styles = {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 14,
       fontWeight: "800",
-      color: "#1f221f",
+      color: colors.textItemName,
     },
     cartItemRestaurant: {
       fontFamily: "Inter_400Regular",
       fontSize: 12,
-      color: "#657064",
+      color: colors.textCartRestaurant,
       marginTop: 2,
     },
     cartItemPrice: {
       fontFamily: "Nunito_700Bold",
       fontSize: 13,
-      color: "#2f6f43",
+      color: colors.success,
       fontWeight: "700",
       marginTop: 4,
     },
@@ -140,7 +141,7 @@ const styles = {
       flexDirection: "row",
       alignItems: "center",
       borderWidth: 1,
-      borderColor: "#d0d8cb",
+      borderColor: colors.borderQty,
       borderRadius: 12,
       overflow: "hidden",
     },
@@ -149,23 +150,23 @@ const styles = {
       height: 28,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "#f6f8f4",
+      backgroundColor: colors.successTint,
     },
     qtyButtonText: {
       fontWeight: "900",
-      color: "#203024",
+      color: colors.successDeeper,
       fontSize: 16,
     },
     qtyText: {
       width: 28,
       textAlign: "center",
       fontWeight: "700",
-      color: "#203024",
+      color: colors.successDeeper,
     },
     sheetCheckoutBar: {
       marginHorizontal: 12,
       marginBottom: 14,
-      backgroundColor: "#1f3b2a",
+      backgroundColor: colors.successDark,
       borderRadius: 16,
       padding: 14,
       flexDirection: "row",
@@ -174,36 +175,36 @@ const styles = {
     },
     checkoutLabel: {
       fontFamily: "Inter_400Regular",
-      color: "#d8e8d2",
+      color: colors.successText,
       fontSize: 12,
     },
     checkoutTotal: {
       fontFamily: "Nunito_900Black",
-      color: "#fff",
+      color: colors.white,
       fontSize: 20,
       fontWeight: "900",
     },
     checkoutButton: {
-      backgroundColor: "#f7d694",
+      backgroundColor: colors.amberLight,
       borderRadius: 10,
       paddingVertical: 10,
       paddingHorizontal: 16,
     },
     checkoutText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: "#35210c",
+      color: colors.textAmberButton,
       fontWeight: "800",
     },
     orderNowButton: {
       marginTop: 20,
-      backgroundColor: "#bd3f1b",
+      backgroundColor: colors.primary,
       borderRadius: 14,
       paddingVertical: 14,
       paddingHorizontal: 40,
     },
     orderNowText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: "#fff",
+      color: colors.white,
       fontSize: 16,
       fontWeight: "800",
     },
@@ -322,7 +323,7 @@ export default function CartBottomSheet({
         {...panResponder.panHandlers}
       >
         <LinearGradient
-          colors={["#f2f7f2", "#f7f8f1"]}
+          colors={colors.gradients.greenSheet}
           style={styles.gradientBackground}
         >
           <View style={styles.sheetHandleWrap}>

@@ -171,6 +171,7 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       firebaseUid: user?.uid || null,
+      userPhone: user?.phoneNumber || null, // For convenience, but use with caution as it may not be unique or present.
       authLoading,
       authActionLoading,
       sendPhoneCode,

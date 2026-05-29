@@ -2,6 +2,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet } from "react-native";
 import sharedStyles from "./styles";
+import * as colors from "../utils/colors";
 
 const styles = {
   ...sharedStyles,
@@ -11,8 +12,8 @@ const styles = {
       height: 34,
       borderRadius: 17,
       borderWidth: 1,
-      borderColor: "#e6d4bf",
-      backgroundColor: "#fff5ea",
+      borderColor: colors.borderLike,
+      backgroundColor: colors.bgLike,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -42,7 +43,7 @@ export default function LikeButton({ liked = false, onPress }) {
       <Ionicons
         name={liked ? "heart" : "heart-outline"}
         size={20}
-        color={liked ? "#e11d48" : "#5a5249"}
+        color={liked ? colors.like : colors.textIconMuted}
       />
     </Pressable>
   );

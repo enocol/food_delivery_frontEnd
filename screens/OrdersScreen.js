@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, memo, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   FlatList,
@@ -7,14 +8,21 @@ import {
   StyleSheet,
   Text,
   View,
+  Platform,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
+import * as colors from "../utils/colors";
 import { formatXaf } from "../utils/formatXaf";
 import { fetchCustomerOrders } from "../apis/orderApi";
+import {
+  getCurrentLocation,
+  getLocationAddress,
+} from "../utils/locationService";
 
 function toDateLabel(dateValue) {
   if (!dateValue) {
@@ -161,10 +169,76 @@ export default function OrdersScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState(
+    "Fetching location...",
+  );
+  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadDeliveryLocation = async () => {
+      try {
+        const coords = await getCurrentLocation();
+        const address = await getLocationAddress(
+          coords.latitude,
+          coords.longitude,
+        );
+
+        if (!isActive) {
+          return;
+        }
+
+        const locationText = [
+          address?.name,
+          address?.street,
+          address?.city,
+          address?.region,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+        setDeliveryLocation(locationText || "Current location");
+      } catch (locationError) {
+        if (!isActive) {
+          return;
+        }
+
+        setDeliveryLocation("Location unavailable");
+      }
+    };
+
+    loadDeliveryLocation();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const renderHeaderLocation = useCallback(
+    () => (
+      <Pressable
+        onPress={() => setIsLocationModalVisible(true)}
+        style={styles.homeHeaderLocationWrap}
+      >
+        <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
+        <View style={styles.homeHeaderLocationRow}>
+          <Ionicons name="location" size={20} color={colors.primaryDeep} />
+          <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
+            {deliveryLocation}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={colors.primaryDeep} />
+        </View>
+      </Pressable>
+    ),
+    [deliveryLocation],
+  );
 
   useRootCartHeader(navigation, cartCount, "Orders", openCartSheet, {
-    headerHeight: 100,
+    headerHeight: 130,
     headerBackgroundColor: "orange",
+    headerLeft: renderHeaderLocation,
+    headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
 
   const loadOrders = useCallback(
@@ -219,7 +293,7 @@ export default function OrdersScreen({ navigation }) {
     if (loading) {
       return (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#d97706" />
+          <ActivityIndicator size="large" color={colors.amber} />
           <Text style={styles.emptySub}>Loading your orders...</Text>
         </View>
       );
@@ -273,9 +347,41 @@ export default function OrdersScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.screen}>
       <LinearGradient
-        colors={["#fff8f0", "#f8efe8"]}
+        colors={colors.gradients.warmCream}
         style={styles.gradientBackground}
       >
+        <Modal
+          visible={isLocationModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsLocationModalVisible(false)}
+        >
+          <Pressable
+            style={styles.homeLocationModalBackdrop}
+            onPress={() => setIsLocationModalVisible(false)}
+          >
+            <Pressable style={styles.homeLocationModalCard} onPress={() => {}}>
+              <View style={styles.homeLocationModalHeader}>
+                <Text style={styles.homeLocationModalTitle}>
+                  Delivery location
+                </Text>
+                <Pressable
+                  onPress={() => setIsLocationModalVisible(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="close" size={22} color={colors.textDark} />
+                </Pressable>
+              </View>
+
+              <View style={styles.homeLocationModalRow}>
+                <Ionicons name="location" size={18} color={colors.orange} />
+                <Text style={styles.homeLocationModalText}>
+                  {deliveryLocation}
+                </Text>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
         {renderContent()}
       </LinearGradient>
     </SafeAreaView>
@@ -285,6 +391,73 @@ export default function OrdersScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
+    homeHeaderLocationContainer: {
+      paddingLeft: 16,
+      maxWidth: Platform.OS === "ios" ? "80%" : "60%",
+    },
+    homeHeaderLocationWrap: {
+      justifyContent: "center",
+      marginTop: 10,
+    },
+    homeHeaderLocationLabel: {
+      fontFamily: "Nunito_700Bold",
+      fontSize: 12,
+      fontWeight: "700",
+      color: colors.primaryDeep,
+      marginBottom: 2,
+    },
+    homeHeaderLocationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    homeHeaderLocationText: {
+      fontFamily: "Nunito_800ExtraBold",
+      flexShrink: 1,
+      fontSize: 14,
+      fontWeight: "800",
+      color: colors.textDark,
+    },
+    homeLocationModalBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlays.locationBackdrop,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    homeLocationModalCard: {
+      width: "100%",
+      maxWidth: 420,
+      backgroundColor: colors.bgWarm,
+      borderRadius: 22,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: colors.borderModalWarm,
+    },
+    homeLocationModalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 14,
+    },
+    homeLocationModalTitle: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 18,
+      fontWeight: "900",
+      color: colors.textDark,
+    },
+    homeLocationModalRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
+    },
+    homeLocationModalText: {
+      fontFamily: "Inter_400Regular",
+      flex: 1,
+      fontSize: 15,
+      lineHeight: 22,
+      color: colors.textMid,
+    },
     ordersListContent: {
       marginTop: 20,
       paddingTop: 40,
@@ -296,7 +469,7 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 28,
       fontWeight: "900",
-      color: "#202420",
+      color: colors.textHeading,
       marginBottom: 16,
     },
     orderRestaurantGroup: {
@@ -306,7 +479,7 @@ const styles = {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 13,
       fontWeight: "800",
-      color: "#2f2318",
+      color: colors.textDark,
       marginBottom: 4,
     },
     orderItemRow: {
@@ -319,34 +492,34 @@ const styles = {
     orderItemName: {
       fontFamily: "Inter_400Regular",
       fontSize: 13,
-      color: "#5f5a53",
+      color: colors.textMid,
       flex: 1,
     },
     orderItemQty: {
       fontFamily: "Inter_500Medium",
       fontSize: 13,
-      color: "#5f5a53",
+      color: colors.textMid,
       marginLeft: 8,
     },
     orderCardFooter: {
       marginTop: 10,
       paddingTop: 8,
       borderTopWidth: 1,
-      borderTopColor: "#eadfd4",
+      borderTopColor: colors.border,
     },
     orderIdText: {
       fontSize: 20,
       fontWeight: "900",
-      color: "#202420",
+      color: colors.textHeading,
       textAlign: "center",
       marginBottom: 10,
     },
     orderCard: {
-      backgroundColor: "#ffffff",
+      backgroundColor: colors.white,
       borderRadius: 16,
       padding: 14,
       borderWidth: 1,
-      borderColor: "#eadfd4",
+      borderColor: colors.border,
     },
     orderRowBetween: {
       flexDirection: "row",
@@ -357,37 +530,37 @@ const styles = {
     orderStatusText: {
       fontSize: 12,
       fontWeight: "800",
-      color: "#2f6f43",
+      color: colors.success,
       textTransform: "capitalize",
     },
     orderMetaText: {
       fontFamily: "Inter_400Regular",
       marginTop: 6,
       fontSize: 13,
-      color: "#6a6258",
+      color: colors.textMuted,
     },
     orderSummaryText: {
       marginTop: 8,
       fontSize: 13,
       fontWeight: "700",
-      color: "#5f5a53",
+      color: colors.textMid,
     },
     orderTotalText: {
       fontFamily: "Nunito_900Black",
       marginTop: 8,
       fontSize: 15,
       fontWeight: "900",
-      color: "#2f2318",
+      color: colors.textDark,
     },
     orderRetryButton: {
       marginTop: 12,
-      backgroundColor: "#2f2318",
+      backgroundColor: colors.textDark,
       borderRadius: 12,
       paddingVertical: 10,
       paddingHorizontal: 14,
     },
     orderRetryButtonText: {
-      color: "#ffffff",
+      color: colors.white,
       fontSize: 14,
       fontWeight: "800",
     },

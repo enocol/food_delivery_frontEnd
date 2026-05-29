@@ -9,7 +9,7 @@ import sharedStyles from "../components/styles";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import RestaurantDetailsScreen from "../screens/RestaurantDetailsScreen";
 import TabNavigator from "./TabNavigator";
-import { View } from "react-native-web";
+import * as colors from "../utils/colors";
 
 const styles = {
   ...sharedStyles,
@@ -55,7 +55,7 @@ export default function StackNavigator() {
             headerBackVisible: true,
             headerBackTitle: "",
             headerBackButtonDisplayMode: "minimal",
-            headerTintColor: "#FF0000",
+            headerTintColor: colors.white,
           }}
         />
         <Stack.Screen
@@ -86,7 +86,11 @@ export default function StackNavigator() {
                       activeOpacity={0.7}
                       style={{ paddingHorizontal: 6, paddingVertical: 6 }}
                     >
-                      <Ionicons name="chevron-back" size={50} color="#FF0000" />
+                      <Ionicons
+                        name="chevron-back"
+                        size={28}
+                        color={colors.white}
+                      />
                     </Pressable>
                   )
                 : undefined, // Android uses the native back button from headerBackVisible

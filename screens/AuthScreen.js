@@ -15,6 +15,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import { firebaseConfig } from "../utils/firebase";
 import sharedStyles from "../components/styles";
@@ -84,7 +85,7 @@ export default function AuthScreen() {
             style={{ width: "100%", height: 120 }}
           />
           <LinearGradient
-            colors={["#fff8f0", "#f8efe8"]}
+            colors={colors.gradients.warmCream}
             style={styles.gradientBackground}
           >
             <View style={styles.authWrap}>
@@ -125,7 +126,7 @@ export default function AuthScreen() {
                   disabled={authActionLoading}
                 >
                   {authActionLoading ? (
-                    <ActivityIndicator color="#ffffff" />
+                    <ActivityIndicator color={colors.white} />
                   ) : (
                     <Text style={styles.authPrimaryButtonText}>
                       {codeSent
@@ -171,27 +172,27 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 28,
       fontWeight: "900",
-      color: "#23201c",
+      color: colors.textHeadingWarm,
     },
     authSubtitle: {
       fontFamily: "Inter_400Regular",
       marginTop: 6,
       fontSize: 14,
-      color: "#6a6258",
+      color: colors.textMuted,
       lineHeight: 20,
     },
     authCard: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderRadius: 16,
       padding: 16,
       borderWidth: 1,
-      borderColor: "#eadfd4",
+      borderColor: colors.border,
       gap: 10,
     },
     authInput: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderWidth: 1,
-      borderColor: "#e4d9cd",
+      borderColor: colors.borderInput,
       paddingHorizontal: 12,
       paddingVertical: 11,
       fontSize: 18,
@@ -199,7 +200,7 @@ const styles = {
     },
     authPrimaryButton: {
       marginTop: 2,
-      backgroundColor: "#1c069c",
+      backgroundColor: colors.authButton,
       borderRadius: 12,
       paddingVertical: 12,
       alignItems: "center",
@@ -207,24 +208,24 @@ const styles = {
     },
     authPrimaryButtonText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: "#ffffff",
+      color: colors.white,
       fontSize: 18,
       fontWeight: "800",
     },
     authSecondaryButton: {
       borderWidth: 1,
-      borderColor: "#e1d6ca",
+      borderColor: colors.borderPicker,
       borderRadius: 12,
       paddingVertical: 12,
       alignItems: "center",
-      backgroundColor: "#ffffff",
+      backgroundColor: colors.white,
     },
     authSecondaryButtonDisabled: {
       opacity: 0.55,
     },
     authSecondaryButtonText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: "#2f2318",
+      color: colors.textDark,
       fontSize: 14,
       fontWeight: "800",
     },

@@ -5,14 +5,12 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   Platform,
 } from "react-native";
@@ -20,9 +18,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
-import LikeButton from "../components/LikeButton";
 import sharedStyles from "../components/styles";
-import { toImageSource } from "../utils/imageSource";
+import * as colors from "../utils/colors";
 import { fetchRestaurantMenu, fetchRestaurants } from "../apis/restaurantApi";
 import { fetchLikes, likeRestaurant, unlikeRestaurant } from "../apis/likesApi";
 import {
@@ -30,6 +27,7 @@ import {
   getLocationAddress,
 } from "../utils/locationService";
 import { FOOD_FILTERS, FILTER_ALIASES } from "../data/foodFilters";
+import RestaurantCard from "../components/RestaurantCard";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -64,38 +62,6 @@ function restaurantMatchesQuery(restaurant, query) {
 
   return text.includes(query);
 }
-
-const RestaurantCard = React.memo(function RestaurantCard({
-  item,
-  onPress,
-  liked,
-  onToggleLike,
-}) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.88}
-      style={styles.restaurantCard}
-      onPress={() => onPress(item.id)}
-    >
-      <Image
-        source={toImageSource(item.image)}
-        style={styles.detailsHeroImage}
-        resizeMode="contain"
-      />
-      <View style={styles.restaurantContent}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.restaurantName}>{item.name}</Text>
-          <Text style={styles.rating}>{item.rating}</Text>
-        </View>
-        <Text style={styles.metaText}>{item.cuisine}</Text>
-        <View style={styles.restaurantMetaRow}>
-          <Text style={styles.metaText}>{item.eta}</Text>
-          <LikeButton liked={liked} onPress={() => onToggleLike(item.id)} />
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-});
 
 export default function HomeScreen({ navigation }) {
   const { cartCount, openCartSheet } = useCart();
@@ -150,11 +116,11 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
         <View style={styles.homeHeaderLocationRow}>
-          <Ionicons name="location" size={20} color="#7c2d12" />
+          <Ionicons name="location" size={20} color={colors.primaryDeep} />
           <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
             {deliveryLocation}
           </Text>
-          <Ionicons name="chevron-down" size={20} color="#7c2d12" />
+          <Ionicons name="chevron-down" size={20} color={colors.primaryDeep} />
         </View>
       </Pressable>
     ),
@@ -343,26 +309,27 @@ export default function HomeScreen({ navigation }) {
   );
 
   let emptyStateIconName = "restaurant-outline";
-  let emptyStateIconColor = "#ff8a00";
-  let emptyStateIconBackgroundColor = "#fff4e8";
-  let emptyStateIconBorderColor = "#ffd1a6";
+  let emptyStateIconColor = colors.orange;
+  let emptyStateIconBackgroundColor = colors.bgEmptyOrange;
+  let emptyStateIconBorderColor = colors.borderOrange;
 
   if (isLoading) {
     emptyStateIconName = "time-outline";
-    emptyStateIconColor = "#d97706";
-    emptyStateIconBackgroundColor = "#fff7e0";
-    emptyStateIconBorderColor = "#f7d794";
+    emptyStateIconColor = colors.amber;
+    emptyStateIconBackgroundColor = colors.bgEmptyAmber;
+    emptyStateIconBorderColor = colors.borderEmptyAmber;
   } else if (error) {
     emptyStateIconName = "alert-circle-outline";
-    emptyStateIconColor = "#dc2626";
-    emptyStateIconBackgroundColor = "#fff1f2";
-    emptyStateIconBorderColor = "#fecdd3";
+    emptyStateIconColor = colors.danger;
+    emptyStateIconBackgroundColor = colors.bgEmptyDanger;
+    emptyStateIconBorderColor = colors.borderEmptyDanger;
   }
 
   return (
     <SafeAreaView style={styles.screen}>
       <LinearGradient
-        colors={["#fff7ec", "#fef3e2", "#f8f1e7"]}
+        // colors={colors.gradients.warmHome}
+        colors={colors.gradients.white}
         style={styles.gradientBackground}
       >
         <Modal
@@ -384,12 +351,12 @@ export default function HomeScreen({ navigation }) {
                   onPress={() => setIsLocationModalVisible(false)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="close" size={22} color="#2f2318" />
+                  <Ionicons name="close" size={22} color={colors.textDark} />
                 </Pressable>
               </View>
 
               <View style={styles.homeLocationModalRow}>
-                <Ionicons name="location" size={18} color="#ff8a00" />
+                <Ionicons name="location" size={18} color={colors.orange} />
                 <Text style={styles.homeLocationModalText}>
                   {deliveryLocation}
                 </Text>
@@ -441,19 +408,32 @@ export default function HomeScreen({ navigation }) {
         <View
           style={[
             styles.homeSearchWrap,
-            isSearchFocused && { borderColor: "#000" },
+            isSearchFocused && { borderColor: colors.black },
           ]}
         >
-          <Ionicons name="search" size={24} color="#7f5a3e" />
+          <Ionicons name="search" size={24} color={colors.iconBrown} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search restaurant or menu"
-            placeholderTextColor="#8b8177"
+            placeholderTextColor={colors.placeholderWarm}
             style={styles.homeSearchInput}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
+            autoCapitalize="words"
           />
+          {searchQuery.length > 0 && (
+            <Pressable
+              onPress={() => setSearchQuery("")}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons
+                name="close-circle"
+                size={20}
+                color={colors.placeholderWarm}
+              />
+            </Pressable>
+          )}
         </View>
 
         <FlatList
@@ -485,7 +465,7 @@ export default function HomeScreen({ navigation }) {
                 />
               </View>
               {isLoading ? (
-                <ActivityIndicator size="large" color="#d97706" />
+                <ActivityIndicator size="large" color={colors.amber} />
               ) : (
                 <View>
                   <Text style={styles.emptyTitle}>
@@ -514,16 +494,16 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 30,
       fontWeight: "900",
-      color: "#2f2a25",
+      color: colors.textWarmDark,
       paddingHorizontal: 10,
     },
     emptyStateIconWrap: {
       width: 78,
       height: 78,
       borderRadius: 39,
-      backgroundColor: "#fff4e8",
+      backgroundColor: colors.bgEmptyOrange,
       borderWidth: 1,
-      borderColor: "#ffd1a6",
+      borderColor: colors.borderOrange,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 14,
@@ -540,7 +520,7 @@ const styles = {
       fontFamily: "Nunito_700Bold",
       fontSize: 12,
       fontWeight: "700",
-      color: "#7c2d12",
+      color: colors.primaryDeep,
       marginBottom: 2,
     },
     homeHeaderLocationRow: {
@@ -553,11 +533,11 @@ const styles = {
       flexShrink: 1,
       fontSize: 14,
       fontWeight: "800",
-      color: "#2f2318",
+      color: colors.textDark,
     },
     homeLocationModalBackdrop: {
       flex: 1,
-      backgroundColor: "rgba(26, 18, 13, 0.45)",
+      backgroundColor: colors.overlays.locationBackdrop,
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: 20,
@@ -565,11 +545,11 @@ const styles = {
     homeLocationModalCard: {
       width: "100%",
       maxWidth: 420,
-      backgroundColor: "#fffaf4",
+      backgroundColor: colors.bgWarm,
       borderRadius: 22,
       padding: 20,
       borderWidth: 1,
-      borderColor: "#f3d7b8",
+      borderColor: colors.borderModalWarm,
     },
     homeLocationModalHeader: {
       flexDirection: "row",
@@ -581,7 +561,7 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 18,
       fontWeight: "900",
-      color: "#2f2318",
+      color: colors.textDark,
     },
     homeLocationModalRow: {
       flexDirection: "row",
@@ -593,7 +573,7 @@ const styles = {
       flex: 1,
       fontSize: 15,
       lineHeight: 22,
-      color: "#5f5a53",
+      color: colors.textMid,
     },
     foodFilterWrap: {
       paddingVertical: 6,
@@ -603,9 +583,9 @@ const styles = {
       gap: 10,
     },
     foodFilterChip: {
-      backgroundColor: "#fffaf3",
+      backgroundColor: colors.white,
       borderWidth: 1,
-      borderColor: "#f0d9bf",
+      borderColor: colors.borderFilterChip,
       borderRadius: 999,
       paddingHorizontal: 14,
       paddingVertical: 8,
@@ -613,17 +593,17 @@ const styles = {
       justifyContent: "center",
     },
     foodFilterChipActive: {
-      backgroundColor: "#bd3f1b",
-      borderColor: "#bd3f1b",
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
     },
     foodFilterChipText: {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 14,
       fontWeight: "800",
-      color: "#3f2b1d",
+      color: colors.orangeText,
     },
     foodFilterChipTextActive: {
-      color: "#ffffff",
+      color: colors.white,
     },
     foodFilterIcon: {
       width: 80,
@@ -640,9 +620,9 @@ const styles = {
       flexDirection: "row",
       alignItems: "center",
       gap: 8,
-      backgroundColor: "#fffaf3",
+      backgroundColor: colors.bgWarmAlt,
       borderWidth: 1,
-      borderColor: "#ecd8c2",
+      borderColor: colors.borderSearchBar,
       borderRadius: 14,
       paddingHorizontal: 12,
     },
@@ -651,54 +631,12 @@ const styles = {
       flex: 1,
       paddingVertical: 15,
       fontSize: 20,
-      color: "#2f2a25",
+      color: colors.textWarmDark,
     },
     restaurantList: {
       paddingBottom: 120,
       gap: 30,
       flexGrow: 1,
-    },
-    restaurantCard: {
-      borderRadius: 18,
-      overflow: "hidden",
-      backgroundColor: "#dbe4d7",
-      borderWidth: 1,
-      borderColor: "#dbe4d7",
-      elevation: 3,
-      width: "100%",
-    },
-    restaurantImage: {
-      width: "100%",
-      height: 260,
-      backgroundColor: "#ffffff",
-    },
-    restaurantContent: {
-      padding: 12,
-    },
-    rowBetween: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: 8,
-    },
-    restaurantName: {
-      fontFamily: "Nunito_800ExtraBold",
-      fontSize: 18,
-      fontWeight: "800",
-      color: "#2d2a27",
-      flex: 1,
-    },
-    rating: {
-      fontFamily: "Nunito_700Bold",
-      fontSize: 14,
-      color: "#7a5610",
-      fontWeight: "700",
-    },
-    restaurantMetaRow: {
-      marginTop: 3,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
     },
   }),
 };

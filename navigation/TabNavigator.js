@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import sharedStyles from "../components/styles";
+import * as colors from "../utils/colors";
 import HomeScreen from "../screens/HomeScreen";
 import OrdersScreen from "../screens/OrdersScreen";
 import ProfileScreen from "../screens/ProfileScreen";
@@ -13,11 +14,11 @@ const styles = {
   ...StyleSheet.create({
     tabBar: {
       position: "absolute",
-      backgroundColor: "rgba(246, 250, 255, 0.62)",
+      // backgroundColor: colors.overlays.tabBarBg,
       height: 75,
       borderRadius: 24,
       borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.86)",
+      // borderColor: colors.overlays.tabBarBorder,
       alignItems: "center",
       justifyContent: "center",
       marginHorizontal: 20,
@@ -25,7 +26,7 @@ const styles = {
       bottom: 16,
       overflow: "hidden",
       elevation: 18,
-      shadowColor: "#2a2119",
+      shadowColor: colors.shadow,
       shadowOpacity: 0.2,
       shadowOffset: { width: 0, height: 12 },
       shadowRadius: 24,
@@ -38,7 +39,7 @@ const styles = {
       bottom: 0,
       borderRadius: 24,
       overflow: "hidden",
-      backgroundColor: "goldenrod",
+      backgroundColor: colors.amberLight,
     },
     tabBarLabel: {
       fontFamily: "Nunito_800ExtraBold",
@@ -56,8 +57,8 @@ export default function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "red",
-        tabBarInactiveTintColor: "#000000",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.black,
         tabBarStyle: [styles.tabBar, { bottom: 16 + insets.bottom }],
         tabBarBackground: () => <View style={styles.tabBarGlassWrap}></View>,
 

@@ -18,6 +18,7 @@ import {
 } from "../utils/locationService";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
+import * as colors from "../utils/colors";
 
 export default function ProfileScreen({ navigation }) {
   const { cartCount, cartTotal, openCartSheet } = useCart();
@@ -31,7 +32,7 @@ export default function ProfileScreen({ navigation }) {
   // useRootCartHeader(navigation, cartCount, "Profile", openCartSheet);
 
   useRootCartHeader(navigation, cartCount, "Profile", openCartSheet, {
-    headerHeight: 100,
+    headerHeight: 130,
     headerBackgroundColor: "orange",
   });
 
@@ -91,7 +92,7 @@ export default function ProfileScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.screen}>
       <LinearGradient
-        colors={["#fff8f0", "#f8efe8"]}
+        colors={colors.gradients.warmCream}
         style={styles.gradientBackground}
       >
         <ScrollView contentContainerStyle={styles.profileWrap}>
@@ -161,18 +162,18 @@ const styles = {
       gap: 14,
     },
     profileCard: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderRadius: 18,
       padding: 20,
       alignItems: "center",
       borderWidth: 1,
-      borderColor: "#eadfd4",
+      borderColor: colors.border,
     },
     avatarCircle: {
       width: 72,
       height: 72,
       borderRadius: 36,
-      backgroundColor: "#bd3f1b",
+      backgroundColor: colors.primary,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 12,
@@ -180,7 +181,7 @@ const styles = {
     },
     avatarText: {
       fontFamily: "Nunito_900Black",
-      color: "#fff",
+      color: colors.white,
       fontSize: 22,
       fontWeight: "900",
     },
@@ -188,48 +189,48 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 22,
       fontWeight: "900",
-      color: "#23201c",
+      color: colors.textHeadingWarm,
     },
     profileMeta: {
       fontFamily: "Inter_400Regular",
       marginTop: 4,
       fontSize: 14,
-      color: "#6a6258",
+      color: colors.textMuted,
     },
     profileSignOutButton: {
       marginTop: 14,
       paddingVertical: 10,
       paddingHorizontal: 16,
       borderRadius: 12,
-      backgroundColor: "#2f2318",
+      backgroundColor: colors.textDark,
     },
     profileSignOutButtonDisabled: {
       opacity: 0.6,
     },
     profileSignOutText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: "#ffffff",
+      color: colors.white,
       fontSize: 14,
       fontWeight: "800",
     },
     infoCard: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderRadius: 16,
       padding: 16,
       borderWidth: 1,
-      borderColor: "#eadfd4",
+      borderColor: colors.border,
     },
     infoCardTitle: {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 16,
       fontWeight: "800",
-      color: "#23201c",
+      color: colors.textHeadingWarm,
       marginBottom: 10,
     },
     infoLine: {
       fontFamily: "Inter_400Regular",
       fontSize: 14,
-      color: "#5f5a53",
+      color: colors.textMid,
       marginBottom: 8,
     },
     profileLocationButton: {
@@ -238,13 +239,13 @@ const styles = {
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 10,
-      backgroundColor: "#2f2318",
+      backgroundColor: colors.textDark,
     },
     profileLocationButtonDisabled: {
       opacity: 0.6,
     },
     profileLocationButtonText: {
-      color: "#ffffff",
+      color: colors.white,
       fontSize: 13,
       fontWeight: "700",
     },

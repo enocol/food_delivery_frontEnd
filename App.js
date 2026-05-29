@@ -1,4 +1,5 @@
 import React from "react";
+import * as colors from "./utils/colors";
 import { View, Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -86,7 +87,7 @@ export default function App() {
   });
 
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: "#FF0000" }} />;
+    return <View style={{ flex: 1, backgroundColor: colors.splash }} />;
   }
 
   return (

@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import * as colors from "../utils/colors";
 
 const styles = StyleSheet.create({
   screen: {
@@ -17,20 +18,20 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_900Black",
     fontSize: 20,
     fontWeight: "900",
-    color: "#202420",
+    color: colors.textHeading,
   },
   emptySub: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: "#5f5e5e",
+    color: colors.textSubMuted,
     marginTop: 6,
     textAlign: "center",
   },
   emptySearchCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "orange",
+    borderColor: colors.borderOrange,
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
   metaText: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    color: "#5a5249",
+    color: colors.textIconMuted,
     marginTop: 3,
   },
   detailsHeroImage: {

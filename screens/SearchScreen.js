@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
+import * as colors from "../utils/colors";
 import { toImageSource } from "../utils/imageSource";
 import { fetchRestaurants } from "../apis/restaurantApi";
 
@@ -28,36 +29,36 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 28,
       fontWeight: "900",
-      color: "#202420",
+      color: colors.textHeading,
     },
     sectionSubtitle: {
       fontFamily: "Inter_400Regular",
       fontSize: 14,
-      color: "#637063",
+      color: colors.textSearchSub,
       marginTop: 5,
       marginBottom: 12,
     },
     searchInput: {
       fontFamily: "Inter_400Regular",
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderWidth: 1,
-      borderColor: "#dbe4d7",
+      borderColor: colors.borderLight,
       borderRadius: 14,
       paddingHorizontal: 14,
       paddingVertical: 12,
       fontSize: 14,
-      color: "#202420",
+      color: colors.textHeading,
     },
     searchResultsWrap: {
       paddingHorizontal: 14,
       paddingBottom: 20,
     },
     searchResultCard: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderRadius: 16,
       overflow: "hidden",
       borderWidth: 1,
-      borderColor: "#dbe4d7",
+      borderColor: colors.borderLight,
       marginBottom: 12,
     },
     searchResultImage: {
@@ -71,7 +72,7 @@ const styles = {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 16,
       fontWeight: "800",
-      color: "#202420",
+      color: colors.textHeading,
     },
   }),
 };
@@ -125,7 +126,7 @@ export default function SearchScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.screen}>
       <LinearGradient
-        colors={["#eef7ef", "#f8f8f2"]}
+        colors={colors.gradients.mint}
         style={styles.gradientBackground}
       >
         <View style={styles.searchHeaderBlock}>
@@ -137,7 +138,7 @@ export default function SearchScreen({ navigation }) {
             value={query}
             onChangeText={setQuery}
             placeholder="Search restaurant, cuisine, or dish"
-            placeholderTextColor="#7f847d"
+            placeholderTextColor={colors.placeholder}
             style={styles.searchInput}
           />
         </View>

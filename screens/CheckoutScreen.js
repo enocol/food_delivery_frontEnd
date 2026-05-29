@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import sharedStyles from "../components/styles";
+import * as colors from "../utils/colors";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../apis/orderApi";
@@ -30,7 +31,7 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutScreen({ navigation }) {
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { firebaseUid, getAuthToken } = useAuth();
+  const { firebaseUid, userPhone, getAuthToken } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState("mtn-momo");
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
@@ -216,6 +217,11 @@ export default function CheckoutScreen({ navigation }) {
         paymentMethodLabel,
         payment: paymentResult,
         customerPhone: normalizedPhone || null,
+        notifyPhone:
+          userPhone ||
+          (normalizedPhone
+            ? `+237${normalizedPhone.replace(/^237/, "")}`
+            : null),
         deliveryAddress,
         totals: {
           itemCount,
@@ -254,7 +260,10 @@ export default function CheckoutScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.checkoutContainer}>
-        <LinearGradient colors={["#f2f7f2", "#fffdf7"]} style={styles.screen}>
+        <LinearGradient
+          colors={colors.gradients.greenLight}
+          style={styles.screen}
+        >
           <KeyboardAwareScrollView
             enableOnAndroid
             keyboardShouldPersistTaps="handled"
@@ -314,7 +323,7 @@ export default function CheckoutScreen({ navigation }) {
                       }
                     }}
                     placeholder="Phone number (e.g. +237 6XX XXX XXX)"
-                    placeholderTextColor="#7f847d"
+                    placeholderTextColor={colors.placeholder}
                     keyboardType="phone-pad"
                     style={styles.paymentPhoneInput}
                   />
@@ -368,7 +377,7 @@ const styles = {
     checkoutContainer: {
       flex: 0.8,
       justifyContent: "center",
-      backgroundColor: "red",
+      backgroundColor: colors.white,
     },
     checkoutScreenContent: {
       paddingHorizontal: 14,
@@ -377,7 +386,7 @@ const styles = {
     },
     checkoutMetaText: {
       fontSize: 14,
-      color: "#425045",
+      color: colors.textGreenBody,
       marginTop: 6,
       fontWeight: "700",
     },
@@ -386,7 +395,7 @@ const styles = {
       left: 12,
       right: 12,
       bottom: 16,
-      backgroundColor: "#1f3b2a",
+      backgroundColor: colors.successDark,
       borderRadius: 16,
       padding: 14,
       flexDirection: "row",
@@ -395,31 +404,31 @@ const styles = {
     },
     checkoutLabel: {
       fontFamily: "Inter_400Regular",
-      color: "#d8e8d2",
+      color: colors.successText,
       fontSize: 12,
     },
     checkoutTotal: {
       fontFamily: "Nunito_900Black",
-      color: "#fff",
+      color: colors.white,
       fontSize: 20,
       fontWeight: "900",
     },
     checkoutButton: {
-      backgroundColor: "#f7d694",
+      backgroundColor: colors.amberLight,
       borderRadius: 10,
       paddingVertical: 10,
       paddingHorizontal: 16,
     },
     checkoutText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: "#35210c",
+      color: colors.textAmberButton,
       fontWeight: "800",
     },
     checkoutScreenCta: {
       marginHorizontal: 8,
       marginTop: 6,
       borderRadius: 14,
-      backgroundColor: "#1f3b2a",
+      backgroundColor: colors.successDark,
       paddingVertical: 14,
       alignItems: "center",
     },
@@ -428,7 +437,7 @@ const styles = {
     },
     checkoutScreenCtaText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: "#ffffff",
+      color: colors.white,
       fontSize: 15,
       fontWeight: "800",
     },
@@ -437,16 +446,16 @@ const styles = {
       marginTop: 4,
       marginBottom: 4,
       fontSize: 13,
-      color: "#425045",
+      color: colors.textGreenBody,
       fontWeight: "700",
     },
     paymentPickerCard: {
       justifyContent: "center",
       marginBottom: 14,
       marginTop: 29,
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       borderWidth: 1,
-      borderColor: "#dbe4d7",
+      borderColor: colors.borderLight,
       borderRadius: 14,
       padding: 12,
       flex: 1,
@@ -454,7 +463,7 @@ const styles = {
     paymentPickerTitle: {
       fontSize: 15,
       fontWeight: "800",
-      color: "#202420",
+      color: colors.textHeading,
       marginBottom: 10,
     },
     paymentOptionRow: {
@@ -467,46 +476,46 @@ const styles = {
       height: 20,
       borderRadius: 10,
       borderWidth: 2,
-      borderColor: "#a9b6a2",
+      borderColor: colors.borderGreen,
       alignItems: "center",
       justifyContent: "center",
       marginRight: 10,
     },
     paymentRadioOuterActive: {
-      borderColor: "#bd3f1b",
+      borderColor: colors.primary,
     },
     paymentRadioInner: {
       width: 10,
       height: 10,
       borderRadius: 5,
-      backgroundColor: "#bd3f1b",
+      backgroundColor: colors.primary,
     },
     paymentOptionLabel: {
       fontSize: 14,
-      color: "#2a2f2a",
+      color: colors.textPaymentLabel,
       fontWeight: "700",
     },
     paymentPhoneInput: {
       marginTop: 8,
-      backgroundColor: "#f9fbf8",
+      backgroundColor: colors.bgPaymentOption,
       borderWidth: 1,
-      borderColor: "#cfdbca",
+      borderColor: colors.borderPaymentOption,
       borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 10,
       fontSize: 14,
-      color: "#202420",
+      color: colors.textHeading,
     },
     paymentPhoneError: {
       marginTop: 6,
       fontSize: 12,
-      color: "#b42318",
+      color: colors.dangerText,
       fontWeight: "700",
     },
     paymentNetworkHint: {
       marginTop: 6,
       fontSize: 12,
-      color: "#2f6f43",
+      color: colors.success,
       fontWeight: "700",
     },
   }),

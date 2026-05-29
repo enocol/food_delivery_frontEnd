@@ -17,7 +17,9 @@ import { useCart } from "../context/CartContext";
 import { toImageSource } from "../utils/imageSource";
 import { formatXaf } from "../utils/formatXaf";
 import sharedStyles from "../components/styles";
+import * as colors from "../utils/colors";
 import { fetchRestaurantMenu } from "../apis/restaurantApi";
+import { formatRestaurantName } from "../utils/formatRestaurantName";
 
 export default function RestaurantDetailsScreen({ route, navigation }) {
   const { addToCart } = useCart();
@@ -117,16 +119,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
   }
 
   return (
-    <View style={styles.screen}>
-      {/* <View style={styles.detailsTopControls}>
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={styles.detailsBackButton}
-        >
-          <Ionicons name="chevron-back" size={30} color="#000000" />
-        </Pressable>
-      </View> */}
-
+    <SafeAreaView style={styles.screen}>
       {/* Sticky restaurant name bar */}
       <Animated.View
         style={[
@@ -139,7 +132,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
         pointerEvents="none"
       >
         <Text style={styles.detailsStickyTitle} numberOfLines={1}>
-          {restaurant.name}
+          {formatRestaurantName(restaurant.name)}
         </Text>
       </Animated.View>
 
@@ -156,7 +149,9 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
           source={toImageSource(restaurant.image)}
           style={styles.detailsHeroImage}
         />
-        <Text style={styles.detailsTitle}>{restaurant.name}</Text>
+        <Text style={styles.detailsTitle}>
+          {formatRestaurantName(restaurant.name)}
+        </Text>
         <Text style={styles.detailsMeta}>
           {restaurant.cuisine} • {restaurant.eta}
         </Text>
@@ -168,7 +163,9 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
             onPress={() => setSelectedItem(item)}
           >
             <View style={styles.menuTextWrap}>
-              <Text style={styles.menuName}>{item.name}</Text>
+              <Text style={styles.menuName}>
+                {formatRestaurantName(item.name)}
+              </Text>
               <Text style={styles.menuDescription}>{item.description}</Text>
               <Text style={styles.menuPrice}>{formatXaf(item.price)}</Text>
             </View>
@@ -187,7 +184,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
                     addingItemId === String(item.id) ? "time-outline" : "add"
                   }
                   size={20}
-                  color="#fff"
+                  color={colors.white}
                 />
               </TouchableOpacity>
             </View>
@@ -213,7 +210,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
               style={styles.itemSheetClose}
               onPress={() => setSelectedItem(null)}
             >
-              <Ionicons name="close" size={22} color="#2f2a25" />
+              <Ionicons name="close" size={22} color={colors.textWarmDark} />
             </Pressable>
           </View>
 
@@ -255,7 +252,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
                   : "cart-outline"
               }
               size={20}
-              color="#fff"
+              color={colors.white}
               style={{ marginRight: 8 }}
             />
             <Text style={styles.itemSheetAddButtonText}>
@@ -266,7 +263,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
           </TouchableOpacity>
         </SafeAreaView>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -282,17 +279,17 @@ const styles = {
       left: 0,
       right: 0,
       zIndex: 20,
-      backgroundColor: "#fffaf4",
+      backgroundColor: colors.bgWarm,
       paddingTop: 50,
       paddingBottom: 12,
       paddingHorizontal: 16,
       borderBottomWidth: 1,
-      borderBottomColor: "#f0e5d4",
+      borderBottomColor: colors.borderMid,
     },
     detailsStickyTitle: {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 17,
-      color: "#28231d",
+      color: colors.textBody,
       textAlign: "center",
     },
     detailsTopControls: {
@@ -305,9 +302,9 @@ const styles = {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: "rgba(255, 250, 242, 0.9)",
+      backgroundColor: colors.overlays.backButtonBg,
       borderWidth: 1,
-      borderColor: "#eadfd4",
+      borderColor: colors.border,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -315,19 +312,19 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 26,
       fontWeight: "900",
-      color: "#28231d",
+      color: colors.textBody,
       marginTop: 14,
       paddingHorizontal: 14,
     },
     detailsMeta: {
       fontFamily: "Inter_400Regular",
       fontSize: 14,
-      color: "#5f5a53",
+      color: colors.textMid,
       paddingHorizontal: 14,
       marginBottom: 10,
     },
     menuCard: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
       marginHorizontal: 14,
       marginTop: 10,
       borderRadius: 14,
@@ -335,7 +332,7 @@ const styles = {
       flexDirection: "row",
       alignItems: "center",
       borderWidth: 1,
-      borderColor: "#f0e5d4",
+      borderColor: colors.borderMid,
     },
     menuImage: {
       width: 100,
@@ -350,7 +347,7 @@ const styles = {
       position: "absolute",
       bottom: 6,
       right: 6,
-      backgroundColor: "#000000",
+      backgroundColor: colors.black,
       borderRadius: 16,
       width: 30,
       height: 30,
@@ -365,25 +362,25 @@ const styles = {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 15,
       fontWeight: "800",
-      color: "#302b25",
+      color: colors.textMenuName,
     },
     menuDescription: {
       fontFamily: "Inter_400Regular",
       fontSize: 12,
-      color: "#6b6359",
+      color: colors.textMenuMeta,
       marginTop: 4,
     },
     menuPrice: {
       fontFamily: "Nunito_700Bold",
       fontSize: 14,
-      color: "#2f6f43",
+      color: colors.success,
       fontWeight: "700",
       marginTop: 6,
     },
     itemSheetScreen: {
       flex: 1,
-      backgroundColor: "#fffaf4",
-      paddingTop: 20,
+      backgroundColor: colors.bgWarm,
+      // paddingTop: 20,
     },
     itemSheetImageWrap: {
       position: "relative",
@@ -403,9 +400,9 @@ const styles = {
       width: 38,
       height: 38,
       borderRadius: 19,
-      backgroundColor: "rgba(255,250,244,0.9)",
+      backgroundColor: colors.overlays.closeButtonBg,
       borderWidth: 1,
-      borderColor: "#eadfd4",
+      borderColor: colors.border,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -423,33 +420,33 @@ const styles = {
     },
     itemSheetDivider: {
       height: 1,
-      backgroundColor: "#f0e5d4",
+      backgroundColor: colors.borderMid,
       marginBottom: 14,
     },
     itemSheetName: {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 20,
       fontWeight: "800",
-      color: "#28231d",
+      color: colors.textBody,
       flex: 1,
     },
     itemSheetPrice: {
       fontFamily: "Nunito_700Bold",
       fontSize: 18,
       fontWeight: "700",
-      color: "#2f6f43",
+      color: colors.success,
     },
     itemSheetDescription: {
       fontFamily: "Inter_400Regular",
       fontSize: 14,
-      color: "#6b6359",
+      color: colors.textMenuMeta,
       lineHeight: 20,
     },
     itemSheetAddButton: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "orange",
+      backgroundColor: colors.primary,
       marginHorizontal: 18,
       marginBottom: 36,
       marginTop: 10,
@@ -463,7 +460,7 @@ const styles = {
       fontFamily: "Nunito_800ExtraBold",
       fontSize: 16,
       fontWeight: "800",
-      color: "#fff",
+      color: colors.white,
     },
   }),
 };
