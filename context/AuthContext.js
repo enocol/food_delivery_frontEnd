@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { syncUserWithNeon } from "../apis/userApi";
+import { connectSocket, disconnectSocket } from "../utils/socket";
 
 const AuthContext = createContext(null);
 
@@ -78,9 +79,20 @@ export function AuthProvider({ children }) {
   const [confirmationResult, setConfirmationResult] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
       setUser(nextUser);
       setAuthLoading(false);
+
+      if (nextUser) {
+        try {
+          const token = await nextUser.getIdToken();
+          connectSocket(token);
+        } catch {
+          // Token fetch failed — socket stays disconnected until next auth event.
+        }
+      } else {
+        disconnectSocket();
+      }
     });
 
     return unsubscribe;
@@ -153,6 +165,7 @@ export function AuthProvider({ children }) {
   const signOutUser = async () => {
     setAuthActionLoading(true);
     try {
+      disconnectSocket();
       await signOut(auth);
       setConfirmationResult(null);
     } finally {

@@ -19,6 +19,7 @@ import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 import { formatXaf } from "../utils/formatXaf";
 import { fetchCustomerOrders } from "../apis/orderApi";
+import { getSocket } from "../utils/socket";
 import {
   getCurrentLocation,
   getLocationAddress,
@@ -273,6 +274,27 @@ export default function OrdersScreen({ navigation }) {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  // Keep order statuses up to date in real time via socket events.
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleStatusUpdate = ({ orderId, status, updatedAt }) => {
+      setOrders((prev) =>
+        prev.map((order) =>
+          String(order.id) === String(orderId)
+            ? { ...order, status, updatedAt }
+            : order,
+        ),
+      );
+    };
+
+    socket.on("order_status_updated", handleStatusUpdate);
+    return () => {
+      socket.off("order_status_updated", handleStatusUpdate);
+    };
+  }, []);
 
   const sortedOrders = useMemo(() => {
     return [...orders].sort((a, b) => {
