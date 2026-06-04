@@ -18,11 +18,18 @@ const RestaurantCard = React.memo(function RestaurantCard({
       style={styles.restaurantCard}
       onPress={() => onPress(item.id)}
     >
-      <Image
-        source={toImageSource(item.image)}
-        style={sharedStyles.detailsHeroImage}
-        resizeMode="contain"
-      />
+      <View style={styles.imageWrapper}>
+        <Image
+          source={toImageSource(item.image)}
+          style={sharedStyles.detailsHeroImage}
+          resizeMode="contain"
+        />
+        {!item.isOpen && (
+          <View style={styles.closedBadge}>
+            <Text style={styles.closedBadgeText}>Currently Closed</Text>
+          </View>
+        )}
+      </View>
       <View style={styles.restaurantContent}>
         <View style={styles.rowBetween}>
           <Text style={styles.restaurantName}>
@@ -49,6 +56,24 @@ const styles = StyleSheet.create({
     borderColor: colors.borderOrange,
     elevation: 3,
     width: "100%",
+  },
+  imageWrapper: {
+    position: "relative",
+  },
+  closedBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "red",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  closedBadgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontFamily: "Nunito_700Bold",
+    fontWeight: "700",
   },
   restaurantContent: {
     padding: 12,

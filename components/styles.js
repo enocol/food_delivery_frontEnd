@@ -13,6 +13,7 @@ const styles = StyleSheet.create({
   },
   gradientBackground: {
     flex: 1,
+    marginTop: -40,
   },
   emptyTitle: {
     fontFamily: "Nunito_900Black",

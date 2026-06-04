@@ -236,7 +236,7 @@ export default function OrdersScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "Orders", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: "orange",
+    headerBackgroundColor: "#ffffff",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
@@ -471,6 +471,7 @@ const styles = {
       fontWeight: "900",
       color: colors.textHeading,
       marginBottom: 16,
+      paddingTop: 100,
     },
     orderRestaurantGroup: {
       marginTop: 10,

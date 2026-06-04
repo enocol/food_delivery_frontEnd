@@ -36,7 +36,7 @@ const styles = {
       backgroundColor: colors.bgOverlay,
     },
     cartSheet: {
-      height: "78%",
+      height: "90%",
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
       overflow: "hidden",
@@ -62,7 +62,7 @@ const styles = {
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 16,
-      paddingTop: 10,
+      paddingTop: 40,
       marginBottom: 8,
     },
     cartActionRow: {

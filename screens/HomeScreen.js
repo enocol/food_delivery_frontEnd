@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   FlatList,
   Modal,
   Pressable,
@@ -28,6 +29,9 @@ import {
 } from "../utils/locationService";
 import { FOOD_FILTERS, FILTER_ALIASES } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
+
+const PLACEHOLDER_WORDS = ["restaurants", "Food"];
+const PLACEHOLDER_WORD_HEIGHT = 28;
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -78,8 +82,44 @@ export default function HomeScreen({ navigation }) {
     "Fetching location...",
   );
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+  const [isClosedModalVisible, setIsClosedModalVisible] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [likedRestaurantIds, setLikedRestaurantIds] = useState(() => ({}));
+  const animA = useRef(new Animated.Value(0)).current;
+  const animB = useRef(new Animated.Value(PLACEHOLDER_WORD_HEIGHT)).current;
+  const placeholderForward = useRef(true);
+  const searchBarAnim = useRef(new Animated.Value(1)).current;
+  const lastScrollY = useRef(0);
+  const searchBarVisible = useRef(true);
+
+  useEffect(() => {
+    const runCycle = () => {
+      const forward = placeholderForward.current;
+      const exitAnim = forward ? animA : animB;
+      const enterAnim = forward ? animB : animA;
+
+      Animated.parallel([
+        Animated.timing(exitAnim, {
+          toValue: -PLACEHOLDER_WORD_HEIGHT,
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(enterAnim, {
+          toValue: 0,
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        exitAnim.setValue(PLACEHOLDER_WORD_HEIGHT);
+        placeholderForward.current = !forward;
+      });
+    };
+
+    const interval = setInterval(runCycle, 5000);
+    return () => clearInterval(interval);
+  }, [animA, animB]);
 
   // Seed liked state from the server whenever a user is authenticated.
   useEffect(() => {
@@ -129,7 +169,7 @@ export default function HomeScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: "orange",
+    headerBackgroundColor: colors.bgWarm,
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
@@ -268,11 +308,53 @@ export default function HomeScreen({ navigation }) {
     setRefreshNonce((value) => value + 1);
   }, []);
 
+  const handleScroll = useCallback(
+    (event) => {
+      const currentY = event.nativeEvent.contentOffset.y;
+      const diff = currentY - lastScrollY.current;
+      lastScrollY.current = currentY;
+
+      if (diff > 8 && searchBarVisible.current) {
+        searchBarVisible.current = false;
+        Animated.timing(searchBarAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: false,
+        }).start();
+      } else if (diff < -8 && !searchBarVisible.current) {
+        searchBarVisible.current = true;
+        Animated.timing(searchBarAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: false,
+        }).start();
+      }
+    },
+    [searchBarAnim],
+  );
+
+  // Always restore the search bar when the user is actively using it.
+  useEffect(() => {
+    if (isSearchFocused || searchQuery.length > 0) {
+      searchBarVisible.current = true;
+      Animated.timing(searchBarAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isSearchFocused, searchQuery, searchBarAnim]);
+
   const handleOpenRestaurant = useCallback(
     (restaurantId) => {
+      const restaurant = restaurants.find((r) => r.id === restaurantId);
+      if (restaurant && !restaurant.isOpen) {
+        setIsClosedModalVisible(true);
+        return;
+      }
       navigation.getParent()?.navigate("RestaurantDetails", { restaurantId });
     },
-    [navigation],
+    [navigation, restaurants],
   );
 
   const handleToggleLike = useCallback(
@@ -327,11 +409,29 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <LinearGradient
-        // colors={colors.gradients.warmHome}
-        colors={colors.gradients.white}
-        style={styles.gradientBackground}
-      >
+      <View style={styles.gradientBackground}>
+        <Modal
+          visible={isClosedModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsClosedModalVisible(false)}
+        >
+          <View style={styles.closedModalBackdrop}>
+            <View style={styles.closedModalCard}>
+              <Text style={styles.closedModalTitle}>Restaurant Closed</Text>
+              <Text style={styles.closedModalMessage}>
+                You cannot make an order. Restaurant is currently closed.
+              </Text>
+              <Pressable
+                style={styles.closedModalButton}
+                onPress={() => setIsClosedModalVisible(false)}
+              >
+                <Text style={styles.closedModalButtonText}>OK</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+
         <Modal
           visible={isLocationModalVisible}
           transparent
@@ -405,36 +505,75 @@ export default function HomeScreen({ navigation }) {
           </ScrollView>
         </View>
 
-        <View
+        <Animated.View
           style={[
-            styles.homeSearchWrap,
-            isSearchFocused && { borderColor: colors.black },
+            styles.searchBarAnimWrapper,
+            {
+              maxHeight: searchBarAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 70],
+              }),
+              opacity: searchBarAnim,
+            },
           ]}
         >
-          <Ionicons name="search" size={24} color={colors.iconBrown} />
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search restaurant or menu"
-            placeholderTextColor={colors.placeholderWarm}
-            style={styles.homeSearchInput}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            autoCapitalize="words"
-          />
-          {searchQuery.length > 0 && (
-            <Pressable
-              onPress={() => setSearchQuery("")}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={colors.placeholderWarm}
+          <View
+            style={[
+              styles.homeSearchWrap,
+              isSearchFocused && { borderColor: colors.black },
+            ]}
+          >
+            <Ionicons name="search" size={24} color={colors.amberLight} />
+            <View style={styles.searchInputWrapper}>
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder=""
+                placeholderTextColor={colors.textSubMuted}
+                style={styles.homeSearchInput}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                autoCapitalize="words"
               />
-            </Pressable>
-          )}
-        </View>
+              {searchQuery.length === 0 && !isSearchFocused && (
+                <View pointerEvents="none" style={styles.fakePlaceholder}>
+                  <Text style={styles.fakePlaceholderStatic}>looking for </Text>
+                  <View style={styles.fakePlaceholderSlot}>
+                    <Animated.Text
+                      style={[
+                        styles.fakePlaceholderWord,
+                        { transform: [{ translateY: animA }] },
+                      ]}
+                    >
+                      {PLACEHOLDER_WORDS[0]}
+                    </Animated.Text>
+                    <Animated.Text
+                      style={[
+                        styles.fakePlaceholderWord,
+                        { position: "absolute", top: 0 },
+                        { transform: [{ translateY: animB }] },
+                      ]}
+                    >
+                      {PLACEHOLDER_WORDS[1]}
+                    </Animated.Text>
+                  </View>
+                </View>
+              )}
+            </View>
+            {searchQuery.length > 0 && (
+              <Pressable
+                onPress={() => setSearchQuery("")}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={colors.textSubMuted}
+                />
+              </Pressable>
+            )}
+          </View>
+        </Animated.View>
 
         <FlatList
           data={restaurants}
@@ -442,8 +581,8 @@ export default function HomeScreen({ navigation }) {
           renderItem={renderRestaurantItem}
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
-          contentContainerStyle={styles.restaurantList}
-          initialNumToRender={4}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           maxToRenderPerBatch={4}
           windowSize={5}
           removeClippedSubviews
@@ -481,7 +620,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           }
         />
-      </LinearGradient>
+      </View>
       <StatusBar style="dark" />
     </SafeAreaView>
   );
@@ -534,6 +673,50 @@ const styles = {
       fontSize: 14,
       fontWeight: "800",
       color: colors.textDark,
+    },
+    closedModalBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlays.locationBackdrop,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    closedModalCard: {
+      width: "100%",
+      maxWidth: 420,
+      backgroundColor: colors.bgWarm,
+      borderRadius: 22,
+      padding: 24,
+      borderWidth: 1,
+      borderColor: colors.borderModalWarm,
+      alignItems: "center",
+    },
+    closedModalTitle: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 18,
+      fontWeight: "900",
+      color: colors.textDark,
+      marginBottom: 10,
+    },
+    closedModalMessage: {
+      fontFamily: "Inter_400Regular",
+      fontSize: 15,
+      lineHeight: 22,
+      color: colors.textMid,
+      textAlign: "center",
+      marginBottom: 20,
+    },
+    closedModalButton: {
+      backgroundColor: "red",
+      borderRadius: 12,
+      paddingHorizontal: 40,
+      paddingVertical: 12,
+    },
+    closedModalButtonText: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 15,
+      fontWeight: "800",
+      color: "#fff",
     },
     homeLocationModalBackdrop: {
       flex: 1,
@@ -613,6 +796,9 @@ const styles = {
     foodFilterItem: {
       alignItems: "center",
     },
+    searchBarAnimWrapper: {
+      overflow: "hidden",
+    },
     homeSearchWrap: {
       marginHorizontal: 14,
       marginTop: 4,
@@ -625,13 +811,44 @@ const styles = {
       borderColor: colors.borderSearchBar,
       borderRadius: 14,
       paddingHorizontal: 12,
+      height: 48,
+      width: "90%",
+    },
+    searchInputWrapper: {
+      flex: 1,
+    },
+    fakePlaceholder: {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      right: 0,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    fakePlaceholderStatic: {
+      fontFamily: "Inter_400Regular",
+      fontSize: 15,
+      color: colors.textSubMuted,
+    },
+    fakePlaceholderSlot: {
+      height: PLACEHOLDER_WORD_HEIGHT,
+      overflow: "hidden",
+    },
+    fakePlaceholderWord: {
+      fontFamily: "Inter_400Regular",
+      fontSize: 15,
+      color: colors.textSubMuted,
+      height: PLACEHOLDER_WORD_HEIGHT,
+      lineHeight: PLACEHOLDER_WORD_HEIGHT,
     },
     homeSearchInput: {
       fontFamily: "Inter_400Regular",
       flex: 1,
-      paddingVertical: 15,
-      fontSize: 20,
+      paddingVertical: 0,
+      fontSize: 15,
       color: colors.textWarmDark,
+      backgroundColor: "transparent",
     },
     restaurantList: {
       paddingBottom: 120,

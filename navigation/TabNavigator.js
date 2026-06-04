@@ -39,7 +39,7 @@ const styles = {
       bottom: 0,
       borderRadius: 24,
       overflow: "hidden",
-      backgroundColor: colors.amberLight,
+      backgroundColor: "#ffffff",
     },
     tabBarLabel: {
       fontFamily: "Nunito_800ExtraBold",

@@ -33,7 +33,7 @@ export default function ProfileScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "Profile", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: "orange",
+    headerBackgroundColor: "#ffffff",
   });
 
   const loadCurrentLocation = useCallback(async () => {
@@ -158,7 +158,7 @@ const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
     profileWrap: {
-      padding: 16,
+      paddingVertical: 100,
       gap: 14,
     },
     profileCard: {
