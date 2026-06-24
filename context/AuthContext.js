@@ -12,7 +12,8 @@ import {
 } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { syncUserWithNeon } from "../apis/userApi";
-import { connectSocket, disconnectSocket } from "../utils/socket";
+import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
+import { AppState } from "react-native";
 
 const AuthContext = createContext(null);
 
@@ -85,8 +86,7 @@ export function AuthProvider({ children }) {
 
       if (nextUser) {
         try {
-          const token = await nextUser.getIdToken();
-          connectSocket(token);
+          connectSocket(() => nextUser.getIdToken());
         } catch {
           // Token fetch failed — socket stays disconnected until next auth event.
         }
@@ -96,6 +96,24 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
+  }, []);
+
+  // Reconnect when the app returns to the foreground in case the socket
+  // dropped while the app was backgrounded (network change, OS suspension).
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") return;
+
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      const s = getSocket();
+      if (s && !s.connected) {
+        s.connect();
+      }
+    });
+
+    return () => subscription.remove();
   }, []);
 
   const sendPhoneCode = async (phoneNumber, applicationVerifier) => {

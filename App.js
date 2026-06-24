@@ -3,6 +3,8 @@ import * as colors from "./utils/colors";
 import { View, Text, Modal, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getSocket } from "./utils/socket";
+import * as Haptics from "expo-haptics";
+import { playOrderStatusSound } from "./utils/cartFeedback";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   useFonts,
@@ -46,16 +48,65 @@ function AppContent() {
   );
 }
 
+function getNotifConfig(status) {
+  switch (status) {
+    case "confirmed":
+      return {
+        iconName: "checkmark-circle",
+        iconColor: "#0d9668",
+        iconCircleStyle: "iconCircleAccepted",
+        title: "Order Accepted!",
+        body: "Your order has been accepted and is being prepared.",
+        buttonStyle: "buttonAccepted",
+        buttonLabel: "Got it",
+        haptic: Haptics.NotificationFeedbackType.Success,
+      };
+    case "ready_for_pickup":
+      // case "readyForPickup":
+      // case "ready for pickup":
+      return {
+        iconName: "bicycle",
+        iconColor: "#0284c7",
+        iconCircleStyle: "iconCircleReady",
+        title: "Order Ready for Delivery!",
+        body: "Your order is ready to be delivered. A rider is on the way!",
+        buttonStyle: "buttonReady",
+        buttonLabel: "Got it",
+        haptic: Haptics.NotificationFeedbackType.Success,
+      };
+    case "cancelled":
+    default:
+      return {
+        iconName: "close-circle",
+        iconColor: "#dc2626",
+        iconCircleStyle: "iconCircleCancelled",
+        title: "Order Cancelled",
+        body: "Your order has been cancelled by the restaurant.",
+        buttonStyle: "buttonCancelled",
+        buttonLabel: "Dismiss",
+        haptic: Haptics.NotificationFeedbackType.Error,
+      };
+  }
+}
+
 function AuthenticatedApp() {
   const { cartCount, isCartSheetOpen, closeCartSheet } = useCart();
-  const [statusNotification, setStatusNotification] = useState(null);
+  const [statusNotifications, setStatusNotifications] = useState([]);
+  const statusNotification = statusNotifications[0] || null;
+  const notificationCount = statusNotifications.length;
 
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
     const handleStatusUpdate = ({ orderId, status, updatedAt }) => {
-      setStatusNotification({ orderId, status, updatedAt });
+      setStatusNotifications((previous) => [
+        ...previous,
+        { orderId, status, updatedAt },
+      ]);
+      playOrderStatusSound();
+      const config = getNotifConfig(status);
+      Haptics.notificationAsync(config.haptic).catch(() => {});
     };
 
     socket.on("order_status_updated", handleStatusUpdate);
@@ -78,7 +129,8 @@ function AuthenticatedApp() {
     }
   };
 
-  const isAccepted = statusNotification?.status === "confirmed";
+  const config = getNotifConfig(statusNotification?.status);
+  const currentIndex = statusNotification ? 1 : 0;
 
   const timeLabel = statusNotification?.updatedAt
     ? new Date(statusNotification.updatedAt).toLocaleTimeString([], {
@@ -101,59 +153,68 @@ function AuthenticatedApp() {
         visible={!!statusNotification}
         transparent
         animationType="slide"
-        onRequestClose={() => setStatusNotification(null)}
+        onRequestClose={() => {}}
       >
-        {/* Tapping the dimmed backdrop dismisses */}
-        <Pressable
-          style={notifStyles.overlay}
-          onPress={() => setStatusNotification(null)}
-        >
-          {/* Inner press stops propagation so tapping the sheet doesn't close */}
-          <Pressable style={notifStyles.sheet} onPress={() => {}}>
+        <View style={notifStyles.overlay}>
+          <View style={notifStyles.sheet}>
+            <View style={notifStyles.headerRow}>
+              <View style={notifStyles.countBadge}>
+                <Text style={notifStyles.countBadgeText}>
+                  {currentIndex} of {notificationCount}
+                </Text>
+              </View>
+
+              <Pressable
+                style={notifStyles.closeButton}
+                onPress={() =>
+                  setStatusNotifications((previous) => previous.slice(1))
+                }
+              >
+                <Ionicons name="close" size={20} color={colors.textWarmDark} />
+              </Pressable>
+            </View>
+
             <View style={notifStyles.handle} />
 
             <View
               style={[
                 notifStyles.iconCircle,
-                isAccepted
-                  ? notifStyles.iconCircleAccepted
-                  : notifStyles.iconCircleCancelled,
+                notifStyles[config.iconCircleStyle],
               ]}
             >
               <Ionicons
-                name={isAccepted ? "checkmark-circle" : "close-circle"}
+                name={config.iconName}
                 size={38}
-                color={isAccepted ? "#0d9668" : "#dc2626"}
+                color={config.iconColor}
               />
             </View>
 
-            <Text style={notifStyles.title}>
-              {isAccepted ? "Order Accepted!" : "Order Cancelled"}
-            </Text>
+            <Text style={notifStyles.title}>{config.title}</Text>
 
-            <Text style={notifStyles.body}>
-              {isAccepted
-                ? "Your order has been accepted and is being prepared."
-                : "Your order has been cancelled by the restaurant."}
-            </Text>
+            <Text style={notifStyles.body}>{config.body}</Text>
 
             <Text style={notifStyles.timestamp}>{timeLabel}</Text>
 
-            <Pressable
-              style={[
-                notifStyles.button,
-                isAccepted
-                  ? notifStyles.buttonAccepted
-                  : notifStyles.buttonCancelled,
-              ]}
-              onPress={() => setStatusNotification(null)}
-            >
-              <Text style={notifStyles.buttonText}>
-                {isAccepted ? "Got it" : "Dismiss"}
+            <View style={notifStyles.queueStatusRow}>
+              <View style={notifStyles.queueDot} />
+              <Text style={notifStyles.queueStatusText}>
+                {notificationCount > 1
+                  ? `Showing the next notification now, with ${notificationCount - 1} waiting in the queue.`
+                  : "You are viewing the only notification in the queue."}
               </Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
+            </View>
+
+            <Text style={notifStyles.queueHint}>
+              {notificationCount > 1
+                ? `${notificationCount - 1} more ${
+                    notificationCount - 1 === 1
+                      ? "notification"
+                      : "notifications"
+                  } queued`
+                : ""}
+            </Text>
+          </View>
+        </View>
       </Modal>
     </>
   );
@@ -170,16 +231,46 @@ const notifStyles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 40,
     alignItems: "center",
+  },
+  headerRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  countBadge: {
+    backgroundColor: colors.bgWarmAlt,
+    borderWidth: 1,
+    borderColor: colors.borderMid,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  countBadgeText: {
+    fontFamily: "Nunito_700Bold",
+    color: colors.textDark,
+    fontSize: 12,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.overlays.closeButtonBg,
+    borderWidth: 1,
+    borderColor: colors.borderMid,
+    alignItems: "center",
+    justifyContent: "center",
   },
   handle: {
     width: 40,
     height: 4,
     borderRadius: 99,
     backgroundColor: "#cbd5e1",
-    marginBottom: 20,
+    marginBottom: 18,
   },
   iconCircle: {
     width: 68,
@@ -190,6 +281,7 @@ const notifStyles = StyleSheet.create({
     marginBottom: 16,
   },
   iconCircleAccepted: { backgroundColor: "#dcfce7" },
+  iconCircleReady: { backgroundColor: "#e0f2fe" },
   iconCircleCancelled: { backgroundColor: "#fee2e2" },
   title: {
     fontFamily: "Nunito_800ExtraBold",
@@ -212,6 +304,40 @@ const notifStyles = StyleSheet.create({
     color: "#94a3b8",
     marginBottom: 24,
   },
+  queueHint: {
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 12,
+    color: colors.textMuted,
+    minHeight: 16,
+    marginBottom: 4,
+  },
+  queueStatusRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.bgWarmAlt,
+    borderWidth: 1,
+    borderColor: colors.borderMid,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 14,
+  },
+  queueDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    flexShrink: 0,
+  },
+  queueStatusText: {
+    flex: 1,
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.textDark,
+  },
   button: {
     width: "100%",
     paddingVertical: 15,
@@ -219,6 +345,7 @@ const notifStyles = StyleSheet.create({
     alignItems: "center",
   },
   buttonAccepted: { backgroundColor: "#0d9668" },
+  buttonReady: { backgroundColor: "#0284c7" },
   buttonCancelled: { backgroundColor: "#dc2626" },
   buttonText: {
     fontFamily: "Nunito_700Bold",

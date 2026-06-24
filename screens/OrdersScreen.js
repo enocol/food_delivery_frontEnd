@@ -109,6 +109,55 @@ function getRestaurantName(order) {
   return "Restaurant unavailable";
 }
 
+function getPaymentStatusColors(paymentStatus) {
+  switch (String(paymentStatus || "").toLowerCase()) {
+    case "paid":
+    case "success":
+    case "successful":
+      return {
+        bg: "#f0fdf4",
+        border: "#bbf7d0",
+        dot: "#0d9668",
+        text: "#0d9668",
+        label: "Payment successful",
+      };
+    case "pending":
+      return {
+        bg: "#fffbeb",
+        border: "#fde68a",
+        dot: "#f59e0b",
+        text: "#b45309",
+        label: "Payment pending",
+      };
+    case "failed":
+    case "failure":
+    case "error":
+      return {
+        bg: "#fff1f2",
+        border: "#fecdd3",
+        dot: "#dc2626",
+        text: "#dc2626",
+        label: "Payment failed",
+      };
+    case "refunded":
+      return {
+        bg: "#eff6ff",
+        border: "#bfdbfe",
+        dot: "#2563eb",
+        text: "#1d4ed8",
+        label: "Payment refunded",
+      };
+    default:
+      return {
+        bg: "#f8fafc",
+        border: "#e2e8f0",
+        dot: "#94a3b8",
+        text: "#475569",
+        label: String(paymentStatus),
+      };
+  }
+}
+
 function groupItemsByRestaurant(items) {
   if (!Array.isArray(items)) return [];
   const map = {};
@@ -130,30 +179,61 @@ const OrderCard = memo(function OrderCard({ item }) {
   const itemCount = getItemCount(item);
   const total = getOrderTotal(item);
   const status = item?.status || item?.payment?.status || "confirmed";
+  const paymentStatus = item?.paymentStatus || item?.payment_status || null;
   const groups = groupItemsByRestaurant(item?.items);
+  const paymentColors = paymentStatus
+    ? getPaymentStatusColors(paymentStatus)
+    : null;
 
   return (
     <View style={styles.orderCard}>
-      <View style={styles.orderRowBetween}>
-        <Text style={styles.orderMetaText}>{toDateLabel(createdAt)}</Text>
-        <Text style={styles.orderStatusText}>{status}</Text>
-      </View>
-      {groups.map((group) => (
-        <View key={group.restaurantName} style={styles.orderRestaurantGroup}>
-          <Text style={styles.orderRestaurantText}>{group.restaurantName}</Text>
-          {group.items.map((lineItem, idx) => (
-            <View key={idx} style={styles.orderItemRow}>
-              <Text style={styles.orderItemName} numberOfLines={1}>
-                · {lineItem.name}
-              </Text>
-              <Text style={styles.orderItemQty}>x{lineItem.qty}</Text>
-            </View>
-          ))}
+      {paymentColors && (
+        <View
+          style={[
+            styles.paymentStrip,
+            {
+              backgroundColor: paymentColors.bg,
+              borderBottomColor: paymentColors.border,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.paymentStripDot,
+              { backgroundColor: paymentColors.dot },
+            ]}
+          />
+          <Text
+            style={[styles.paymentStripText, { color: paymentColors.text }]}
+          >
+            {paymentColors.label}
+          </Text>
         </View>
-      ))}
-      <View style={[styles.orderRowBetween, styles.orderCardFooter]}>
-        <Text style={styles.orderSummaryText}>{itemCount} item(s)</Text>
-        <Text style={styles.orderTotalText}>{formatXaf(total)}</Text>
+      )}
+      <View style={styles.orderCardContent}>
+        <View style={styles.orderRowBetween}>
+          <Text style={styles.orderMetaText}>{toDateLabel(createdAt)}</Text>
+          <Text style={styles.orderStatusText}>{status}</Text>
+        </View>
+        {groups.map((group) => (
+          <View key={group.restaurantName} style={styles.orderRestaurantGroup}>
+            <Text style={styles.orderRestaurantText}>
+              {group.restaurantName}
+            </Text>
+            {group.items.map((lineItem, idx) => (
+              <View key={idx} style={styles.orderItemRow}>
+                <Text style={styles.orderItemName} numberOfLines={1}>
+                  · {lineItem.name}
+                </Text>
+                <Text style={styles.orderItemQty}>x{lineItem.qty}</Text>
+              </View>
+            ))}
+          </View>
+        ))}
+        <View style={[styles.orderRowBetween, styles.orderCardFooter]}>
+          <Text style={styles.orderSummaryText}>{itemCount} item(s)</Text>
+          <Text style={styles.orderTotalText}>{formatXaf(total)}</Text>
+        </View>
       </View>
     </View>
   );
@@ -540,9 +620,31 @@ const styles = {
     orderCard: {
       backgroundColor: colors.white,
       borderRadius: 16,
-      padding: 14,
+      overflow: "hidden",
       borderWidth: 1,
       borderColor: colors.border,
+    },
+    paymentStrip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 7,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderBottomWidth: 1,
+    },
+    paymentStripDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+    },
+    paymentStripText: {
+      fontFamily: "Nunito_700Bold",
+      fontSize: 11,
+      letterSpacing: 0.3,
+      textTransform: "uppercase",
+    },
+    orderCardContent: {
+      padding: 14,
     },
     orderRowBetween: {
       flexDirection: "row",

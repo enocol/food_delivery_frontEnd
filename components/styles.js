@@ -10,6 +10,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
+    backgroundColor: colors.white,
   },
   gradientBackground: {
     flex: 1,

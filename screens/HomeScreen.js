@@ -4,18 +4,19 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   Animated,
-  Easing,
   FlatList,
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
@@ -29,9 +30,7 @@ import {
 } from "../utils/locationService";
 import { FOOD_FILTERS, FILTER_ALIASES } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
-
-const PLACEHOLDER_WORDS = ["restaurants", "Food"];
-const PLACEHOLDER_WORD_HEIGHT = 28;
+import HomeSearchBar from "../components/HomeSearchBar";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -68,6 +67,7 @@ function restaurantMatchesQuery(restaurant, query) {
 }
 
 export default function HomeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const { cartCount, openCartSheet } = useCart();
   const { firebaseUid } = useAuth();
   const [selectedFood, setSelectedFood] = useState("All");
@@ -85,41 +85,9 @@ export default function HomeScreen({ navigation }) {
   const [isClosedModalVisible, setIsClosedModalVisible] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [likedRestaurantIds, setLikedRestaurantIds] = useState(() => ({}));
-  const animA = useRef(new Animated.Value(0)).current;
-  const animB = useRef(new Animated.Value(PLACEHOLDER_WORD_HEIGHT)).current;
-  const placeholderForward = useRef(true);
   const searchBarAnim = useRef(new Animated.Value(1)).current;
   const lastScrollY = useRef(0);
   const searchBarVisible = useRef(true);
-
-  useEffect(() => {
-    const runCycle = () => {
-      const forward = placeholderForward.current;
-      const exitAnim = forward ? animA : animB;
-      const enterAnim = forward ? animB : animA;
-
-      Animated.parallel([
-        Animated.timing(exitAnim, {
-          toValue: -PLACEHOLDER_WORD_HEIGHT,
-          duration: 350,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(enterAnim, {
-          toValue: 0,
-          duration: 350,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        exitAnim.setValue(PLACEHOLDER_WORD_HEIGHT);
-        placeholderForward.current = !forward;
-      });
-    };
-
-    const interval = setInterval(runCycle, 5000);
-    return () => clearInterval(interval);
-  }, [animA, animB]);
 
   // Seed liked state from the server whenever a user is authenticated.
   useEffect(() => {
@@ -394,6 +362,7 @@ export default function HomeScreen({ navigation }) {
   let emptyStateIconColor = colors.orange;
   let emptyStateIconBackgroundColor = colors.bgEmptyOrange;
   let emptyStateIconBorderColor = colors.borderOrange;
+  const listBottomPadding = 75 + 16 + insets.bottom + 20;
 
   if (isLoading) {
     emptyStateIconName = "time-outline";
@@ -505,80 +474,22 @@ export default function HomeScreen({ navigation }) {
           </ScrollView>
         </View>
 
-        <Animated.View
-          style={[
-            styles.searchBarAnimWrapper,
-            {
-              maxHeight: searchBarAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 70],
-              }),
-              opacity: searchBarAnim,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.homeSearchWrap,
-              isSearchFocused && { borderColor: colors.black },
-            ]}
-          >
-            <Ionicons name="search" size={24} color={colors.amberLight} />
-            <View style={styles.searchInputWrapper}>
-              <TextInput
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder=""
-                placeholderTextColor={colors.textSubMuted}
-                style={styles.homeSearchInput}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                autoCapitalize="words"
-              />
-              {searchQuery.length === 0 && !isSearchFocused && (
-                <View pointerEvents="none" style={styles.fakePlaceholder}>
-                  <Text style={styles.fakePlaceholderStatic}>looking for </Text>
-                  <View style={styles.fakePlaceholderSlot}>
-                    <Animated.Text
-                      style={[
-                        styles.fakePlaceholderWord,
-                        { transform: [{ translateY: animA }] },
-                      ]}
-                    >
-                      {PLACEHOLDER_WORDS[0]}
-                    </Animated.Text>
-                    <Animated.Text
-                      style={[
-                        styles.fakePlaceholderWord,
-                        { position: "absolute", top: 0 },
-                        { transform: [{ translateY: animB }] },
-                      ]}
-                    >
-                      {PLACEHOLDER_WORDS[1]}
-                    </Animated.Text>
-                  </View>
-                </View>
-              )}
-            </View>
-            {searchQuery.length > 0 && (
-              <Pressable
-                onPress={() => setSearchQuery("")}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons
-                  name="close-circle"
-                  size={20}
-                  color={colors.textSubMuted}
-                />
-              </Pressable>
-            )}
-          </View>
-        </Animated.View>
+        <HomeSearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          isSearchFocused={isSearchFocused}
+          setIsSearchFocused={setIsSearchFocused}
+          searchBarAnim={searchBarAnim}
+        />
 
         <FlatList
           data={restaurants}
           keyExtractor={keyExtractor}
           renderItem={renderRestaurantItem}
+          contentContainerStyle={[
+            styles.restaurantList,
+            { paddingBottom: listBottomPadding },
+          ]}
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
           onScroll={handleScroll}
@@ -796,62 +707,10 @@ const styles = {
     foodFilterItem: {
       alignItems: "center",
     },
-    searchBarAnimWrapper: {
-      overflow: "hidden",
-    },
-    homeSearchWrap: {
-      marginHorizontal: 14,
-      marginTop: 4,
-      marginBottom: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      backgroundColor: colors.bgWarmAlt,
-      borderWidth: 1,
-      borderColor: colors.borderSearchBar,
-      borderRadius: 14,
-      paddingHorizontal: 12,
-      height: 48,
-      width: "90%",
-    },
-    searchInputWrapper: {
-      flex: 1,
-    },
-    fakePlaceholder: {
-      position: "absolute",
-      left: 0,
-      top: 0,
-      bottom: 0,
-      right: 0,
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    fakePlaceholderStatic: {
-      fontFamily: "Inter_400Regular",
-      fontSize: 15,
-      color: colors.textSubMuted,
-    },
-    fakePlaceholderSlot: {
-      height: PLACEHOLDER_WORD_HEIGHT,
-      overflow: "hidden",
-    },
-    fakePlaceholderWord: {
-      fontFamily: "Inter_400Regular",
-      fontSize: 15,
-      color: colors.textSubMuted,
-      height: PLACEHOLDER_WORD_HEIGHT,
-      lineHeight: PLACEHOLDER_WORD_HEIGHT,
-    },
-    homeSearchInput: {
-      fontFamily: "Inter_400Regular",
-      flex: 1,
-      paddingVertical: 0,
-      fontSize: 15,
-      color: colors.textWarmDark,
-      backgroundColor: "transparent",
-    },
     restaurantList: {
       paddingBottom: 120,
+      paddingHorizontal: 12,
+      rowGap: 12,
       gap: 30,
       flexGrow: 1,
     },

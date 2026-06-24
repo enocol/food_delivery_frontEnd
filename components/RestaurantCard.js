@@ -1,17 +1,21 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import sharedStyles from "./styles";
-import LikeButton from "./LikeButton";
 import * as colors from "../utils/colors";
 import { toImageSource } from "../utils/imageSource";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
+import { formatXaf } from "../utils/formatXaf";
 
-const RestaurantCard = React.memo(function RestaurantCard({
-  item,
-  onPress,
-  liked,
-  onToggleLike,
-}) {
+const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
+  const ratingValue = Number(item.rating) || 0;
+  const ratingCount = Number(item.ratingCount) || 0;
+  const cuisineText = item.cuisine || "Cuisine unavailable";
+  const etaText = item.eta || "Delivery time unavailable";
+  const deliveryText =
+    Number(item.deliveryFee) > 0
+      ? `${formatXaf(Number(item.deliveryFee))} delivery`
+      : "Free delivery";
+
   return (
     <TouchableOpacity
       activeOpacity={0.88}
@@ -21,8 +25,8 @@ const RestaurantCard = React.memo(function RestaurantCard({
       <View style={styles.imageWrapper}>
         <Image
           source={toImageSource(item.image)}
-          style={sharedStyles.detailsHeroImage}
-          resizeMode="contain"
+          style={styles.heroImage}
+          resizeMode="cover"
         />
         {!item.isOpen && (
           <View style={styles.closedBadge}>
@@ -31,16 +35,49 @@ const RestaurantCard = React.memo(function RestaurantCard({
         )}
       </View>
       <View style={styles.restaurantContent}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.restaurantName}>
-            {formatRestaurantName(item.name)}
+        <Text style={styles.restaurantName} numberOfLines={1}>
+          {formatRestaurantName(item.name)}
+        </Text>
+
+        <View style={styles.metaRow}>
+          <Ionicons name="star" size={18} color={colors.amberLight} />
+          <Text style={styles.ratingText}>{ratingValue.toFixed(1)}</Text>
+          {ratingCount > 0 && (
+            <Text style={styles.ratingCountText}>({ratingCount})</Text>
+          )}
+          <Text style={styles.dot}>·</Text>
+          <Text style={[styles.metaText, styles.cuisineText]} numberOfLines={1}>
+            {cuisineText}
           </Text>
-          <Text style={styles.rating}>{item.rating}</Text>
         </View>
-        <Text style={sharedStyles.metaText}>{item.cuisine}</Text>
-        <View style={styles.restaurantMetaRow}>
-          <Text style={sharedStyles.metaText}>{item.eta}</Text>
-          <LikeButton liked={liked} onPress={() => onToggleLike(item.id)} />
+
+        <View style={[styles.metaRow, styles.metaRowWrap]}>
+          <View style={styles.metaGroup}>
+            <Ionicons
+              name="time-outline"
+              size={20}
+              color={colors.textIconMuted}
+            />
+            <Text style={styles.metaText}>{etaText}</Text>
+          </View>
+          <Text style={styles.dot}>·</Text>
+          <View style={styles.metaGroup}>
+            <Ionicons
+              name="bicycle-outline"
+              size={20}
+              color={colors.textIconMuted}
+            />
+            <Text style={styles.metaText}>{deliveryText}</Text>
+          </View>
+          <Text style={styles.dot}>·</Text>
+          <View style={styles.metaGroup}>
+            <Ionicons
+              name="bag-handle-outline"
+              size={20}
+              color={colors.textIconMuted}
+            />
+            <Text style={styles.metaText}>No min. order</Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -49,59 +86,94 @@ const RestaurantCard = React.memo(function RestaurantCard({
 
 const styles = StyleSheet.create({
   restaurantCard: {
-    borderRadius: 18,
-    overflow: "hidden",
+    borderRadius: 20,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.borderOrange,
-    elevation: 3,
+    borderColor: colors.borderMid,
+    shadowColor: colors.shadow,
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
     width: "100%",
+    overflow: "hidden",
   },
   imageWrapper: {
     position: "relative",
   },
+  heroImage: {
+    width: "100%",
+    height: 220,
+  },
   closedBadge: {
     position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "red",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    top: 12,
+    right: 12,
+    backgroundColor: colors.overlays.locationBackdrop,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   closedBadgeText: {
-    color: "#fff",
-    fontSize: 11,
+    color: colors.white,
+    fontSize: 12,
     fontFamily: "Nunito_700Bold",
     fontWeight: "700",
   },
   restaurantContent: {
-    padding: 12,
-  },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 16,
+    gap: 10,
   },
   restaurantName: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 18,
-    fontWeight: "800",
+    fontFamily: "Nunito_900Black",
+    fontSize: 20,
+    fontWeight: "900",
     color: colors.textRestaurant,
-    flex: 1,
   },
-  rating: {
-    fontFamily: "Nunito_700Bold",
-    fontSize: 14,
-    color: colors.amberDark,
-    fontWeight: "700",
-  },
-  restaurantMetaRow: {
-    marginTop: 3,
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    flexWrap: "nowrap",
+  },
+  metaRowWrap: {
+    flexWrap: "wrap",
+    rowGap: 6,
+  },
+  metaGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  ratingText: {
+    marginLeft: 6,
+    fontFamily: "Nunito_700Bold",
+    fontSize: 16,
+    color: colors.textDark,
+    fontWeight: "700",
+  },
+  ratingCountText: {
+    marginLeft: 6,
+    fontFamily: "Inter_400Regular",
+    fontSize: 16,
+    color: colors.textMuted,
+  },
+  dot: {
+    marginHorizontal: 10,
+    fontFamily: "Inter_400Regular",
+    fontSize: 16,
+    color: colors.border,
+    lineHeight: 18,
+  },
+  metaText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 16,
+    color: colors.textIconMuted,
+  },
+  cuisineText: {
+    flex: 1,
+    flexShrink: 1,
   },
 });
 

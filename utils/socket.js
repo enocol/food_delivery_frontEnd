@@ -20,21 +20,29 @@ let socket = null;
  * ID token.  Any existing connection is cleanly disconnected first so the
  * server always gets a fresh room assignment.
  *
- * @param {string} token  Firebase ID token from firebaseUser.getIdToken()
+ * @param {() => Promise<string>} getTokenFn  Async function that returns a fresh Firebase ID token
  * @returns {import("socket.io-client").Socket}
  */
-export function connectSocket(token) {
+export function connectSocket(getTokenFn) {
   if (socket) {
     socket.disconnect();
     socket = null;
   }
 
   socket = io(SOCKET_URL, {
-    auth: { token },
+    // Dynamic callback so every reconnect attempt gets a fresh Firebase token.
+    // getIdToken() auto-refreshes the token when it is near expiry.
+    auth: (cb) => {
+      getTokenFn()
+        .then((token) => cb({ token, role: "customer" }))
+        .catch(() => cb({ token: "", role: "customer" }));
+    },
     transports: ["websocket"],
     reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 2000,
+    reconnectionAttempts: Infinity, // never give up
+    reconnectionDelay: 2000, // start at 2 s
+    reconnectionDelayMax: 30000, // cap backoff at 30 s
+    randomizationFactor: 0.5, // jitter so clients don't all retry at once
   });
   //   console.log("[socket] Attempting connection to", SOCKET_URL);
   socket.on("connect", () => {

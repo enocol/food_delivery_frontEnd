@@ -136,5 +136,6 @@ export async function fetchCustomerOrders(token, firebaseUid) {
       firebaseUid,
     },
   );
+
   return unwrapOrders(response);
 }

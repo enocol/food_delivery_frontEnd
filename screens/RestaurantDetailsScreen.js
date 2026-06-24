@@ -4,15 +4,20 @@ import {
   Animated,
   Image,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
+  StatusBar,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import { toImageSource } from "../utils/imageSource";
 import { formatXaf } from "../utils/formatXaf";
@@ -22,6 +27,11 @@ import { fetchRestaurantMenu } from "../apis/restaurantApi";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
 
 export default function RestaurantDetailsScreen({ route, navigation }) {
+  const insets = useSafeAreaInsets();
+  const modalTopInset =
+    Platform.OS === "android"
+      ? Math.max(insets.top, StatusBar.currentHeight || 0)
+      : insets.top;
   const { addToCart } = useCart();
   const [restaurant, setRestaurant] = useState(null);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -197,9 +207,14 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
         visible={!!selectedItem}
         transparent={false}
         animationType="slide"
+        statusBarTranslucent={false}
         onRequestClose={() => setSelectedItem(null)}
       >
-        <SafeAreaView style={styles.itemSheetScreen}>
+        <SafeAreaView
+          style={styles.itemSheetScreen}
+          edges={["left", "right", "bottom"]}
+        >
+          <View style={[styles.itemSheetTopInset, { height: modalTopInset }]} />
           {/* Image with close button overlaid top-left */}
           <View style={styles.itemSheetImageWrap}>
             <Image
@@ -381,6 +396,10 @@ const styles = {
       flex: 1,
       backgroundColor: colors.bgWarm,
       // paddingTop: 20,
+    },
+    itemSheetTopInset: {
+      width: "100%",
+      backgroundColor: colors.bgWarm,
     },
     itemSheetImageWrap: {
       position: "relative",
