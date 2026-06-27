@@ -95,7 +95,10 @@ export default function ProfileScreen({ navigation }) {
         colors={colors.gradients.warmCream}
         style={styles.gradientBackground}
       >
-        <ScrollView contentContainerStyle={styles.profileWrap}>
+        <ScrollView
+          contentContainerStyle={styles.profileWrap}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.profileCard}>
             <View style={styles.avatarCircle}>
               <Text style={styles.avatarText}>{initials || "ME"}</Text>

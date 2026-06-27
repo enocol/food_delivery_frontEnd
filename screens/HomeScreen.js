@@ -486,6 +486,7 @@ export default function HomeScreen({ navigation }) {
           data={restaurants}
           keyExtractor={keyExtractor}
           renderItem={renderRestaurantItem}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.restaurantList,
             { paddingBottom: listBottomPadding },

@@ -432,6 +432,7 @@ export default function OrdersScreen({ navigation }) {
         data={sortedOrders}
         keyExtractor={keyExtractor}
         renderItem={renderOrder}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.ordersListContent}
         refreshing={refreshing}
         onRefresh={handleRefresh}

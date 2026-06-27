@@ -149,6 +149,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
       <Animated.ScrollView
         style={styles.screen}
         contentContainerStyle={styles.detailsContainer}
+        showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true },
