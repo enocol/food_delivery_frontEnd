@@ -84,12 +84,24 @@ export default function StackNavigator() {
                       onPress={() => navigation.goBack()}
                       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                       activeOpacity={0.7}
-                      style={{ paddingHorizontal: 6, paddingVertical: 6 }}
+                      style={{
+                        paddingHorizontal: 6,
+                        paddingVertical: 6,
+                        backgroundColor: colors.bgCream,
+                        borderRadius: 18,
+                        borderWidth: 1,
+                        borderColor: colors.borderLight,
+                        shadowColor: colors.textDark,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.12,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
                     >
                       <Ionicons
                         name="chevron-back"
                         size={28}
-                        color={colors.white}
+                        color={colors.textHeading}
                       />
                     </Pressable>
                   )

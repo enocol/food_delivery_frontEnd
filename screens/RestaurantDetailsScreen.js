@@ -32,7 +32,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
     Platform.OS === "android"
       ? Math.max(insets.top, StatusBar.currentHeight || 0)
       : insets.top;
-  const { addToCart } = useCart();
+  const { addToCart, cartCount, openCartSheet } = useCart();
   const [restaurant, setRestaurant] = useState(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -203,6 +203,22 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
         ))}
       </Animated.ScrollView>
 
+      {cartCount > 0 ? (
+        <Pressable
+          style={[
+            styles.viewBasketButton,
+            { bottom: Math.max(insets.bottom + 16, 16) },
+          ]}
+          onPress={openCartSheet}
+        >
+          <Ionicons name="cart-outline" size={18} color={colors.white} />
+          <Text style={styles.viewBasketText}>View Basket</Text>
+          <View style={styles.viewBasketBadge}>
+            <Text style={styles.viewBasketBadgeText}>{cartCount}</Text>
+          </View>
+        </Pressable>
+      ) : null}
+
       {/* Menu item detail full-screen modal */}
       <Modal
         visible={!!selectedItem}
@@ -338,6 +354,50 @@ const styles = {
       color: colors.textMid,
       paddingHorizontal: 14,
       marginBottom: 10,
+    },
+    viewBasketButton: {
+      position: "absolute",
+      left: "30%",
+      right: "30%",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 16,
+      backgroundColor: colors.primary,
+      shadowColor: colors.textDark,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.18,
+      shadowRadius: 10,
+      elevation: 8,
+      zIndex: 30,
+    },
+    viewBasketBadge: {
+      position: "absolute",
+      top: -7,
+      right: -7,
+      minWidth: 22,
+      height: 22,
+      paddingHorizontal: 5,
+      borderRadius: 11,
+      backgroundColor: colors.amber,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: colors.white,
+    },
+    viewBasketBadgeText: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 11,
+      fontWeight: "800",
+      color: colors.textWarmDark,
+    },
+    viewBasketText: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 15,
+      fontWeight: "800",
+      color: colors.white,
     },
     menuCard: {
       backgroundColor: colors.white,
