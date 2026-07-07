@@ -11,8 +11,16 @@ import {
 } from "react-native";
 import * as colors from "../utils/colors";
 
-const PLACEHOLDER_WORDS = ["restaurants", "Food"];
+const PLACEHOLDER_WORDS = ["restaurants", "Food items"];
 const PLACEHOLDER_WORD_HEIGHT = 28;
+
+function getWordOpacity(animatedValue) {
+  return animatedValue.interpolate({
+    inputRange: [-PLACEHOLDER_WORD_HEIGHT, -1, 0, 1, PLACEHOLDER_WORD_HEIGHT],
+    outputRange: [0, 0, 1, 0, 0],
+    extrapolate: "clamp",
+  });
+}
 
 export default function HomeSearchBar({
   searchQuery,
@@ -87,12 +95,15 @@ export default function HomeSearchBar({
           />
           {searchQuery.length === 0 && !isSearchFocused && (
             <View pointerEvents="none" style={styles.fakePlaceholder}>
-              <Text style={styles.fakePlaceholderStatic}>looking for </Text>
+              <Text style={styles.fakePlaceholderStatic}>Search for </Text>
               <View style={styles.fakePlaceholderSlot}>
                 <Animated.Text
                   style={[
                     styles.fakePlaceholderWord,
-                    { transform: [{ translateY: animA }] },
+                    {
+                      transform: [{ translateY: animA }],
+                      opacity: getWordOpacity(animA),
+                    },
                   ]}
                 >
                   {PLACEHOLDER_WORDS[0]}
@@ -101,7 +112,10 @@ export default function HomeSearchBar({
                   style={[
                     styles.fakePlaceholderWord,
                     { position: "absolute", top: 0 },
-                    { transform: [{ translateY: animB }] },
+                    {
+                      transform: [{ translateY: animB }],
+                      opacity: getWordOpacity(animB),
+                    },
                   ]}
                 >
                   {PLACEHOLDER_WORDS[1]}
@@ -130,22 +144,19 @@ export default function HomeSearchBar({
 const styles = StyleSheet.create({
   searchBarAnimWrapper: {
     overflow: "hidden",
+    backgroundColor: colors.black,
   },
   homeSearchWrap: {
-    marginHorizontal: 14,
-    marginTop: 4,
-    marginBottom: 8,
+    marginBottom: 29,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     backgroundColor: colors.bgWarmAlt,
-    borderWidth: 1,
+
     borderColor: colors.borderSearchBar,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    height: 48,
-    width: "90%",
+    height: 50,
+    width: "100%",
   },
+
   searchInputWrapper: {
     flex: 1,
   },
@@ -177,7 +188,6 @@ const styles = StyleSheet.create({
   homeSearchInput: {
     fontFamily: "Inter_400Regular",
     flex: 1,
-    paddingVertical: 0,
     fontSize: 15,
     color: colors.textWarmDark,
     backgroundColor: "transparent",

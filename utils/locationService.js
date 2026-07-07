@@ -19,7 +19,9 @@ export async function getCurrentLocation() {
       altitude: location.coords.altitude,
     };
   } catch (error) {
-    console.error("Error getting location:", error);
+    if (__DEV__) {
+      console.error("Error getting location:", error);
+    }
     throw new Error(error.message || "Unable to get current location");
   }
 }
@@ -45,7 +47,9 @@ export async function getLocationAddress(latitude, longitude) {
 
     return null;
   } catch (error) {
-    console.error("Error reverse geocoding location:", error);
+    if (__DEV__) {
+      console.error("Error reverse geocoding location:", error);
+    }
     return null;
   }
 }

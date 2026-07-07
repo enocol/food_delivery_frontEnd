@@ -23,7 +23,12 @@ import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 import { fetchRestaurantMenu, fetchRestaurants } from "../apis/restaurantApi";
-import { fetchLikes, likeRestaurant, unlikeRestaurant } from "../apis/likesApi";
+import {
+  fetchLikes,
+  fetchRestaurantLikeCount,
+  likeRestaurant,
+  unlikeRestaurant,
+} from "../apis/likesApi";
 import {
   getCurrentLocation,
   getLocationAddress,
@@ -85,14 +90,21 @@ export default function HomeScreen({ navigation }) {
   const [isClosedModalVisible, setIsClosedModalVisible] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [likedRestaurantIds, setLikedRestaurantIds] = useState(() => ({}));
+  const [likedRestaurantCounts, setLikedRestaurantCounts] = useState(
+    () => ({}),
+  );
   const searchBarAnim = useRef(new Animated.Value(1)).current;
   const lastScrollY = useRef(0);
   const searchBarVisible = useRef(true);
+  const restaurantsCacheRef = useRef([]);
+  const menuCacheRef = useRef(new Map());
+  const lastRefreshNonceRef = useRef(-1);
 
   // Seed liked state from the server whenever a user is authenticated.
   useEffect(() => {
     if (!firebaseUid) {
       setLikedRestaurantIds({});
+      setLikedRestaurantCounts({});
       return;
     }
 
@@ -103,18 +115,72 @@ export default function HomeScreen({ navigation }) {
         if (!isActive) return;
         const map = {};
         rows.forEach((row) => {
-          map[row.restaurantId] = true;
+          const restaurantId =
+            row?.restaurantId ??
+            row?.restaurant_id ??
+            row?.restaurant?.id ??
+            row;
+
+          if (restaurantId == null) {
+            return;
+          }
+
+          map[String(restaurantId)] = true;
         });
         setLikedRestaurantIds(map);
       })
-      .catch((error) =>
-        console.warn("[LikeButton] failed to load likes", error),
-      );
+      .catch((error) => {
+        if (__DEV__) {
+          console.warn("[LikeButton] failed to load likes", error);
+        }
+      });
 
     return () => {
       isActive = false;
     };
   }, [firebaseUid]);
+
+  useEffect(() => {
+    if (!restaurants.length) {
+      setLikedRestaurantCounts({});
+      return;
+    }
+
+    let isActive = true;
+
+    const loadLikeCounts = async () => {
+      const countEntries = await Promise.all(
+        restaurants.map(async (restaurant) => {
+          const restaurantId = String(restaurant.id);
+
+          try {
+            const likesCount = await fetchRestaurantLikeCount(restaurantId);
+            return [restaurantId, likesCount];
+          } catch (countError) {
+            if (__DEV__) {
+              console.warn(
+                `[LikeButton] failed to load like count for restaurant ${restaurantId}`,
+                countError,
+              );
+            }
+            return [restaurantId, 0];
+          }
+        }),
+      );
+
+      if (!isActive) {
+        return;
+      }
+
+      setLikedRestaurantCounts(Object.fromEntries(countEntries));
+    };
+
+    loadLikeCounts();
+
+    return () => {
+      isActive = false;
+    };
+  }, [restaurants]);
 
   const renderHeaderLocation = useCallback(
     () => (
@@ -204,29 +270,61 @@ export default function HomeScreen({ navigation }) {
         const activeFilter =
           selectedFood && selectedFood !== "All" ? selectedFood : null;
         const query = debouncedSearchQuery.trim().toLowerCase();
-        const allRestaurants = await fetchRestaurants();
+        const shouldFetchRestaurants =
+          !restaurantsCacheRef.current.length ||
+          lastRefreshNonceRef.current !== refreshNonce;
+
+        if (shouldFetchRestaurants) {
+          menuCacheRef.current.clear();
+          restaurantsCacheRef.current = await fetchRestaurants();
+          lastRefreshNonceRef.current = refreshNonce;
+        }
+
+        const allRestaurants = restaurantsCacheRef.current;
         const selectedMenuTerms = activeFilter
           ? getFilterTerms(activeFilter)
           : [];
         const queryTerms = query ? [query] : [];
         const needsMenuLookup = Boolean(activeFilter || query);
 
-        let menuResponses = [];
+        const menuByRestaurantId = new Map();
 
         if (needsMenuLookup) {
-          menuResponses = await Promise.allSettled(
-            allRestaurants.map((restaurant) =>
-              fetchRestaurantMenu(restaurant.id),
-            ),
+          const menuResponses = await Promise.allSettled(
+            allRestaurants.map(async (restaurant) => {
+              const cachedMenu = menuCacheRef.current.get(restaurant.id);
+              if (cachedMenu) {
+                return {
+                  restaurantId: restaurant.id,
+                  menu: cachedMenu,
+                };
+              }
+
+              const payload = await fetchRestaurantMenu(restaurant.id);
+              const menu = payload?.menu || [];
+              menuCacheRef.current.set(restaurant.id, menu);
+
+              return {
+                restaurantId: restaurant.id,
+                menu,
+              };
+            }),
           );
+
+          menuResponses.forEach((response) => {
+            if (response.status !== "fulfilled") {
+              return;
+            }
+
+            menuByRestaurantId.set(
+              response.value.restaurantId,
+              response.value.menu,
+            );
+          });
         }
 
-        const data = allRestaurants.filter((restaurant, index) => {
-          const menuResponse = menuResponses[index];
-          const menuItems =
-            menuResponse?.status === "fulfilled"
-              ? menuResponse.value?.menu || []
-              : [];
+        const data = allRestaurants.filter((restaurant) => {
+          const menuItems = menuByRestaurantId.get(restaurant.id) || [];
 
           const matchesSelectedMenu =
             !activeFilter ||
@@ -273,6 +371,8 @@ export default function HomeScreen({ navigation }) {
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
+    restaurantsCacheRef.current = [];
+    menuCacheRef.current.clear();
     setRefreshNonce((value) => value + 1);
   }, []);
 
@@ -327,18 +427,36 @@ export default function HomeScreen({ navigation }) {
 
   const handleToggleLike = useCallback(
     (restaurantId) => {
+      const key = String(restaurantId);
+
       setLikedRestaurantIds((previous) => {
-        const isCurrentlyLiked = Boolean(previous[restaurantId]);
+        const isCurrentlyLiked = Boolean(previous[key]);
         if (isCurrentlyLiked) {
-          unlikeRestaurant(firebaseUid, restaurantId).catch((error) =>
-            console.warn("[LikeButton] unlike failed", error),
-          );
+          unlikeRestaurant(firebaseUid, restaurantId).catch((error) => {
+            if (__DEV__) {
+              console.warn("[LikeButton] unlike failed", error);
+            }
+          });
         } else {
-          likeRestaurant(firebaseUid, restaurantId).catch((error) =>
-            console.warn("[LikeButton] like failed", error),
-          );
+          likeRestaurant(firebaseUid, restaurantId).catch((error) => {
+            if (__DEV__) {
+              console.warn("[LikeButton] like failed", error);
+            }
+          });
         }
-        return { ...previous, [restaurantId]: !isCurrentlyLiked };
+
+        setLikedRestaurantCounts((previousCounts) => {
+          const currentCount = Number(previousCounts[key]) || 0;
+
+          return {
+            ...previousCounts,
+            [key]: isCurrentlyLiked
+              ? Math.max(0, currentCount - 1)
+              : currentCount + 1,
+          };
+        });
+
+        return { ...previous, [key]: !isCurrentlyLiked };
       });
     },
     [firebaseUid],
@@ -351,11 +469,17 @@ export default function HomeScreen({ navigation }) {
       <RestaurantCard
         item={item}
         onPress={handleOpenRestaurant}
-        liked={Boolean(likedRestaurantIds[item.id])}
+        liked={Boolean(likedRestaurantIds[String(item.id)])}
+        likeCount={Number(likedRestaurantCounts[String(item.id)]) || 0}
         onToggleLike={handleToggleLike}
       />
     ),
-    [handleOpenRestaurant, handleToggleLike, likedRestaurantIds],
+    [
+      handleOpenRestaurant,
+      handleToggleLike,
+      likedRestaurantCounts,
+      likedRestaurantIds,
+    ],
   );
 
   let emptyStateIconName = "restaurant-outline";
@@ -671,7 +795,8 @@ const styles = {
       color: colors.textMid,
     },
     foodFilterWrap: {
-      paddingVertical: 6,
+      paddingVertical: 20,
+      backgroundColor: colors.black,
     },
     foodFilterScrollContent: {
       paddingHorizontal: 14,

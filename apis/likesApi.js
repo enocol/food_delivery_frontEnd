@@ -11,7 +11,7 @@ const LIKES_ENDPOINT = `${API_BASE_URL.replace(/\/+$/, "")}/likes`;
 
 /**
  * GET /api/likes/:firebase_uid
- * Returns an array of liked restaurant IDs for the user.
+ * Returns the user's likes. Supports legacy arrays and wrapped payloads.
  */
 export async function fetchLikes(firebaseUid) {
   const response = await fetch(
@@ -32,6 +32,26 @@ export async function fetchLikes(firebaseUid) {
   if (Array.isArray(data.data)) return data.data;
   if (Array.isArray(data.rows)) return data.rows;
   return [];
+}
+
+/**
+ * GET /api/likes/restaurant/:restaurant_id/count
+ * Response: { restaurantId, likesCount }
+ */
+export async function fetchRestaurantLikeCount(restaurantId) {
+  const response = await fetch(
+    `${LIKES_ENDPOINT}/restaurant/${encodeURIComponent(restaurantId)}/count`,
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `[likesApi] GET /likes/restaurant/:id/count failed (${response.status}): ${text}`,
+    );
+  }
+
+  const data = await response.json();
+  return Number(data?.likesCount) || 0;
 }
 
 /**

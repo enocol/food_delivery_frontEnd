@@ -4,6 +4,7 @@ import * as colors from "../utils/colors";
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: colors.bgWarm,
   },
   centered: {
     flex: 1,
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
   },
   detailsHeroImage: {
     width: "100%",
-    height: 350,
+    height: 380,
     objectFit: "cover",
   },
 });

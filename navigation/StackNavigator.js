@@ -33,7 +33,7 @@ export default function StackNavigator() {
       <Stack.Navigator
         initialRouteName="MainTabs"
         screenOptions={{
-          headerShadowVisible: false,
+          headerShadowBackgroundColor: colors.black,
           headerTitleStyle: styles.headerTitle,
           headerShown: true,
         }}
@@ -51,11 +51,10 @@ export default function StackNavigator() {
           options={{
             title: "",
             headerTransparent: true,
-            headerTitle: "",
             headerBackVisible: true,
             headerBackTitle: "",
             headerBackButtonDisplayMode: "minimal",
-            headerTintColor: colors.white,
+            headerTintColor: colors.black,
           }}
         />
         <Stack.Screen
@@ -64,48 +63,11 @@ export default function StackNavigator() {
           options={({ navigation }) => ({
             title: "",
             headerShown: true,
-            headerTransparent: true,
-            headerTitle: "",
-            headerBackTitle: "",
             headerBackButtonDisplayMode: "minimal",
             headerBackTitleVisible: false,
-            // headerBackVisible: Platform.OS !== "ios",
-            headerBackVisible: false, // We'll handle the back button manually for better control over styling and hit area
-            headerLeftContainerStyle:
-              Platform.OS === "ios"
-                ? {
-                    paddingLeft: 8,
-                  }
-                : undefined,
-            headerLeft:
-              Platform.OS === "ios"
-                ? () => (
-                    <Pressable
-                      onPress={() => navigation.goBack()}
-                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                      activeOpacity={0.7}
-                      style={{
-                        paddingHorizontal: 6,
-                        paddingVertical: 6,
-                        backgroundColor: colors.bgCream,
-                        borderRadius: 18,
-                        borderWidth: 1,
-                        borderColor: colors.borderLight,
-                        shadowColor: colors.textDark,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.12,
-                        shadowRadius: 4,
-                        elevation: 3,
-                      }}
-                    >
-                      <Ionicons
-                        name="chevron-back"
-                        size={28}
-                        color={colors.textHeading}
-                      />
-                    </Pressable>
-                  )
-                : undefined, // Android uses the native back button from headerBackVisible
+            headerBackVisible: true,
+            headerTransparent: true,
+            headerTintColor: colors.black,
           })}
         />
       </Stack.Navigator>

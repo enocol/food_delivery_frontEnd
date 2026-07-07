@@ -57,15 +57,19 @@ export async function syncUserWithNeon(firebaseUser) {
 
     if (!response.ok) {
       const text = await response.text();
-      console.warn(
-        `[userApi] syncUserWithNeon failed (${response.status}): ${text}`,
-      );
+      if (__DEV__) {
+        console.warn(
+          `[userApi] syncUserWithNeon failed (${response.status}): ${text}`,
+        );
+      }
     }
   } catch (networkError) {
     // Network failure should not block the user from using the app.
-    console.warn(
-      "[userApi] syncUserWithNeon network error:",
-      networkError.message,
-    );
+    if (__DEV__) {
+      console.warn(
+        "[userApi] syncUserWithNeon network error:",
+        networkError.message,
+      );
+    }
   }
 }

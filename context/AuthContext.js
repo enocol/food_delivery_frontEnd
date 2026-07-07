@@ -133,10 +133,12 @@ export function AuthProvider({ children }) {
       return confirmation;
     } catch (error) {
       if (error.code) {
-        console.warn("[AuthContext] sendPhoneCode failed", {
-          code: error.code,
-          message: error.message,
-        });
+        if (__DEV__) {
+          console.warn("[AuthContext] sendPhoneCode failed", {
+            code: error.code,
+            message: error.message,
+          });
+        }
         throw new Error(formatAuthError(error));
       }
       throw new Error(
@@ -168,10 +170,12 @@ export function AuthProvider({ children }) {
       return result;
     } catch (error) {
       if (error.code) {
-        console.warn("[AuthContext] verifyPhoneCode failed", {
-          code: error.code,
-          message: error.message,
-        });
+        if (__DEV__) {
+          console.warn("[AuthContext] verifyPhoneCode failed", {
+            code: error.code,
+            message: error.message,
+          });
+        }
         throw new Error(formatAuthError(error));
       }
       throw error;

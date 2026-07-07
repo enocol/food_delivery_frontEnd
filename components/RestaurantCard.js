@@ -5,8 +5,15 @@ import * as colors from "../utils/colors";
 import { toImageSource } from "../utils/imageSource";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
 import { formatXaf } from "../utils/formatXaf";
+import LikeButton from "./LikeButton";
 
-const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
+const RestaurantCard = React.memo(function RestaurantCard({
+  item,
+  onPress,
+  liked = false,
+  likeCount = 0,
+  onToggleLike,
+}) {
   const ratingValue = Number(item.rating) || 0;
   const ratingCount = Number(item.ratingCount) || 0;
   const cuisineText = item.cuisine || "Cuisine unavailable";
@@ -51,33 +58,40 @@ const RestaurantCard = React.memo(function RestaurantCard({ item, onPress }) {
           </Text>
         </View>
 
-        <View style={[styles.metaRow, styles.metaRowWrap]}>
-          <View style={styles.metaGroup}>
-            <Ionicons
-              name="time-outline"
-              size={20}
-              color={colors.textIconMuted}
-            />
-            <Text style={styles.metaText}>{etaText}</Text>
+        <View style={styles.bottomMetaRow}>
+          <View style={styles.bottomMetaContent}>
+            <View style={styles.metaGroup}>
+              <Ionicons
+                name="time-outline"
+                size={20}
+                color={colors.textIconMuted}
+              />
+              <Text style={styles.metaText}>{etaText}</Text>
+            </View>
+            <Text style={styles.dot}>·</Text>
+            <View style={styles.metaGroup}>
+              <Ionicons
+                name="bicycle-outline"
+                size={20}
+                color={colors.textIconMuted}
+              />
+              <Text style={styles.metaText}>{deliveryText}</Text>
+            </View>
+            <Text style={styles.dot}>·</Text>
+            <View style={styles.metaGroup}>
+              <Ionicons
+                name="bag-handle-outline"
+                size={20}
+                color={colors.textIconMuted}
+              />
+              <Text style={styles.metaText}>No min. order</Text>
+            </View>
           </View>
-          <Text style={styles.dot}>·</Text>
-          <View style={styles.metaGroup}>
-            <Ionicons
-              name="bicycle-outline"
-              size={20}
-              color={colors.textIconMuted}
-            />
-            <Text style={styles.metaText}>{deliveryText}</Text>
-          </View>
-          <Text style={styles.dot}>·</Text>
-          <View style={styles.metaGroup}>
-            <Ionicons
-              name="bag-handle-outline"
-              size={20}
-              color={colors.textIconMuted}
-            />
-            <Text style={styles.metaText}>No min. order</Text>
-          </View>
+          <LikeButton
+            liked={liked}
+            likeCount={likeCount}
+            onPress={() => onToggleLike?.(item.id)}
+          />
         </View>
       </View>
     </TouchableOpacity>
@@ -103,7 +117,7 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: "100%",
-    height: 220,
+    height: 300,
   },
   closedBadge: {
     position: "absolute",
@@ -137,9 +151,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "nowrap",
   },
-  metaRowWrap: {
+  bottomMetaRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  bottomMetaContent: {
+    flex: 1,
+    flexDirection: "row",
     flexWrap: "wrap",
     rowGap: 6,
+    alignItems: "center",
   },
   metaGroup: {
     flexDirection: "row",

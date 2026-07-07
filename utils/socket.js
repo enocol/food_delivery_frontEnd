@@ -46,15 +46,21 @@ export function connectSocket(getTokenFn) {
   });
   //   console.log("[socket] Attempting connection to", SOCKET_URL);
   socket.on("connect", () => {
-    console.log("[socket] ✅ Connected — id:", socket.id);
+    if (__DEV__) {
+      console.log("[socket] ✅ Connected — id:", socket.id);
+    }
   });
 
   socket.on("disconnect", (reason) => {
-    console.log("[socket] ❌ Disconnected —", reason);
+    if (__DEV__) {
+      console.log("[socket] ❌ Disconnected —", reason);
+    }
   });
 
   socket.on("connect_error", (err) => {
-    console.log("[socket] ⚠️  Connection error —", err.message);
+    if (__DEV__) {
+      console.log("[socket] ⚠️  Connection error —", err.message);
+    }
   });
 
   return socket;

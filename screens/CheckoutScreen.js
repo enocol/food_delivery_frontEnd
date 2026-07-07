@@ -17,10 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../apis/orderApi";
 import { requestMobileMoneyPayment } from "../apis/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
-import {
-  getCurrentLocation,
-  getLocationAddress,
-} from "../utils/locationService";
+import { getCurrentLocation } from "../utils/locationService";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const PAYMENT_METHODS = [
@@ -187,13 +184,9 @@ export default function CheckoutScreen({ navigation }) {
         setStatusMessage("Getting delivery location...");
         try {
           const location = await getCurrentLocation();
-          const address = await getLocationAddress(
-            location.latitude,
-            location.longitude,
-          );
           deliveryAddress = {
-            ...location,
-            ...address,
+            latitude: location.latitude,
+            longitude: location.longitude,
           };
           setUserLocation(deliveryAddress);
         } catch (locationError) {
@@ -246,7 +239,9 @@ export default function CheckoutScreen({ navigation }) {
       );
       navigation.navigate("MainTabs");
     } catch (error) {
-      console.error("Order creation error:", error);
+      if (__DEV__) {
+        console.error("Order creation error:", error);
+      }
       Alert.alert(
         "Checkout error",
         error.message || "Something went wrong while processing your order.",

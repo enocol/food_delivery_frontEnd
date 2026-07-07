@@ -163,16 +163,22 @@ export function CartProvider({ children }) {
       setCartItems(toItemMap(payload));
     } catch (error) {
       if (isLegacyUserIdConstraintError(error)) {
-        console.warn(
-          "[CartContext] Backend schema mismatch: user_id is NOT NULL on carts/cart_items, but backend uses firebase_uid-only inserts. Populate user_id server-side or drop legacy NOT NULL constraints.",
-        );
+        if (__DEV__) {
+          console.warn(
+            "[CartContext] Backend schema mismatch: user_id is NOT NULL on carts/cart_items, but backend uses firebase_uid-only inserts. Populate user_id server-side or drop legacy NOT NULL constraints.",
+          );
+        }
       } else if (isTransientCartLoadError(error)) {
-        console.warn(
-          "[CartContext] Temporary network issue while loading cart. Keeping current cart state.",
-        );
+        if (__DEV__) {
+          console.warn(
+            "[CartContext] Temporary network issue while loading cart. Keeping current cart state.",
+          );
+        }
         return;
       } else {
-        console.warn("[CartContext] Failed to load cart:", error.message);
+        if (__DEV__) {
+          console.warn("[CartContext] Failed to load cart:", error.message);
+        }
       }
       resetLocalCart();
     } finally {

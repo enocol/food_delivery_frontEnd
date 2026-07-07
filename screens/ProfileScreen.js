@@ -144,13 +144,6 @@ export default function ProfileScreen({ navigation }) {
               </Text>
             </Pressable>
           </View>
-
-          <View style={styles.infoCard}>
-            <Text style={styles.infoCardTitle}>Quick actions</Text>
-            <Text style={styles.infoLine}>Saved addresses</Text>
-            <Text style={styles.infoLine}>Payment methods</Text>
-            <Text style={styles.infoLine}>Order history</Text>
-          </View>
         </ScrollView>
       </LinearGradient>
     </SafeAreaView>

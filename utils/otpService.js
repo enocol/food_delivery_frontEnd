@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const OTP_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
-const OTP_KEY_PREFIX = '@mbolo_eats_otp_';
+const OTP_KEY_PREFIX = "@mbolo_eats_otp_";
 
 export function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -40,18 +40,23 @@ export async function sendOtpEmail(email, otp) {
 
   if (!serviceId || !templateId || !publicKey) {
     // Dev mode: print code to console when EmailJS is not configured
-    console.warn(`[DEV MODE] OTP for ${email}: ${otp}`);
+    if (__DEV__) {
+      console.warn(`[DEV MODE] OTP for ${email}: ${otp}`);
+    }
     return;
   }
 
-  const validUntil = new Date(Date.now() + OTP_EXPIRY_MS).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const validUntil = new Date(Date.now() + OTP_EXPIRY_MS).toLocaleTimeString(
+    [],
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  );
 
-  const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       service_id: serviceId,
       template_id: templateId,
@@ -66,8 +71,8 @@ export async function sendOtpEmail(email, otp) {
         passcode: otp,
         time: validUntil,
         otp_code: otp,
-        app_name: 'Mbolo Eats',
-        company_name: 'Mbolo Eats',
+        app_name: "Mbolo Eats",
+        company_name: "Mbolo Eats",
       },
     }),
   });
@@ -76,7 +81,7 @@ export async function sendOtpEmail(email, otp) {
     const text = await response.text();
     if (response.status === 422) {
       throw new Error(
-        'EmailJS rejected the request: recipient is empty. In your EmailJS template, set the To Email field to a variable such as {{to_email}} (or {{email}}), then try again.'
+        "EmailJS rejected the request: recipient is empty. In your EmailJS template, set the To Email field to a variable such as {{to_email}} (or {{email}}), then try again.",
       );
     }
     throw new Error(`Failed to send OTP email (${response.status}): ${text}`);
