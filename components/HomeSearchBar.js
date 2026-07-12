@@ -149,16 +149,20 @@ const styles = StyleSheet.create({
   searchBarAnimWrapper: {
     overflow: "hidden",
     backgroundColor: colors.white,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 14,
   },
   homeSearchWrap: {
-    marginBottom: 29,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.bgWarmAlt,
-
-    borderColor: colors.borderSearchBar,
+    backgroundColor: colors.white,
+    borderColor: colors.black,
+    borderWidth: 2,
+    borderRadius: 10,
     height: 50,
     width: "100%",
+    paddingHorizontal: 10,
   },
 
   searchInputWrapper: {
