@@ -797,7 +797,7 @@ const styles = {
     },
     foodFilterWrap: {
       paddingVertical: 20,
-      backgroundColor: colors.black,
+      backgroundColor: colors.white,
     },
     foodFilterScrollContent: {
       paddingHorizontal: 14,

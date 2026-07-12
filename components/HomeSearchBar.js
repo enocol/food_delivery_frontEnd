@@ -148,7 +148,7 @@ export default function HomeSearchBar({
 const styles = StyleSheet.create({
   searchBarAnimWrapper: {
     overflow: "hidden",
-    backgroundColor: colors.black,
+    backgroundColor: colors.white,
   },
   homeSearchWrap: {
     marginBottom: 29,
