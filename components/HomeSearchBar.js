@@ -28,6 +28,7 @@ export default function HomeSearchBar({
   isSearchFocused,
   setIsSearchFocused,
   searchBarAnim,
+  onSearchInputFocus,
 }) {
   const animA = useRef(new Animated.Value(0)).current;
   const animB = useRef(new Animated.Value(PLACEHOLDER_WORD_HEIGHT)).current;
@@ -89,7 +90,10 @@ export default function HomeSearchBar({
             placeholder=""
             placeholderTextColor={colors.textSubMuted}
             style={styles.homeSearchInput}
-            onFocus={() => setIsSearchFocused(true)}
+            onFocus={() => {
+              setIsSearchFocused(true);
+              onSearchInputFocus?.();
+            }}
             onBlur={() => setIsSearchFocused(false)}
             autoCapitalize="words"
           />

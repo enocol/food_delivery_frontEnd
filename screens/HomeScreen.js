@@ -604,6 +604,7 @@ export default function HomeScreen({ navigation }) {
           isSearchFocused={isSearchFocused}
           setIsSearchFocused={setIsSearchFocused}
           searchBarAnim={searchBarAnim}
+          onSearchInputFocus={() => setSelectedFood("All")}
         />
 
         <FlatList
