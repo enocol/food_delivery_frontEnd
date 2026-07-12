@@ -24,10 +24,18 @@ import styles from "./components/styles";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
 import AuthScreen from "./screens/AuthScreen";
+import RegisterScreen from "./screens/RegisterScreen";
 import StackNavigator, { navigationRef } from "./navigation/StackNavigator";
 
 function AppContent() {
   const { user, authLoading } = useAuth();
+  const [authScreen, setAuthScreen] = useState("signIn");
+
+  useEffect(() => {
+    if (!user) {
+      setAuthScreen("signIn");
+    }
+  }, [user]);
 
   if (authLoading) {
     return (
@@ -38,7 +46,11 @@ function AppContent() {
   }
 
   if (!user) {
-    return <AuthScreen />;
+    return authScreen === "register" ? (
+      <RegisterScreen onGoToSignIn={() => setAuthScreen("signIn")} />
+    ) : (
+      <AuthScreen onGoToCreateAccount={() => setAuthScreen("register")} />
+    );
   }
 
   return (
@@ -96,9 +108,6 @@ function AuthenticatedApp() {
   const notificationCount = statusNotifications.length;
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
-
     const handleStatusUpdate = ({ orderId, status, updatedAt }) => {
       setStatusNotifications((previous) => [
         ...previous,
@@ -109,9 +118,37 @@ function AuthenticatedApp() {
       Haptics.notificationAsync(config.haptic).catch(() => {});
     };
 
-    socket.on("order_status_updated", handleStatusUpdate);
+    let detach = null;
+    const attachListener = () => {
+      const socket = getSocket();
+      if (!socket) {
+        return false;
+      }
+
+      socket.on("order_status_updated", handleStatusUpdate);
+      detach = () => socket.off("order_status_updated", handleStatusUpdate);
+      return true;
+    };
+
+    if (!attachListener()) {
+      const timer = setInterval(() => {
+        if (attachListener()) {
+          clearInterval(timer);
+        }
+      }, 250);
+
+      return () => {
+        clearInterval(timer);
+        if (detach) {
+          detach();
+        }
+      };
+    }
+
     return () => {
-      socket.off("order_status_updated", handleStatusUpdate);
+      if (detach) {
+        detach();
+      }
     };
   }, []);
 

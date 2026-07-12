@@ -18,12 +18,18 @@ import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import sharedStyles from "../components/styles";
 
-export default function AuthScreen({ onGoToCreateAccount }) {
-  const { authActionLoading, signInWithEmailPassword } = useAuth();
+export default function RegisterScreen({ onGoToSignIn }) {
+  const { authActionLoading, createAccountWithEmailPassword } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignIn = async () => {
+  const handleCreateAccount = async () => {
+    if (!name.trim()) {
+      Alert.alert("Name required", "Please enter your name.");
+      return;
+    }
+
     if (!email.trim()) {
       Alert.alert("Email required", "Please enter your email address.");
       return;
@@ -35,9 +41,9 @@ export default function AuthScreen({ onGoToCreateAccount }) {
     }
 
     try {
-      await signInWithEmailPassword(email.trim(), password);
+      await createAccountWithEmailPassword(name.trim(), email.trim(), password);
     } catch (error) {
-      Alert.alert("Sign-in failed", error.message);
+      Alert.alert("Account creation failed", error.message);
     }
   };
 
@@ -61,10 +67,21 @@ export default function AuthScreen({ onGoToCreateAccount }) {
           >
             <View style={styles.authWrap}>
               <View style={styles.authCard}>
-                <Text style={styles.authTitle}>Sign In</Text>
+                <Text style={styles.authTitle}>Create Account</Text>
                 <Text style={styles.authSubtitle}>
-                  Enter your email and password to sign in.
+                  Enter your name, email, and password to create a new account.
                 </Text>
+
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Full name"
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  textContentType="name"
+                  autoComplete="name"
+                  style={styles.authInput}
+                />
 
                 <TextInput
                   value={email}
@@ -84,32 +101,32 @@ export default function AuthScreen({ onGoToCreateAccount }) {
                   placeholder="Password"
                   secureTextEntry
                   autoCorrect={false}
-                  textContentType="password"
-                  autoComplete="password"
+                  textContentType="newPassword"
+                  autoComplete="new-password"
                   style={styles.authInput}
                 />
 
                 <Pressable
                   style={styles.authPrimaryButton}
-                  onPress={handleSignIn}
+                  onPress={handleCreateAccount}
                   disabled={authActionLoading}
                 >
                   {authActionLoading ? (
                     <ActivityIndicator color={colors.white} />
                   ) : (
                     <Text style={styles.authPrimaryButtonText}>
-                      Sign in now
+                      Create account
                     </Text>
                   )}
                 </Pressable>
 
                 <Pressable
                   style={styles.authSecondaryButton}
-                  onPress={onGoToCreateAccount}
+                  onPress={onGoToSignIn}
                   disabled={authActionLoading}
                 >
                   <Text style={styles.authSecondaryButtonText}>
-                    Create new account
+                    Already have an account? Sign in
                   </Text>
                 </Pressable>
               </View>

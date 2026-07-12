@@ -357,9 +357,6 @@ export default function OrdersScreen({ navigation }) {
 
   // Keep order statuses up to date in real time via socket events.
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
-
     const handleStatusUpdate = ({ orderId, status, updatedAt }) => {
       setOrders((prev) =>
         prev.map((order) =>
@@ -370,9 +367,37 @@ export default function OrdersScreen({ navigation }) {
       );
     };
 
-    socket.on("order_status_updated", handleStatusUpdate);
+    let detach = null;
+    const attachListener = () => {
+      const socket = getSocket();
+      if (!socket) {
+        return false;
+      }
+
+      socket.on("order_status_updated", handleStatusUpdate);
+      detach = () => socket.off("order_status_updated", handleStatusUpdate);
+      return true;
+    };
+
+    if (!attachListener()) {
+      const timer = setInterval(() => {
+        if (attachListener()) {
+          clearInterval(timer);
+        }
+      }, 250);
+
+      return () => {
+        clearInterval(timer);
+        if (detach) {
+          detach();
+        }
+      };
+    }
+
     return () => {
-      socket.off("order_status_updated", handleStatusUpdate);
+      if (detach) {
+        detach();
+      }
     };
   }, []);
 

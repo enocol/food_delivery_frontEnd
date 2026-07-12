@@ -24,14 +24,14 @@ const USERS_ENDPOINT = `${API_BASE_URL.replace(/\/+$/, "")}/auth`;
  *            RETURNING *;
  */
 export async function syncUserWithNeon(firebaseUser) {
-  if (!firebaseUser) return;
+  if (!firebaseUser) return false;
 
   let idToken;
   try {
     idToken = await firebaseUser.getIdToken();
   } catch {
     // If token retrieval fails, skip silently — user is still signed in to Firebase.
-    return;
+    return false;
   }
 
   try {
@@ -62,7 +62,10 @@ export async function syncUserWithNeon(firebaseUser) {
           `[userApi] syncUserWithNeon failed (${response.status}): ${text}`,
         );
       }
+      return false;
     }
+
+    return true;
   } catch (networkError) {
     // Network failure should not block the user from using the app.
     if (__DEV__) {
@@ -71,5 +74,6 @@ export async function syncUserWithNeon(firebaseUser) {
         networkError.message,
       );
     }
+    return false;
   }
 }
