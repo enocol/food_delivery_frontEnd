@@ -7,7 +7,6 @@ import {
   FlatList,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -33,9 +32,10 @@ import {
   getCurrentLocation,
   getLocationAddress,
 } from "../utils/locationService";
-import { FOOD_FILTERS, FILTER_ALIASES } from "../data/foodFilters";
+import { FILTER_ALIASES } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
+import HomeFoodFilter from "../components/HomeFoodFilter";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -558,45 +558,10 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </Modal>
 
-        <View style={styles.foodFilterWrap}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.foodFilterScrollContent}
-          >
-            {FOOD_FILTERS.map((food) => {
-              const isActive = selectedFood === food;
-              return (
-                <View key={food} style={styles.foodFilterItem}>
-                  <Pressable
-                    onPress={() =>
-                      setSelectedFood((prev) => {
-                        if (food === "All") {
-                          return "All";
-                        }
-
-                        return prev === food ? "All" : food;
-                      })
-                    }
-                    style={[
-                      styles.foodFilterChip,
-                      isActive ? styles.foodFilterChipActive : null,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.foodFilterChipText,
-                        isActive ? styles.foodFilterChipTextActive : null,
-                      ]}
-                    >
-                      {food}
-                    </Text>
-                  </Pressable>
-                </View>
-              );
-            })}
-          </ScrollView>
-        </View>
+        <HomeFoodFilter
+          selectedFood={selectedFood}
+          setSelectedFood={setSelectedFood}
+        />
 
         <HomeSearchBar
           searchQuery={searchQuery}
@@ -794,45 +759,6 @@ const styles = {
       fontSize: 15,
       lineHeight: 22,
       color: colors.textMid,
-    },
-    foodFilterWrap: {
-      paddingVertical: 20,
-      backgroundColor: colors.white,
-    },
-    foodFilterScrollContent: {
-      paddingHorizontal: 14,
-      gap: 10,
-    },
-    foodFilterChip: {
-      backgroundColor: colors.white,
-      borderWidth: 1,
-      borderColor: colors.borderFilterChip,
-      borderRadius: 999,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    foodFilterChipActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    foodFilterChipText: {
-      fontFamily: "Nunito_800ExtraBold",
-      fontSize: 14,
-      fontWeight: "800",
-      color: colors.orangeText,
-    },
-    foodFilterChipTextActive: {
-      color: colors.white,
-    },
-    foodFilterIcon: {
-      width: 80,
-      height: 50,
-      marginBottom: 4,
-    },
-    foodFilterItem: {
-      alignItems: "center",
     },
     restaurantList: {
       paddingBottom: 120,
