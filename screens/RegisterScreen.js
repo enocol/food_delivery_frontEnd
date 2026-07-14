@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
   Image,
 } from "react-native";
@@ -23,6 +24,9 @@ export default function RegisterScreen({ onGoToSignIn }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { height: windowHeight } = useWindowDimensions();
+  const isCompactScreen = windowHeight < 750;
+  const heroImageHeight = isCompactScreen ? 150 : 190;
 
   const handleCreateAccount = async () => {
     if (!name.trim()) {
@@ -54,18 +58,31 @@ export default function RegisterScreen({ onGoToSignIn }) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
-          contentContainerStyle={{ paddingTop: 40, flexGrow: 1 }}
+          contentContainerStyle={[
+            styles.authScrollContent,
+            isCompactScreen ? styles.authScrollContentCompact : null,
+          ]}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <Image
             source={require("../assets/splash-icon.png")}
-            style={{ width: "100%", height: 120 }}
+            resizeMode="contain"
+            style={[styles.authHeroImage, { height: heroImageHeight }]}
           />
           <LinearGradient
             colors={colors.gradients.warmCream}
-            style={styles.gradientBackground}
+            style={[
+              styles.authGradientBackground,
+              isCompactScreen ? styles.authGradientBackgroundCompact : null,
+            ]}
           >
-            <View style={styles.authWrap}>
+            <View
+              style={[
+                styles.authWrap,
+                isCompactScreen ? styles.authWrapCompact : null,
+              ]}
+            >
               <View style={styles.authCard}>
                 <Text style={styles.authTitle}>Create Account</Text>
                 <Text style={styles.authSubtitle}>
@@ -76,6 +93,7 @@ export default function RegisterScreen({ onGoToSignIn }) {
                   value={name}
                   onChangeText={setName}
                   placeholder="Full name"
+                  placeholderTextColor={colors.textDark}
                   autoCapitalize="words"
                   autoCorrect={false}
                   textContentType="name"
@@ -87,6 +105,7 @@ export default function RegisterScreen({ onGoToSignIn }) {
                   value={email}
                   onChangeText={setEmail}
                   placeholder="Email address"
+                  placeholderTextColor={colors.textDark}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -99,6 +118,7 @@ export default function RegisterScreen({ onGoToSignIn }) {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Password"
+                  placeholderTextColor={colors.textDark}
                   secureTextEntry
                   autoCorrect={false}
                   textContentType="newPassword"
@@ -141,11 +161,36 @@ export default function RegisterScreen({ onGoToSignIn }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
+    authScrollContent: {
+      paddingTop: 16,
+      flexGrow: 1,
+      paddingBottom: 16,
+    },
+    authScrollContentCompact: {
+      paddingTop: 8,
+    },
+    authHeroImage: {
+      width: "100%",
+      alignSelf: "center",
+      marginTop: 4,
+      marginBottom: 10,
+    },
+    authGradientBackground: {
+      flex: 1,
+      marginTop: 0,
+      paddingTop: 8,
+    },
+    authGradientBackgroundCompact: {
+      paddingTop: 4,
+    },
     authWrap: {
-      paddingTop: 30,
+      paddingTop: 22,
       gap: 14,
       flex: 1,
       paddingHorizontal: 16,
+    },
+    authWrapCompact: {
+      paddingTop: 12,
     },
     authTitle: {
       fontFamily: "Nunito_900Black",
@@ -172,6 +217,7 @@ const styles = {
       backgroundColor: colors.white,
       borderWidth: 1,
       borderColor: colors.borderInput,
+      color: colors.textDark,
       paddingHorizontal: 12,
       paddingVertical: 11,
       fontSize: 18,

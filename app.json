@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "",
+    "name": "Mbolo Eats",
     "slug": "mbolo-eats",
     "scheme": "mboloeats",
     "version": "1.0.0",
@@ -11,8 +11,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Mbolo Eats needs your location to track delivery orders.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Mbolo Eats needs your location to track delivery orders."
-      }
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Mbolo Eats needs your location to track delivery orders.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.anonymous.mboloeats"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +26,9 @@
       "package": "com.anonymous.mboloeats",
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -35,6 +39,12 @@
       "expo-audio",
       "expo-font",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e9e11578-4056-44d7-866a-767ecc75bf5c"
+      }
+    },
+    "owner": "eno.col"
   }
 }
