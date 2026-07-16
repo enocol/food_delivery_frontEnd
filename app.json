@@ -22,7 +22,9 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
+        
       },
+      "googleServicesFile": "./google-services.json",
       "package": "com.anonymous.mboloeats",
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
@@ -38,7 +40,8 @@
       "expo-web-browser",
       "expo-audio",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {

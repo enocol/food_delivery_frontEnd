@@ -1,4 +1,10 @@
 {
   "js/ts.tsserver.experimental.enableProjectDiagnostics": false,
-  "js/ts.validate.enabled": true
+  "js/ts.validate.enabled": true,
+  "search.exclude": {
+    "**/node_modules": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true
+  }
 }

@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.borderMid,
+    borderColor: colors.borderLight,
     shadowColor: colors.shadow,
     shadowOpacity: 0.1,
     shadowRadius: 14,
@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     width: "100%",
     overflow: "hidden",
+    marginVertical: 20,
   },
   imageWrapper: {
     position: "relative",

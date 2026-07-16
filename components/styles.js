@@ -4,7 +4,6 @@ import * as colors from "../utils/colors";
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.bgWarm,
   },
   centered: {
     flex: 1,

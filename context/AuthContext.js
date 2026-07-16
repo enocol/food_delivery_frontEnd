@@ -14,7 +14,9 @@ import {
 } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { syncUserWithNeon } from "../apis/userApi";
+import { registerPushToken } from "../apis/pushTokenApi";
 import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
+import { registerForPushNotificationsAsync } from "../utils/pushNotifications";
 import { AppState } from "react-native";
 
 const AuthContext = createContext(null);
@@ -81,6 +83,27 @@ export function AuthProvider({ children }) {
         try {
           await ensureCustomerAccountSynced(nextUser);
           connectSocket(() => nextUser.getIdToken());
+
+          // Request permissions and log Expo push token on login/start for now.
+          registerForPushNotificationsAsync().then(async (pushPayload) => {
+            if (!pushPayload) {
+              return;
+            }
+
+            const payload = {
+              firebase_uid: nextUser.uid,
+              ...pushPayload,
+            };
+
+            if (__DEV__) {
+              console.log(
+                `[push] token for user ${nextUser.uid}:`,
+                payload.fcm_token,
+              );
+            }
+
+            await registerPushToken(nextUser, payload);
+          });
         } catch {
           // Token fetch failed — socket stays disconnected until next auth event.
         }

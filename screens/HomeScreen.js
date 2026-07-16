@@ -203,7 +203,7 @@ export default function HomeScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: colors.bgWarm,
+    headerBackgroundColor: colors.white,
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });

@@ -151,7 +151,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 14,
+    marginHorizontal: 15,
+    marginTop: 15,
   },
   homeSearchWrap: {
     flexDirection: "row",
