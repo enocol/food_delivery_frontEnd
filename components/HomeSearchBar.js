@@ -148,7 +148,10 @@ export default function HomeSearchBar({
 const styles = StyleSheet.create({
   searchBarAnimWrapper: {
     overflow: "hidden",
-    backgroundColor: colors.white,
+    backgroundColor: colors.bgWarm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 15,
@@ -157,9 +160,7 @@ const styles = StyleSheet.create({
   homeSearchWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.white,
-    borderColor: colors.black,
-    borderWidth: 2,
+    backgroundColor: colors.bgWarm,
     borderRadius: 10,
     height: 50,
     width: "100%",

@@ -84,7 +84,7 @@ export function AuthProvider({ children }) {
           await ensureCustomerAccountSynced(nextUser);
           connectSocket(() => nextUser.getIdToken());
 
-          // Request permissions and log Expo push token on login/start for now.
+          // Request permissions and register the push token on login/start.
           registerForPushNotificationsAsync().then(async (pushPayload) => {
             if (!pushPayload) {
               return;
@@ -94,13 +94,6 @@ export function AuthProvider({ children }) {
               firebase_uid: nextUser.uid,
               ...pushPayload,
             };
-
-            if (__DEV__) {
-              console.log(
-                `[push] token for user ${nextUser.uid}:`,
-                payload.fcm_token,
-              );
-            }
 
             await registerPushToken(nextUser, payload);
           });

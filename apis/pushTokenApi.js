@@ -55,44 +55,12 @@ export async function registerPushToken(firebaseUser, payload) {
     }
 
     if (!response.ok) {
-      const text = await response.text();
-      if (__DEV__) {
-        console.warn(
-          `[pushTokenApi] registerPushToken failed (${response.status}): ${text}`,
-        );
-        console.warn("[pushTokenApi] backend push token registration result:", {
-          ok: false,
-          status: response.status,
-          firebase_uid: requestBody.firebase_uid,
-          platform: requestBody.platform,
-        });
-      }
+      await response.text();
       return false;
-    }
-
-    if (__DEV__) {
-      console.log("[pushTokenApi] backend push token registration result:", {
-        ok: true,
-        status: response.status,
-        firebase_uid: requestBody.firebase_uid,
-        platform: requestBody.platform,
-      });
     }
 
     return true;
   } catch (networkError) {
-    if (__DEV__) {
-      console.warn(
-        "[pushTokenApi] registerPushToken network error:",
-        networkError.message,
-      );
-      console.warn("[pushTokenApi] backend push token registration result:", {
-        ok: false,
-        status: "network_error",
-        firebase_uid: requestBody.firebase_uid,
-        platform: requestBody.platform,
-      });
-    }
     return false;
   }
 }

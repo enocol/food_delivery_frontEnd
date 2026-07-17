@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as colors from "../utils/colors";
@@ -6,6 +6,7 @@ import { toImageSource } from "../utils/imageSource";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
 import { formatXaf } from "../utils/formatXaf";
 import LikeButton from "./LikeButton";
+import { SkeletonBlock } from "./LoadingPlaceholder";
 
 const RestaurantCard = React.memo(function RestaurantCard({
   item,
@@ -14,6 +15,12 @@ const RestaurantCard = React.memo(function RestaurantCard({
   likeCount = 0,
   onToggleLike,
 }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [item.image]);
+
   const ratingValue = Number(item.rating) || 0;
   const ratingCount = Number(item.ratingCount) || 0;
   const cuisineText = item.cuisine || "Cuisine unavailable";
@@ -34,7 +41,12 @@ const RestaurantCard = React.memo(function RestaurantCard({
           source={toImageSource(item.image)}
           style={styles.heroImage}
           resizeMode="cover"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageLoaded(true)}
         />
+        {!imageLoaded ? (
+          <SkeletonBlock style={styles.heroImagePlaceholder} />
+        ) : null}
         {!item.isOpen && (
           <View style={styles.closedBadge}>
             <Text style={styles.closedBadgeText}>Currently Closed</Text>
@@ -115,6 +127,11 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     position: "relative",
+  },
+  heroImagePlaceholder: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 0,
+    zIndex: 2,
   },
   heroImage: {
     width: "100%",

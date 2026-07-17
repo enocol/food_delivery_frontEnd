@@ -59,10 +59,6 @@ export async function registerForPushNotificationsAsync() {
       "1.0.0";
     const locale = Intl.DateTimeFormat().resolvedOptions().locale || null;
 
-    if (__DEV__) {
-      console.log("[push] Expo push token:", token);
-    }
-
     return {
       fcm_token: token,
       platform: Platform.OS,

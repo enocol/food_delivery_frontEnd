@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, memo, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -16,6 +16,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
+import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import * as colors from "../utils/colors";
 import { formatXaf } from "../utils/formatXaf";
 import { fetchCustomerOrders } from "../apis/orderApi";
@@ -419,10 +420,28 @@ export default function OrdersScreen({ navigation }) {
   const renderContent = () => {
     if (loading) {
       return (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.amber} />
-          <Text style={styles.emptySub}>Loading your orders...</Text>
-        </View>
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.ordersLoadingContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <SkeletonBlock style={styles.ordersLoadingHeading} />
+          {[1, 2, 3].map((item) => (
+            <View key={item} style={styles.ordersLoadingCard}>
+              <View style={styles.ordersLoadingRowBetween}>
+                <SkeletonBlock style={styles.ordersLoadingMeta} />
+                <SkeletonBlock style={styles.ordersLoadingStatus} />
+              </View>
+              <SkeletonBlock style={styles.ordersLoadingRestaurant} />
+              <SkeletonBlock style={styles.ordersLoadingItemLine} />
+              <SkeletonBlock style={styles.ordersLoadingItemLineShort} />
+              <View style={styles.ordersLoadingRowBetween}>
+                <SkeletonBlock style={styles.ordersLoadingSummary} />
+                <SkeletonBlock style={styles.ordersLoadingTotal} />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       );
     }
 
@@ -592,6 +611,61 @@ const styles = {
       padding: 16,
       paddingBottom: 120,
       gap: 10,
+    },
+    ordersLoadingContent: {
+      marginTop: 20,
+      paddingTop: 40,
+      paddingHorizontal: 16,
+      paddingBottom: 120,
+      gap: 12,
+    },
+    ordersLoadingHeading: {
+      width: "54%",
+      height: 28,
+      marginTop: 60,
+      marginBottom: 8,
+    },
+    ordersLoadingCard: {
+      backgroundColor: colors.white,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 16,
+      padding: 14,
+      gap: 10,
+    },
+    ordersLoadingRowBetween: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    ordersLoadingMeta: {
+      width: "40%",
+      height: 13,
+    },
+    ordersLoadingStatus: {
+      width: 76,
+      height: 22,
+      borderRadius: 999,
+    },
+    ordersLoadingRestaurant: {
+      width: "48%",
+      height: 15,
+    },
+    ordersLoadingItemLine: {
+      width: "85%",
+      height: 13,
+    },
+    ordersLoadingItemLineShort: {
+      width: "62%",
+      height: 13,
+    },
+    ordersLoadingSummary: {
+      width: "26%",
+      height: 13,
+    },
+    ordersLoadingTotal: {
+      width: "24%",
+      height: 16,
     },
     ordersHeading: {
       fontFamily: "Nunito_900Black",

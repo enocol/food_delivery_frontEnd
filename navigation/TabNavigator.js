@@ -39,7 +39,7 @@ const styles = {
       bottom: 0,
       borderRadius: 24,
       overflow: "hidden",
-      backgroundColor: "#ffffff",
+      backgroundColor: colors.bgWarm,
     },
     tabBarLabel: {
       fontFamily: "Nunito_800ExtraBold",
@@ -99,8 +99,8 @@ export default function TabNavigator() {
         name="HomeTab"
         component={HomeScreen}
         options={{
-          title: "",
-          tabBarLabel: "",
+          title: "Home",
+          tabBarLabel: "Home",
           headerShown: true,
           headerTransparent: false,
           headerTitle: "",
@@ -110,8 +110,8 @@ export default function TabNavigator() {
         name="OrdersTab"
         component={OrdersScreen}
         options={{
-          title: "",
-          tabBarLabel: "",
+          title: "Orders",
+          tabBarLabel: "Orders",
           headerShown: true,
           headerTransparent: true,
           headerTitle: "",
@@ -121,8 +121,8 @@ export default function TabNavigator() {
         name="ProfileTab"
         component={ProfileScreen}
         options={{
-          title: "",
-          tabBarLabel: "",
+          title: "Profile",
+          tabBarLabel: "Profile",
           headerShown: true,
           headerTransparent: true,
           headerTitle: "",

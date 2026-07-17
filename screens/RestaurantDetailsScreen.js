@@ -22,6 +22,8 @@ import { useCart } from "../context/CartContext";
 import { toImageSource } from "../utils/imageSource";
 import { formatXaf } from "../utils/formatXaf";
 import sharedStyles from "../components/styles";
+import { SkeletonBlock } from "../components/LoadingPlaceholder";
+import FloatingBasketButton from "../components/FloatingBasketButton";
 import * as colors from "../utils/colors";
 import { fetchRestaurantMenu } from "../apis/restaurantApi";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
@@ -51,6 +53,9 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
   const [error, setError] = useState("");
   const [addingItemId, setAddingItemId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
+  const [itemSheetImageLoaded, setItemSheetImageLoaded] = useState(false);
+  const [menuImageLoadedMap, setMenuImageLoadedMap] = useState({});
 
   const handleAddToCart = async (item) => {
     if (!restaurant || addingItemId) {
@@ -111,11 +116,39 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
     };
   }, [route.params?.restaurantId]);
 
+  useEffect(() => {
+    setHeroImageLoaded(false);
+    setMenuImageLoadedMap({});
+  }, [restaurant?.id]);
+
+  useEffect(() => {
+    setItemSheetImageLoaded(false);
+  }, [selectedItem?.id]);
+
   if (loading) {
     return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.emptyTitle}>Loading restaurant...</Text>
-      </View>
+      <SafeAreaView style={styles.screen}>
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.detailsLoadingContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <SkeletonBlock style={styles.detailsLoadingHero} />
+          <SkeletonBlock style={styles.detailsLoadingTitle} />
+          <SkeletonBlock style={styles.detailsLoadingMeta} />
+
+          {[1, 2, 3, 4].map((item) => (
+            <View key={item} style={styles.detailsLoadingMenuCard}>
+              <View style={styles.detailsLoadingMenuTextWrap}>
+                <SkeletonBlock style={styles.detailsLoadingMenuName} />
+                <SkeletonBlock style={styles.detailsLoadingMenuDescription} />
+                <SkeletonBlock style={styles.detailsLoadingMenuPrice} />
+              </View>
+              <SkeletonBlock style={styles.detailsLoadingMenuImage} />
+            </View>
+          ))}
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -156,10 +189,17 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
         )}
         scrollEventThrottle={16}
       >
-        <Image
-          source={toImageSource(restaurant.image)}
-          style={styles.detailsHeroImage}
-        />
+        <View style={styles.detailsHeroImageWrap}>
+          <Image
+            source={toImageSource(restaurant.image)}
+            style={styles.detailsHeroImage}
+            onLoad={() => setHeroImageLoaded(true)}
+            onError={() => setHeroImageLoaded(true)}
+          />
+          {!heroImageLoaded ? (
+            <SkeletonBlock style={styles.detailsHeroImagePlaceholder} />
+          ) : null}
+        </View>
         <Text style={styles.detailsTitle}>
           {formatRestaurantName(restaurant.name)}
         </Text>
@@ -184,7 +224,22 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
               <Image
                 source={toImageSource(item.image)}
                 style={styles.menuImage}
+                onLoad={() =>
+                  setMenuImageLoadedMap((previous) => ({
+                    ...previous,
+                    [item.id]: true,
+                  }))
+                }
+                onError={() =>
+                  setMenuImageLoadedMap((previous) => ({
+                    ...previous,
+                    [item.id]: true,
+                  }))
+                }
               />
+              {!menuImageLoadedMap[item.id] ? (
+                <SkeletonBlock style={styles.menuImagePlaceholder} />
+              ) : null}
               <TouchableOpacity
                 style={styles.menuPlusButton}
                 onPress={() => handleAddToCart(item)}
@@ -203,21 +258,11 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
         ))}
       </Animated.ScrollView>
 
-      {cartCount > 0 ? (
-        <Pressable
-          style={[
-            styles.viewBasketButton,
-            { bottom: Math.max(insets.bottom + 16, 16) },
-          ]}
-          onPress={openCartSheet}
-        >
-          <Ionicons name="cart-outline" size={18} color={colors.white} />
-          <Text style={styles.viewBasketText}>View Basket</Text>
-          <View style={styles.viewBasketBadge}>
-            <Text style={styles.viewBasketBadgeText}>{cartCount}</Text>
-          </View>
-        </Pressable>
-      ) : null}
+      <FloatingBasketButton
+        count={cartCount}
+        onPress={openCartSheet}
+        bottom={Math.max(insets.bottom + 16, 16)}
+      />
 
       {/* Menu item detail full-screen modal */}
       <Modal
@@ -237,7 +282,12 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
             <Image
               source={toImageSource(selectedItem?.image)}
               style={styles.itemSheetImage}
+              onLoad={() => setItemSheetImageLoaded(true)}
+              onError={() => setItemSheetImageLoaded(true)}
             />
+            {!itemSheetImageLoaded ? (
+              <SkeletonBlock style={styles.itemSheetImagePlaceholder} />
+            ) : null}
             <Pressable
               style={styles.itemSheetClose}
               onPress={() => setSelectedItem(null)}
@@ -302,8 +352,75 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
+    detailsLoadingContainer: {
+      paddingBottom: 24,
+    },
+    detailsLoadingHero: {
+      width: "100%",
+      height: 380,
+      borderRadius: 0,
+    },
+    detailsLoadingTitle: {
+      height: 28,
+      marginTop: 16,
+      marginHorizontal: 14,
+      width: "62%",
+    },
+    detailsLoadingMeta: {
+      height: 16,
+      marginTop: 10,
+      marginHorizontal: 14,
+      width: "42%",
+      marginBottom: 12,
+    },
+    detailsLoadingMenuCard: {
+      marginHorizontal: 14,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+      borderRadius: 16,
+      padding: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      backgroundColor: colors.white,
+    },
+    detailsLoadingMenuTextWrap: {
+      flex: 1,
+    },
+    detailsLoadingMenuName: {
+      height: 18,
+      width: "70%",
+      marginBottom: 8,
+    },
+    detailsLoadingMenuDescription: {
+      height: 14,
+      width: "92%",
+      marginBottom: 8,
+    },
+    detailsLoadingMenuPrice: {
+      height: 16,
+      width: "36%",
+    },
+    detailsLoadingMenuImage: {
+      width: 96,
+      height: 96,
+      borderRadius: 12,
+      flexShrink: 0,
+    },
     detailsContainer: {
       paddingBottom: 20,
+    },
+    detailsHeroImageWrap: {
+      position: "relative",
+      width: "100%",
+      height: 380,
+    },
+    detailsHeroImagePlaceholder: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: 0,
+      zIndex: 2,
     },
     detailsStickyHeader: {
       position: "absolute",
@@ -355,50 +472,6 @@ const styles = {
       paddingHorizontal: 14,
       marginBottom: 10,
     },
-    viewBasketButton: {
-      position: "absolute",
-      left: "30%",
-      right: "30%",
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      paddingVertical: 14,
-      borderRadius: 16,
-      backgroundColor: colors.primary,
-      shadowColor: colors.textDark,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.18,
-      shadowRadius: 10,
-      elevation: 8,
-      zIndex: 30,
-    },
-    viewBasketBadge: {
-      position: "absolute",
-      top: -7,
-      right: -7,
-      minWidth: 22,
-      height: 22,
-      paddingHorizontal: 5,
-      borderRadius: 11,
-      backgroundColor: colors.amber,
-      alignItems: "center",
-      justifyContent: "center",
-      borderWidth: 2,
-      borderColor: colors.white,
-    },
-    viewBasketBadgeText: {
-      fontFamily: "Nunito_800ExtraBold",
-      fontSize: 11,
-      fontWeight: "800",
-      color: colors.textWarmDark,
-    },
-    viewBasketText: {
-      fontFamily: "Nunito_800ExtraBold",
-      fontSize: 15,
-      fontWeight: "800",
-      color: colors.white,
-    },
     menuCard: {
       backgroundColor: colors.white,
       marginHorizontal: 14,
@@ -418,6 +491,11 @@ const styles = {
       position: "relative",
       width: 100,
       height: 100,
+    },
+    menuImagePlaceholder: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: 0,
+      zIndex: 2,
     },
     menuPlusButton: {
       position: "absolute",
@@ -471,6 +549,11 @@ const styles = {
       width: "100%",
       height: 300,
       objectFit: "cover",
+    },
+    itemSheetImagePlaceholder: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: 0,
+      zIndex: 2,
     },
     itemSheetClose: {
       position: "absolute",

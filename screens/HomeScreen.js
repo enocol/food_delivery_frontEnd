@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  ActivityIndicator,
   Animated,
   FlatList,
   Modal,
@@ -20,6 +19,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
+import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import * as colors from "../utils/colors";
 import { fetchRestaurantMenu, fetchRestaurants } from "../apis/restaurantApi";
 import {
@@ -36,6 +36,7 @@ import { FILTER_ALIASES } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
 import HomeFoodFilter from "../components/HomeFoodFilter";
+import FloatingBasketButton from "../components/FloatingBasketButton";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -203,7 +204,7 @@ export default function HomeScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: colors.white,
+    headerBackgroundColor: colors.bgWarm,
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
@@ -488,12 +489,7 @@ export default function HomeScreen({ navigation }) {
   let emptyStateIconBorderColor = colors.borderOrange;
   const listBottomPadding = 75 + 16 + insets.bottom + 20;
 
-  if (isLoading) {
-    emptyStateIconName = "time-outline";
-    emptyStateIconColor = colors.amber;
-    emptyStateIconBackgroundColor = colors.bgEmptyAmber;
-    emptyStateIconBorderColor = colors.borderEmptyAmber;
-  } else if (error) {
+  if (error) {
     emptyStateIconName = "alert-circle-outline";
     emptyStateIconColor = colors.danger;
     emptyStateIconBackgroundColor = colors.bgEmptyDanger;
@@ -589,25 +585,36 @@ export default function HomeScreen({ navigation }) {
           windowSize={5}
           removeClippedSubviews
           ListEmptyComponent={
-            <View style={styles.emptySearchCard}>
-              <View
-                style={[
-                  styles.emptyStateIconWrap,
-                  {
-                    backgroundColor: emptyStateIconBackgroundColor,
-                    borderColor: emptyStateIconBorderColor,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={emptyStateIconName}
-                  size={42}
-                  color={emptyStateIconColor}
-                />
+            isLoading ? (
+              <View style={styles.homeLoadingList}>
+                {[1, 2, 3].map((item) => (
+                  <View key={item} style={styles.homeLoadingCard}>
+                    <SkeletonBlock style={styles.homeLoadingImage} />
+                    <View style={styles.homeLoadingContent}>
+                      <SkeletonBlock style={styles.homeLoadingTitle} />
+                      <SkeletonBlock style={styles.homeLoadingMeta} />
+                      <SkeletonBlock style={styles.homeLoadingMetaWide} />
+                    </View>
+                  </View>
+                ))}
               </View>
-              {isLoading ? (
-                <ActivityIndicator size="large" color={colors.amber} />
-              ) : (
+            ) : (
+              <View style={styles.emptySearchCard}>
+                <View
+                  style={[
+                    styles.emptyStateIconWrap,
+                    {
+                      backgroundColor: emptyStateIconBackgroundColor,
+                      borderColor: emptyStateIconBorderColor,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={emptyStateIconName}
+                    size={42}
+                    color={emptyStateIconColor}
+                  />
+                </View>
                 <View>
                   <Text style={styles.emptyTitle}>
                     {error
@@ -618,9 +625,16 @@ export default function HomeScreen({ navigation }) {
                     {error || "Try another food filter or search term."}
                   </Text>
                 </View>
-              )}
-            </View>
+              </View>
+            )
           }
+        />
+
+        <FloatingBasketButton
+          count={cartCount}
+          onPress={openCartSheet}
+          bottom={Math.max(insets.bottom + 68, 68)}
+          variant="compact"
         />
       </View>
       <StatusBar style="dark" />
@@ -648,6 +662,40 @@ const styles = {
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 14,
+    },
+    homeLoadingList: {
+      marginTop: 20,
+      gap: 12,
+      paddingHorizontal: 2,
+      paddingBottom: 16,
+    },
+    homeLoadingCard: {
+      backgroundColor: colors.white,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+      overflow: "hidden",
+    },
+    homeLoadingImage: {
+      width: "100%",
+      height: 160,
+      borderRadius: 0,
+    },
+    homeLoadingContent: {
+      padding: 14,
+      gap: 8,
+    },
+    homeLoadingTitle: {
+      height: 18,
+      width: "64%",
+    },
+    homeLoadingMeta: {
+      height: 13,
+      width: "40%",
+    },
+    homeLoadingMetaWide: {
+      height: 13,
+      width: "55%",
     },
     homeHeaderLocationContainer: {
       paddingLeft: 16,

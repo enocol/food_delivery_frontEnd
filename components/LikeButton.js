@@ -8,11 +8,10 @@ const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
     likeButton: {
-      minWidth: 34,
+      // minWidth: 34,
       height: 34,
       borderRadius: 17,
-      borderWidth: 1,
-      borderColor: colors.borderLike,
+      // borderColor: colors.borderLike,
       backgroundColor: colors.bgLike,
       alignItems: "center",
       justifyContent: "center",
@@ -22,7 +21,7 @@ const styles = {
     },
     likeButtonPressed: {
       opacity: 0.85,
-      transform: [{ scale: 0.96 }],
+      // transform: [{ scale: 0.96 }],
     },
     likeCountText: {
       fontFamily: "Nunito_700Bold",
