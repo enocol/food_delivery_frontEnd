@@ -2,8 +2,8 @@ import { Platform } from "react-native";
 
 const DEFAULT_API_BASE_URL =
   Platform.OS === "ios"
-    ? "http://192.168.0.152:5000/api"
-    : "http://192.168.0.152:5000/api";
+    ? process.env.EXPO_PUBLIC_API_BASE_URL
+    : process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
