@@ -1,16 +1,33 @@
 import React from "react";
 import {
-  Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  Vibration,
   View,
 } from "react-native";
-import { FOOD_FILTERS, FOOD_FILTER_IMAGES } from "../data/foodFilters";
+import * as Haptics from "expo-haptics";
+import { Ionicons } from "@expo/vector-icons";
+import { FOOD_FILTERS } from "../data/foodFilters";
 import * as colors from "../utils/colors";
 
+const ACTIVE_FILTER_ORANGE = "#ff5a1f";
+
 export default function HomeFoodFilter({ selectedFood, setSelectedFood }) {
+  const triggerFilterToggleFeedback = async () => {
+    if (Platform.OS === "web") {
+      return;
+    }
+
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      Vibration.vibrate(20);
+    }
+  };
+
   return (
     <View style={styles.foodFilterWrap}>
       <ScrollView
@@ -21,50 +38,42 @@ export default function HomeFoodFilter({ selectedFood, setSelectedFood }) {
         {FOOD_FILTERS.map((food) => {
           const isActive = selectedFood === food;
           return (
-            <View key={food} style={styles.foodFilterItem}>
-              <Pressable
-                onPress={() =>
-                  setSelectedFood((prev) => {
-                    if (food === "All") {
-                      return "All";
-                    }
+            <Pressable
+              key={food}
+              onPress={async () => {
+                await triggerFilterToggleFeedback();
 
-                    return prev === food ? "All" : food;
-                  })
-                }
-                style={[
-                  styles.foodFilterChip,
-                  isActive ? styles.foodFilterChipActive : null,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Filter by ${food}`}
-              >
-                {FOOD_FILTER_IMAGES[food] ? (
-                  <Image
-                    source={{ uri: FOOD_FILTER_IMAGES[food] }}
-                    style={styles.foodFilterImage}
-                  />
-                ) : (
-                  <Text
-                    style={[
-                      styles.foodFilterChipText,
-                      isActive ? styles.foodFilterChipTextActive : null,
-                    ]}
-                  >
-                    {food}
-                  </Text>
-                )}
-              </Pressable>
+                setSelectedFood((prev) => {
+                  if (food === "All") {
+                    return "All";
+                  }
+
+                  return prev === food ? "All" : food;
+                });
+              }}
+              style={[
+                styles.foodFilterChip,
+                isActive ? styles.foodFilterChipActive : null,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`Filter by ${food}`}
+            >
               <Text
                 style={[
-                  styles.foodFilterLabel,
-                  isActive ? styles.foodFilterLabelActive : null,
+                  styles.foodFilterChipText,
+                  isActive ? styles.foodFilterChipTextActive : null,
                 ]}
-                numberOfLines={2}
+                numberOfLines={1}
               >
                 {food}
               </Text>
-            </View>
+
+              {isActive ? (
+                <View style={styles.foodFilterTickBadge}>
+                  <Ionicons name="checkmark" size={11} color={colors.white} />
+                </View>
+              ) : null}
+            </Pressable>
           );
         })}
       </ScrollView>
@@ -74,57 +83,55 @@ export default function HomeFoodFilter({ selectedFood, setSelectedFood }) {
 
 const styles = StyleSheet.create({
   foodFilterWrap: {
-    paddingVertical: 10,
-    backgroundColor: colors.white,
+    paddingTop: 10,
+    paddingBottom: 14,
   },
   foodFilterScrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    gap: 10,
   },
   foodFilterChip: {
-    backgroundColor: colors.white,
-    // borderWidth: 1,
-    borderRadius: 16,
-    borderColor: colors.borderFilterChip,
-    width: 58,
-    height: 58,
+    // backgroundColor: "#2a2623",
+    backgroundColor: "#fff5f0",
+    borderWidth: 1,
+    borderRadius: 19,
+    borderColor: ACTIVE_FILTER_ORANGE,
+    minHeight: 38,
+    minWidth: 58,
+    paddingHorizontal: 16,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    gap: 6,
   },
   foodFilterChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  foodFilterImage: {
-    width: 44,
-    height: 44,
-    // borderRadius: 22,
-    resizeMode: "cover",
+    backgroundColor: ACTIVE_FILTER_ORANGE,
+    borderColor: ACTIVE_FILTER_ORANGE,
+    shadowColor: ACTIVE_FILTER_ORANGE,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    elevation: 6,
   },
   foodFilterChipText: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.orangeText,
+    fontFamily: "Nunito_700Bold",
+    fontSize: 16,
+    lineHeight: 20,
+    color: "#a79f97",
     textAlign: "center",
   },
   foodFilterChipTextActive: {
     color: colors.white,
   },
-  foodFilterItem: {
+  foodFilterTickBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.28)",
     alignItems: "center",
-    width: 72,
-    gap: 6,
-  },
-  foodFilterLabel: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.textMuted,
-    textAlign: "center",
-  },
-  foodFilterLabelActive: {
-    color: colors.primary,
-    fontWeight: "700",
+    justifyContent: "center",
   },
 });

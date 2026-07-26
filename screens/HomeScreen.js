@@ -36,6 +36,7 @@ import { FILTER_ALIASES } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
 import HomeFoodFilter from "../components/HomeFoodFilter";
+import HomeGreetingBanner from "../components/HomeGreetingBanner";
 import FloatingBasketButton from "../components/FloatingBasketButton";
 
 function getFilterTerms(food) {
@@ -75,7 +76,11 @@ function restaurantMatchesQuery(restaurant, query) {
 export default function HomeScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { cartCount, openCartSheet } = useCart();
-  const { firebaseUid } = useAuth();
+  const { firebaseUid, user } = useAuth();
+  const customerName =
+    user?.displayName?.trim()?.split(/\s+/)?.[0] ||
+    user?.email?.trim()?.split("@")[0] ||
+    "Alex";
   const [selectedFood, setSelectedFood] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -204,7 +209,7 @@ export default function HomeScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: colors.bgWarm,
+    headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
@@ -554,6 +559,8 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </Modal>
 
+        <HomeGreetingBanner customerName={customerName} />
+
         <HomeFoodFilter
           selectedFood={selectedFood}
           setSelectedFood={setSelectedFood}
@@ -707,9 +714,9 @@ const styles = {
     },
     homeHeaderLocationLabel: {
       fontFamily: "Nunito_700Bold",
-      fontSize: 12,
+      fontSize: 15,
       fontWeight: "700",
-      color: colors.primaryDeep,
+      color: colors.white,
       marginBottom: 2,
     },
     homeHeaderLocationRow: {

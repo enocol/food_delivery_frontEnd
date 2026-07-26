@@ -5,14 +5,37 @@ import sharedStyles from "./styles";
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
-    tabButtonContent: {
+    tabButtonPressable: {
       flex: 1,
-      width: "100%",
       justifyContent: "center",
       alignItems: "center",
     },
-    tabButtonInner: {},
-    tabButtonActiveOverlay: {},
+    tabButtonContent: {
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    tabButtonInner: {
+      minWidth: 92,
+      minHeight: 44,
+      paddingHorizontal: 14,
+      borderRadius: 24,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: "transparent",
+      backgroundColor: "transparent",
+    },
+    tabButtonInnerFocused: {
+      backgroundColor: "#9ca3af",
+      borderColor: "#6b7280",
+      borderWidth: 2,
+      shadowColor: "#000000",
+      shadowOpacity: 0.2,
+      shadowOffset: { width: 0, height: 3 },
+      shadowRadius: 6,
+      elevation: 4,
+    },
   }),
 };
 
@@ -25,25 +48,17 @@ export default function AnimatedTabBarButton({
   testID,
 }) {
   const focused = Boolean(accessibilityState?.selected);
-  const progress = React.useRef(new Animated.Value(focused ? 1 : 0)).current;
   const spring = React.useRef(new Animated.Value(focused ? 1 : 0)).current;
 
   React.useEffect(() => {
-    Animated.parallel([
-      Animated.timing(progress, {
-        toValue: focused ? 1 : 0,
-        duration: focused ? 240 : 180,
-        useNativeDriver: true,
-      }),
-      Animated.spring(spring, {
-        toValue: focused ? 1 : 0,
-        damping: 16,
-        stiffness: 220,
-        mass: 0.9,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [focused, progress, spring]);
+    Animated.spring(spring, {
+      toValue: focused ? 1 : 0,
+      damping: 16,
+      stiffness: 220,
+      mass: 0.9,
+      useNativeDriver: true,
+    }).start();
+  }, [focused, spring]);
 
   const animatedStyle = {
     transform: [
@@ -67,12 +82,15 @@ export default function AnimatedTabBarButton({
       testID={testID}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={style}
+      style={[styles.tabButtonPressable, style]}
     >
-      <Animated.View style={[styles.tabButtonInner, animatedStyle]}>
-        <Animated.View
-          style={[styles.tabButtonActiveOverlay, { opacity: progress }]}
-        />
+      <Animated.View
+        style={[
+          styles.tabButtonInner,
+          focused ? styles.tabButtonInnerFocused : null,
+          animatedStyle,
+        ]}
+      >
         <View style={styles.tabButtonContent}>{children}</View>
       </Animated.View>
     </Pressable>

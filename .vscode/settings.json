@@ -1,5 +1,7 @@
 {
-  "js/ts.tsserver.experimental.enableProjectDiagnostics": false,
+  "javascript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.validate.enable": false,
   "js/ts.validate.enabled": true,
   "search.exclude": {
     "**/node_modules": true

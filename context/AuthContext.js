@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -62,6 +63,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authActionLoading, setAuthActionLoading] = useState(false);
+  const newSignupUidRef = useRef(null);
 
   const ensureCustomerAccountSynced = async (firebaseUser) => {
     // Retry once in case backend upsert races with fresh token propagation.
@@ -86,7 +88,19 @@ export function AuthProvider({ children }) {
 
           // Request permissions and register the push token on login/start.
           registerForPushNotificationsAsync().then(async (pushPayload) => {
+            const isNewSignup = newSignupUidRef.current === nextUser.uid;
+
             if (!pushPayload) {
+              if (__DEV__ && isNewSignup) {
+                console.log("[push] registration result for new user-----:", {
+                  firebase_uid: nextUser.uid,
+                  registered: false,
+                  reason: "permission_not_granted_or_no_token",
+                });
+              }
+              if (isNewSignup) {
+                newSignupUidRef.current = null;
+              }
               return;
             }
 
@@ -95,7 +109,11 @@ export function AuthProvider({ children }) {
               ...pushPayload,
             };
 
-            await registerPushToken(nextUser, payload);
+            const registered = await registerPushToken(nextUser, payload);
+
+            if (isNewSignup) {
+              newSignupUidRef.current = null;
+            }
           });
         } catch {
           // Token fetch failed — socket stays disconnected until next auth event.
@@ -207,6 +225,8 @@ export function AuthProvider({ children }) {
         normalizedEmail,
         normalizedPassword,
       );
+
+      newSignupUidRef.current = result.user.uid;
 
       await updateProfile(result.user, {
         displayName: normalizedName,

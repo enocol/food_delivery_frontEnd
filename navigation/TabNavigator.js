@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { LinearGradient } from "expo-linear-gradient";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AnimatedTabBarButton from "../components/AnimatedTabBarButton";
 import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 import HomeScreen from "../screens/HomeScreen";
@@ -39,7 +39,7 @@ const styles = {
       bottom: 0,
       borderRadius: 24,
       overflow: "hidden",
-      backgroundColor: colors.bgWarm,
+      backgroundColor: "#120f0d",
     },
     tabBarLabel: {
       fontFamily: "Nunito_800ExtraBold",
@@ -57,10 +57,11 @@ export default function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.black,
+        tabBarActiveTintColor: "#ff5a1f",
+        tabBarInactiveTintColor: colors.white,
         tabBarStyle: [styles.tabBar, { bottom: 16 + insets.bottom }],
         tabBarBackground: () => <View style={styles.tabBarGlassWrap}></View>,
+        tabBarButton: (props) => <AnimatedTabBarButton {...props} />,
 
         tabBarItemStyle: {
           flex: 1,

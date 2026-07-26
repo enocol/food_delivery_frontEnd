@@ -18,7 +18,7 @@ const styles = {
     },
     cartHeaderIcon: {
       fontWeight: "800",
-      color: colors.primaryBlack,
+      color: colors.white,
       fontSize: 24,
     },
     cartBadge: {
@@ -44,7 +44,7 @@ export default function CartHeaderButton({ count, onPress }) {
       <Ionicons
         name="cart-outline"
         size={24}
-        color={colors.primaryBlack}
+        color={colors.white}
         style={styles.cartHeaderIcon}
       />
       {count > 0 ? (

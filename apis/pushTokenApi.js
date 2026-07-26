@@ -32,6 +32,10 @@ export async function registerPushToken(firebaseUser, payload) {
     is_active: payload.is_active,
   };
 
+  if (__DEV__) {
+    console.log("[push] backend registration payload:", requestBody);
+  }
+
   try {
     let response = await fetch(PUSH_TOKENS_ENDPOINT, {
       method: "POST",
