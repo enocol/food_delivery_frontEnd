@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -28,12 +31,32 @@ export default function ProfileScreen({ navigation }) {
   );
   const [locationCoords, setLocationCoords] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
+  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
-  // useRootCartHeader(navigation, cartCount, "Profile", openCartSheet);
+  const renderHeaderLocation = useCallback(
+    () => (
+      <Pressable
+        onPress={() => setIsLocationModalVisible(true)}
+        style={styles.homeHeaderLocationWrap}
+      >
+        <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
+        <View style={styles.homeHeaderLocationRow}>
+          <Ionicons name="location" size={20} color={colors.primaryDeep} />
+          <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
+            {locationLabel}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={colors.primaryDeep} />
+        </View>
+      </Pressable>
+    ),
+    [locationLabel],
+  );
 
   useRootCartHeader(navigation, cartCount, "Profile", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: "#ffffff",
+    headerBackgroundColor: "#ff5a1f",
+    headerLeft: renderHeaderLocation,
+    headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
 
   const loadCurrentLocation = useCallback(async () => {
@@ -95,6 +118,44 @@ export default function ProfileScreen({ navigation }) {
         colors={colors.gradients.warmCream}
         style={styles.gradientBackground}
       >
+        <Modal
+          visible={isLocationModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsLocationModalVisible(false)}
+        >
+          <Pressable
+            style={styles.homeLocationModalBackdrop}
+            onPress={() => setIsLocationModalVisible(false)}
+          >
+            <Pressable style={styles.homeLocationModalCard} onPress={() => {}}>
+              <View style={styles.homeLocationModalHeader}>
+                <Text style={styles.homeLocationModalTitle}>
+                  Delivery location
+                </Text>
+                <Pressable
+                  onPress={() => setIsLocationModalVisible(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="close" size={22} color={colors.textDark} />
+                </Pressable>
+              </View>
+
+              <View style={styles.homeLocationModalRow}>
+                <Ionicons name="location" size={18} color={colors.orange} />
+                <Text style={styles.homeLocationModalText}>
+                  {locationLabel}
+                </Text>
+              </View>
+              {locationCoords ? (
+                <Text style={styles.homeLocationModalCoords}>
+                  {locationCoords}
+                </Text>
+              ) : null}
+            </Pressable>
+          </Pressable>
+        </Modal>
+
         <ScrollView
           contentContainerStyle={styles.profileWrap}
           showsVerticalScrollIndicator={false}
@@ -153,6 +214,79 @@ export default function ProfileScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
+    homeHeaderLocationContainer: {
+      paddingLeft: 16,
+      maxWidth: Platform.OS === "ios" ? "80%" : "60%",
+    },
+    homeHeaderLocationWrap: {
+      justifyContent: "center",
+      marginTop: 10,
+    },
+    homeHeaderLocationLabel: {
+      fontFamily: "Nunito_700Bold",
+      fontSize: 15,
+      fontWeight: "700",
+      color: colors.white,
+      marginBottom: 2,
+    },
+    homeHeaderLocationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    homeHeaderLocationText: {
+      fontFamily: "Nunito_800ExtraBold",
+      flexShrink: 1,
+      fontSize: 14,
+      fontWeight: "800",
+      color: colors.textDark,
+    },
+    homeLocationModalBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlays.locationBackdrop,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    homeLocationModalCard: {
+      width: "100%",
+      maxWidth: 420,
+      backgroundColor: colors.bgWarm,
+      borderRadius: 22,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: colors.borderModalWarm,
+    },
+    homeLocationModalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 14,
+    },
+    homeLocationModalTitle: {
+      fontFamily: "Nunito_900Black",
+      fontSize: 18,
+      fontWeight: "900",
+      color: colors.textDark,
+    },
+    homeLocationModalRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
+    },
+    homeLocationModalText: {
+      fontFamily: "Inter_400Regular",
+      flex: 1,
+      fontSize: 15,
+      lineHeight: 22,
+      color: colors.textMid,
+    },
+    homeLocationModalCoords: {
+      marginTop: 10,
+      fontFamily: "Inter_400Regular",
+      fontSize: 13,
+      color: colors.textMuted,
+    },
     profileWrap: {
       paddingVertical: 100,
       gap: 14,
@@ -198,7 +332,7 @@ const styles = {
       paddingVertical: 10,
       paddingHorizontal: 16,
       borderRadius: 12,
-      backgroundColor: colors.textDark,
+      backgroundColor: "#ff5a1f",
     },
     profileSignOutButtonDisabled: {
       opacity: 0.6,
@@ -235,7 +369,7 @@ const styles = {
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 10,
-      backgroundColor: colors.textDark,
+      backgroundColor: "#ff5a1f",
     },
     profileLocationButtonDisabled: {
       opacity: 0.6,

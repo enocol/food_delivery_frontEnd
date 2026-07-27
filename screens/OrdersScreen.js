@@ -318,7 +318,7 @@ export default function OrdersScreen({ navigation }) {
 
   useRootCartHeader(navigation, cartCount, "Orders", openCartSheet, {
     headerHeight: 130,
-    headerBackgroundColor: "#ffffff",
+    headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
@@ -548,9 +548,9 @@ const styles = {
     },
     homeHeaderLocationLabel: {
       fontFamily: "Nunito_700Bold",
-      fontSize: 12,
+      fontSize: 15,
       fontWeight: "700",
-      color: colors.primaryDeep,
+      color: colors.white,
       marginBottom: 2,
     },
     homeHeaderLocationRow: {

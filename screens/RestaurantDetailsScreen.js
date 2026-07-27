@@ -461,7 +461,7 @@ const styles = {
       fontFamily: "Nunito_900Black",
       fontSize: 26,
       fontWeight: "900",
-      color: colors.white,
+      color: colors.textHeading,
       marginTop: 14,
       paddingHorizontal: 14,
     },
