@@ -91,11 +91,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   foodFilterChip: {
-    // backgroundColor: "#2a2623",
-    backgroundColor: "#fff5f0",
+    backgroundColor: colors.bgWarm,
     borderWidth: 1,
     borderRadius: 19,
-    borderColor: ACTIVE_FILTER_ORANGE,
+    borderColor: colors.borderLight,
     minHeight: 38,
     minWidth: 58,
     paddingHorizontal: 16,

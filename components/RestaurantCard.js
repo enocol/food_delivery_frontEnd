@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as colors from "../utils/colors";
@@ -34,7 +35,10 @@ const RestaurantCard = React.memo(function RestaurantCard({
     <TouchableOpacity
       activeOpacity={0.88}
       style={styles.restaurantCard}
-      onPress={() => onPress(item.id)}
+      onPress={() => {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        onPress(item.id);
+      }}
     >
       <View style={styles.imageWrapper}>
         <Image

@@ -29,6 +29,7 @@ export default function HomeSearchBar({
   setIsSearchFocused,
   searchBarAnim,
   onSearchInputFocus,
+  containerStyle,
 }) {
   const animA = useRef(new Animated.Value(0)).current;
   const animB = useRef(new Animated.Value(PLACEHOLDER_WORD_HEIGHT)).current;
@@ -67,6 +68,7 @@ export default function HomeSearchBar({
     <Animated.View
       style={[
         styles.searchBarAnimWrapper,
+        containerStyle,
         {
           maxHeight: searchBarAnim.interpolate({
             inputRange: [0, 1],
@@ -148,7 +150,8 @@ export default function HomeSearchBar({
 const styles = StyleSheet.create({
   searchBarAnimWrapper: {
     overflow: "hidden",
-    backgroundColor: colors.bgWarm,
+    backgroundColor: colors.white,
+    width: "70%",
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.borderLight,

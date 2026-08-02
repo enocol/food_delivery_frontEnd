@@ -1,5 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { StatusBar } from "expo-status-bar";
+import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Animated,
@@ -32,7 +39,7 @@ import {
   getCurrentLocation,
   getLocationAddress,
 } from "../utils/locationService";
-import { FILTER_ALIASES } from "../data/foodFilters";
+import { FILTER_ALIASES, FOOD_FILTERS } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
 import HomeFoodFilter from "../components/HomeFoodFilter";
@@ -94,6 +101,8 @@ export default function HomeScreen({ navigation }) {
   );
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const [isClosedModalVisible, setIsClosedModalVisible] = useState(false);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [isAiModalVisible, setIsAiModalVisible] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [likedRestaurantIds, setLikedRestaurantIds] = useState(() => ({}));
   const [likedRestaurantCounts, setLikedRestaurantCounts] = useState(
@@ -196,11 +205,11 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
         <View style={styles.homeHeaderLocationRow}>
-          <Ionicons name="location" size={20} color={colors.primaryDeep} />
+          <Ionicons name="location" size={25} color={colors.white} />
           <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
             {deliveryLocation}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={colors.primaryDeep} />
+          <Ionicons name="chevron-down" size={25} color={colors.white} />
         </View>
       </Pressable>
     ),
@@ -470,6 +479,66 @@ export default function HomeScreen({ navigation }) {
 
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
+  const aiRecommendations = useMemo(() => {
+    const nextFood =
+      FOOD_FILTERS.find((food) => food !== "All" && food !== selectedFood) ||
+      "Fried Rice";
+
+    const cuisines = Array.from(
+      new Set(
+        restaurants
+          .map((restaurant) => String(restaurant?.cuisine || "").trim())
+          .filter(Boolean),
+      ),
+    ).slice(0, 2);
+
+    const suggestions = [
+      {
+        id: "ai-trending",
+        title: `Trending now: ${nextFood}`,
+        subtitle: "Apply a food filter for instant picks.",
+        food: nextFood,
+        query: "",
+      },
+      {
+        id: "ai-reset",
+        title: "Reset and explore all",
+        subtitle: "Clear search and show the full restaurant list.",
+        food: "All",
+        query: "",
+      },
+      ...cuisines.map((cuisine, index) => ({
+        id: `ai-cuisine-${index}`,
+        title: `Try ${cuisine}`,
+        subtitle: "Search restaurants and menu items by cuisine.",
+        food: "All",
+        query: cuisine,
+      })),
+    ];
+
+    return suggestions.slice(0, 4);
+  }, [restaurants, selectedFood]);
+
+  const handleOpenFilterModal = useCallback(() => {
+    setIsFilterModalVisible(true);
+  }, []);
+
+  const handleApplyFilter = useCallback((food) => {
+    setSelectedFood(food);
+    setIsFilterModalVisible(false);
+  }, []);
+
+  const handleOpenAiModal = useCallback(() => {
+    setIsAiModalVisible(true);
+  }, []);
+
+  const handleApplyAiRecommendation = useCallback((recommendation) => {
+    setSelectedFood(recommendation.food);
+    setSearchQuery(recommendation.query);
+    setDebouncedSearchQuery(recommendation.query);
+    setIsAiModalVisible(false);
+  }, []);
+
   const renderRestaurantItem = useCallback(
     ({ item }) => (
       <RestaurantCard
@@ -559,6 +628,104 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </Modal>
 
+        <Modal
+          visible={isFilterModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsFilterModalVisible(false)}
+        >
+          <Pressable
+            style={styles.homeLocationModalBackdrop}
+            onPress={() => setIsFilterModalVisible(false)}
+          >
+            <Pressable style={styles.homeLocationModalCard} onPress={() => {}}>
+              <View style={styles.homeLocationModalHeader}>
+                <Text style={styles.homeLocationModalTitle}>Quick filters</Text>
+                <Pressable
+                  onPress={() => setIsFilterModalVisible(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="close" size={22} color={colors.textDark} />
+                </Pressable>
+              </View>
+
+              <View style={styles.filterChipWrap}>
+                {FOOD_FILTERS.map((food) => {
+                  const isActive = selectedFood === food;
+
+                  return (
+                    <Pressable
+                      key={food}
+                      style={[
+                        styles.filterChip,
+                        isActive ? styles.filterChipActive : null,
+                      ]}
+                      onPress={() => handleApplyFilter(food)}
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          isActive ? styles.filterChipTextActive : null,
+                        ]}
+                      >
+                        {food}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        <Modal
+          visible={isAiModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsAiModalVisible(false)}
+        >
+          <Pressable
+            style={styles.homeLocationModalBackdrop}
+            onPress={() => setIsAiModalVisible(false)}
+          >
+            <Pressable style={styles.homeLocationModalCard} onPress={() => {}}>
+              <View style={styles.homeLocationModalHeader}>
+                <Text style={styles.homeLocationModalTitle}>
+                  AI Recommendations
+                </Text>
+                <Pressable
+                  onPress={() => setIsAiModalVisible(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="close" size={22} color={colors.textDark} />
+                </Pressable>
+              </View>
+
+              <View style={styles.aiSuggestionWrap}>
+                {aiRecommendations.map((recommendation) => (
+                  <Pressable
+                    key={recommendation.id}
+                    style={styles.aiSuggestionCard}
+                    onPress={() => {
+                      void Haptics.impactAsync(
+                        Haptics.ImpactFeedbackStyle.Medium,
+                      );
+                      handleApplyAiRecommendation(recommendation);
+                    }}
+                  >
+                    <Text style={styles.aiSuggestionTitle}>
+                      {recommendation.title}
+                    </Text>
+                    <Text style={styles.aiSuggestionSubtext}>
+                      {recommendation.subtitle}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
         <HomeGreetingBanner customerName={customerName} />
 
         <HomeFoodFilter
@@ -566,14 +733,53 @@ export default function HomeScreen({ navigation }) {
           setSelectedFood={setSelectedFood}
         />
 
-        <HomeSearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          isSearchFocused={isSearchFocused}
-          setIsSearchFocused={setIsSearchFocused}
-          searchBarAnim={searchBarAnim}
-          onSearchInputFocus={() => setSelectedFood("All")}
-        />
+        <View style={styles.searchRowWrap}>
+          <HomeSearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            isSearchFocused={isSearchFocused}
+            setIsSearchFocused={setIsSearchFocused}
+            searchBarAnim={searchBarAnim}
+            onSearchInputFocus={() => setSelectedFood("All")}
+            containerStyle={styles.searchBarRowItem}
+          />
+          <Animated.View
+            style={[
+              styles.searchActionsWrap,
+              {
+                maxHeight: searchBarAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 70],
+                }),
+                opacity: searchBarAnim,
+              },
+            ]}
+          >
+            <Pressable
+              style={styles.searchActionButtonPlain}
+              accessibilityRole="button"
+              accessibilityLabel="Filter options"
+              onPress={() => {
+                void Haptics.selectionAsync();
+                handleOpenFilterModal();
+              }}
+            >
+              <Ionicons name="options-outline" size={28} color="#e8772e" />
+            </Pressable>
+
+            <Pressable
+              style={styles.searchActionButtonCircle}
+              accessibilityRole="button"
+              accessibilityLabel="Magic recommendations"
+              onPress={() => {
+                void Haptics.selectionAsync();
+                handleOpenAiModal();
+              }}
+            >
+              <Ionicons name="sparkles" size={26} color="#263238" />
+            </Pressable>
+          </Animated.View>
+        </View>
 
         <FlatList
           data={restaurants}
@@ -644,7 +850,7 @@ export default function HomeScreen({ navigation }) {
           variant="compact"
         />
       </View>
-      <StatusBar style="dark" />
+      <StatusBar style="auto" />
     </SafeAreaView>
   );
 }
@@ -704,6 +910,96 @@ const styles = {
       height: 13,
       width: "55%",
     },
+    searchRowWrap: {
+      flexDirection: "row",
+      direction: "ltr",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      marginTop: 10,
+      gap: 10,
+    },
+    searchActionsWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      overflow: "hidden",
+    },
+    searchActionButtonPlain: {
+      width: 42,
+      height: 42,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.bgWarm,
+    },
+    searchActionButtonCircle: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.bgWarm,
+      borderWidth: 1,
+      borderColor: "#b7bacf",
+    },
+    searchBarRowItem: {
+      flex: 1,
+      width: "auto",
+      marginHorizontal: 0,
+      marginTop: 0,
+    },
+    filterChipWrap: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+      marginTop: 6,
+    },
+    filterChip: {
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: colors.white,
+    },
+    filterChipActive: {
+      backgroundColor: colors.orange,
+      borderColor: colors.orange,
+    },
+    filterChipText: {
+      fontFamily: "Nunito_700Bold",
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.textDark,
+    },
+    filterChipTextActive: {
+      color: colors.white,
+    },
+    aiSuggestionWrap: {
+      marginTop: 6,
+      gap: 10,
+    },
+    aiSuggestionCard: {
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+      borderRadius: 14,
+      backgroundColor: colors.white,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    aiSuggestionTitle: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 15,
+      fontWeight: "800",
+      color: colors.textDark,
+    },
+    aiSuggestionSubtext: {
+      marginTop: 4,
+      fontFamily: "Inter_400Regular",
+      fontSize: 13,
+      color: colors.textMid,
+      lineHeight: 19,
+    },
     homeHeaderLocationContainer: {
       paddingLeft: 16,
       maxWidth: Platform.OS === "ios" ? "80%" : "60%",
@@ -729,7 +1025,7 @@ const styles = {
       flexShrink: 1,
       fontSize: 14,
       fontWeight: "800",
-      color: colors.textDark,
+      color: colors.white,
     },
     closedModalBackdrop: {
       flex: 1,

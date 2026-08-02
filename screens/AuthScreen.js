@@ -19,30 +19,69 @@ import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import sharedStyles from "../components/styles";
 
-export default function AuthScreen({ onGoToCreateAccount }) {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function AuthScreen({ onGoToCreateAccount, navigation }) {
   const { authActionLoading, signInWithEmailPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const { height: windowHeight } = useWindowDimensions();
   const isCompactScreen = windowHeight < 750;
   const heroImageHeight = isCompactScreen ? 150 : 190;
 
   const handleSignIn = async () => {
-    if (!email.trim()) {
-      Alert.alert("Email required", "Please enter your email address.");
+    setEmailError("");
+    setPasswordError("");
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedEmail) {
+      setEmailError("Please enter your email address.");
       return;
     }
 
-    if (!password.trim()) {
-      Alert.alert("Password required", "Please enter your password.");
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      setEmailError("Enter a valid email address.");
+      return;
+    }
+
+    if (!normalizedPassword) {
+      setPasswordError("Please enter your password.");
+      return;
+    }
+
+    if (normalizedPassword.length < 5) {
+      setPasswordError("Password must be at least 5 characters.");
+      return;
+    }
+
+    if (normalizedPassword.length > 72) {
+      setPasswordError("Password must not exceed 72 characters.");
+      return;
+    }
+
+    if (/\s/.test(normalizedPassword)) {
+      setPasswordError("Password cannot contain spaces.");
       return;
     }
 
     try {
-      await signInWithEmailPassword(email.trim(), password);
+      await signInWithEmailPassword(normalizedEmail, normalizedPassword);
     } catch (error) {
       Alert.alert("Sign-in failed", error.message);
     }
+  };
+
+  const handleGoToCreateAccount = () => {
+    if (typeof onGoToCreateAccount === "function") {
+      onGoToCreateAccount();
+      return;
+    }
+
+    navigation?.navigate("Register");
   };
 
   return (
@@ -85,7 +124,12 @@ export default function AuthScreen({ onGoToCreateAccount }) {
 
                 <TextInput
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(value) => {
+                    setEmail(value);
+                    if (emailError) {
+                      setEmailError("");
+                    }
+                  }}
                   placeholder="Email address"
                   placeholderTextColor={colors.textDark}
                   keyboardType="email-address"
@@ -93,20 +137,37 @@ export default function AuthScreen({ onGoToCreateAccount }) {
                   autoCorrect={false}
                   textContentType="emailAddress"
                   autoComplete="email"
-                  style={styles.authInput}
+                  style={[
+                    styles.authInput,
+                    emailError ? styles.authInputError : null,
+                  ]}
                 />
+                {emailError ? (
+                  <Text style={styles.authFieldErrorText}>{emailError}</Text>
+                ) : null}
 
                 <TextInput
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(value) => {
+                    setPassword(value);
+                    if (passwordError) {
+                      setPasswordError("");
+                    }
+                  }}
                   placeholder="Password"
                   placeholderTextColor={colors.textDark}
                   secureTextEntry
                   autoCorrect={false}
                   textContentType="password"
                   autoComplete="password"
-                  style={styles.authInput}
+                  style={[
+                    styles.authInput,
+                    passwordError ? styles.authInputError : null,
+                  ]}
                 />
+                {passwordError ? (
+                  <Text style={styles.authFieldErrorText}>{passwordError}</Text>
+                ) : null}
 
                 <Pressable
                   style={styles.authPrimaryButton}
@@ -124,7 +185,7 @@ export default function AuthScreen({ onGoToCreateAccount }) {
 
                 <Pressable
                   style={styles.authSecondaryButton}
-                  onPress={onGoToCreateAccount}
+                  onPress={handleGoToCreateAccount}
                   disabled={authActionLoading}
                 >
                   <Text style={styles.authSecondaryButtonText}>
@@ -156,6 +217,7 @@ const styles = {
       alignSelf: "center",
       marginTop: 4,
       marginBottom: 10,
+      zIndex: 0,
     },
     authGradientBackground: {
       flex: 1,
@@ -205,9 +267,18 @@ const styles = {
       fontSize: 18,
       height: 60,
     },
+    authInputError: {
+      borderColor: colors.danger,
+    },
+    authFieldErrorText: {
+      marginTop: -2,
+      fontFamily: "Inter_400Regular",
+      fontSize: 12,
+      color: colors.danger,
+    },
     authPrimaryButton: {
       marginTop: 2,
-      backgroundColor: colors.authButton,
+      backgroundColor: "#ff5a1f",
       borderRadius: 12,
       paddingVertical: 12,
       alignItems: "center",

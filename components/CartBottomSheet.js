@@ -240,7 +240,7 @@ const styles = {
       elevation: 12,
     },
     checkoutButton: {
-      backgroundColor: colors.amberLight,
+      backgroundColor: "#ff5a1f",
       borderRadius: 14,
       paddingVertical: 14,
       width: "80%",

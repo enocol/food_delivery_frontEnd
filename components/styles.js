@@ -4,7 +4,7 @@ import * as colors from "../utils/colors";
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#fffaf0",
+    backgroundColor: colors.white,
   },
   centered: {
     flex: 1,

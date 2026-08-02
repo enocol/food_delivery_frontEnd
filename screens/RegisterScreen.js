@@ -19,36 +19,100 @@ import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import sharedStyles from "../components/styles";
 
-export default function RegisterScreen({ onGoToSignIn }) {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_REGEX = /^[A-Za-z]+(?:-[A-Za-z]+)*$/;
+
+export default function RegisterScreen({ onGoToSignIn, navigation }) {
   const { authActionLoading, createAccountWithEmailPassword } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const { height: windowHeight } = useWindowDimensions();
   const isCompactScreen = windowHeight < 750;
   const heroImageHeight = isCompactScreen ? 150 : 190;
 
   const handleCreateAccount = async () => {
-    if (!name.trim()) {
-      Alert.alert("Name required", "Please enter your name.");
+    setNameError("");
+    setEmailError("");
+    setPasswordError("");
+
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedName) {
+      setNameError("Please enter your name.");
       return;
     }
 
-    if (!email.trim()) {
-      Alert.alert("Email required", "Please enter your email address.");
+    if (normalizedName.length < 2 || normalizedName.length > 60) {
+      setNameError("Name must be between 2 and 60 characters.");
       return;
     }
 
-    if (!password.trim()) {
-      Alert.alert("Password required", "Please enter your password.");
+    if (!NAME_REGEX.test(normalizedName)) {
+      setNameError(
+        "Name can only contain letters and hyphens. Numbers are not allowed.",
+      );
+      return;
+    }
+
+    if (!normalizedEmail) {
+      setEmailError("Please enter your email address.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      setEmailError("Enter a valid email address.");
+      return;
+    }
+
+    if (!normalizedPassword) {
+      setPasswordError("Please enter your password.");
+      return;
+    }
+
+    if (normalizedPassword.length < 5) {
+      setPasswordError("Password must be at least 5 characters.");
+      return;
+    }
+
+    if (normalizedPassword.length > 72) {
+      setPasswordError("Password must not exceed 72 characters.");
+      return;
+    }
+
+    if (/\s/.test(normalizedPassword)) {
+      setPasswordError("Password cannot contain spaces.");
       return;
     }
 
     try {
-      await createAccountWithEmailPassword(name.trim(), email.trim(), password);
+      await createAccountWithEmailPassword(
+        normalizedName,
+        normalizedEmail,
+        normalizedPassword,
+      );
     } catch (error) {
       Alert.alert("Account creation failed", error.message);
     }
+  };
+
+  const handleGoToSignIn = () => {
+    if (typeof onGoToSignIn === "function") {
+      onGoToSignIn();
+      return;
+    }
+
+    if (navigation?.canGoBack?.()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation?.navigate("Auth");
   };
 
   return (
@@ -91,19 +155,35 @@ export default function RegisterScreen({ onGoToSignIn }) {
 
                 <TextInput
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={(value) => {
+                    setName(value);
+                    if (nameError) {
+                      setNameError("");
+                    }
+                  }}
                   placeholder="Full name"
                   placeholderTextColor={colors.textDark}
                   autoCapitalize="words"
                   autoCorrect={false}
                   textContentType="name"
                   autoComplete="name"
-                  style={styles.authInput}
+                  style={[
+                    styles.authInput,
+                    nameError ? styles.authInputError : null,
+                  ]}
                 />
+                {nameError ? (
+                  <Text style={styles.authFieldErrorText}>{nameError}</Text>
+                ) : null}
 
                 <TextInput
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(value) => {
+                    setEmail(value);
+                    if (emailError) {
+                      setEmailError("");
+                    }
+                  }}
                   placeholder="Email address"
                   placeholderTextColor={colors.textDark}
                   keyboardType="email-address"
@@ -111,20 +191,37 @@ export default function RegisterScreen({ onGoToSignIn }) {
                   autoCorrect={false}
                   textContentType="emailAddress"
                   autoComplete="email"
-                  style={styles.authInput}
+                  style={[
+                    styles.authInput,
+                    emailError ? styles.authInputError : null,
+                  ]}
                 />
+                {emailError ? (
+                  <Text style={styles.authFieldErrorText}>{emailError}</Text>
+                ) : null}
 
                 <TextInput
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(value) => {
+                    setPassword(value);
+                    if (passwordError) {
+                      setPasswordError("");
+                    }
+                  }}
                   placeholder="Password"
                   placeholderTextColor={colors.textDark}
                   secureTextEntry
                   autoCorrect={false}
                   textContentType="newPassword"
                   autoComplete="new-password"
-                  style={styles.authInput}
+                  style={[
+                    styles.authInput,
+                    passwordError ? styles.authInputError : null,
+                  ]}
                 />
+                {passwordError ? (
+                  <Text style={styles.authFieldErrorText}>{passwordError}</Text>
+                ) : null}
 
                 <Pressable
                   style={styles.authPrimaryButton}
@@ -142,7 +239,7 @@ export default function RegisterScreen({ onGoToSignIn }) {
 
                 <Pressable
                   style={styles.authSecondaryButton}
-                  onPress={onGoToSignIn}
+                  onPress={handleGoToSignIn}
                   disabled={authActionLoading}
                 >
                   <Text style={styles.authSecondaryButtonText}>
@@ -223,9 +320,18 @@ const styles = {
       fontSize: 18,
       height: 60,
     },
+    authInputError: {
+      borderColor: colors.danger,
+    },
+    authFieldErrorText: {
+      marginTop: -2,
+      fontFamily: "Inter_400Regular",
+      fontSize: 12,
+      color: colors.danger,
+    },
     authPrimaryButton: {
       marginTop: 2,
-      backgroundColor: colors.authButton,
+      backgroundColor: "#ff5a1f",
       borderRadius: 12,
       paddingVertical: 12,
       alignItems: "center",

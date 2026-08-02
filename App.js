@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import * as colors from "./utils/colors";
 import { View, Text, Image } from "react-native";
 import * as Notifications from "expo-notifications";
@@ -20,8 +20,6 @@ import CartBottomSheet from "./components/CartBottomSheet";
 import styles from "./components/styles";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
-import AuthScreen from "./screens/AuthScreen";
-import RegisterScreen from "./screens/RegisterScreen";
 import StackNavigator, { navigationRef } from "./navigation/StackNavigator";
 
 // Show push notifications while app is foregrounded.
@@ -36,12 +34,42 @@ Notifications.setNotificationHandler({
 
 function AppContent() {
   const { user, authLoading } = useAuth();
-  const [authScreen, setAuthScreen] = useState("signIn");
+  const previousUserRef = useRef(user);
 
   useEffect(() => {
-    if (!user) {
-      setAuthScreen("signIn");
+    const wasAuthenticated = Boolean(previousUserRef.current);
+    const isAuthenticated = Boolean(user);
+    let timeoutId = null;
+
+    const resetToAuthRoute = (attempt = 0) => {
+      if (navigationRef.isReady()) {
+        navigationRef.resetRoot({
+          index: 0,
+          routes: [{ name: "Auth" }],
+        });
+        return;
+      }
+
+      if (attempt >= 5) {
+        return;
+      }
+
+      timeoutId = setTimeout(() => {
+        resetToAuthRoute(attempt + 1);
+      }, 60);
+    };
+
+    if (wasAuthenticated && !isAuthenticated) {
+      resetToAuthRoute();
     }
+
+    previousUserRef.current = user;
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [user]);
 
   if (authLoading) {
@@ -64,11 +92,7 @@ function AppContent() {
   }
 
   if (!user) {
-    return authScreen === "register" ? (
-      <RegisterScreen onGoToSignIn={() => setAuthScreen("signIn")} />
-    ) : (
-      <AuthScreen onGoToCreateAccount={() => setAuthScreen("register")} />
-    );
+    return <StackNavigator isAuthenticated={false} />;
   }
 
   return (
@@ -123,7 +147,7 @@ function AuthenticatedApp() {
 
   return (
     <>
-      <StackNavigator />
+      <StackNavigator isAuthenticated />
       <CartBottomSheet
         visible={isCartSheetOpen}
         onClose={closeCartSheet}

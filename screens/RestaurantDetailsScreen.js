@@ -609,7 +609,7 @@ const styles = {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: colors.primary,
+      backgroundColor: "#ff5a1f",
       marginHorizontal: 18,
       marginBottom: 36,
       marginTop: 10,
