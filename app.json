@@ -2,7 +2,6 @@
   "expo": {
     "name": "Mbolo Eats",
     "slug": "mbolo-eats",
-    "newArchEnabled": false,
     "scheme": "mboloeats",
     "version": "1.0.0",
     "orientation": "portrait",
