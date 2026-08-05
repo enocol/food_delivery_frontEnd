@@ -110,7 +110,7 @@ export default function HomeScreen({ navigation }) {
   );
   const searchBarAnim = useRef(new Animated.Value(1)).current;
   const lastScrollY = useRef(0);
-  const searchBarVisible = useRef(true);
+  const searchBarVisibilityRef = useRef(1);
   const restaurantsCacheRef = useRef([]);
   const menuCacheRef = useRef(new Map());
   const lastRefreshNonceRef = useRef(-1);
@@ -393,24 +393,39 @@ export default function HomeScreen({ navigation }) {
 
   const handleScroll = useCallback(
     (event) => {
-      const currentY = event.nativeEvent.contentOffset.y;
+      const { contentOffset, contentSize, layoutMeasurement } =
+        event.nativeEvent;
+      const currentY = contentOffset.y;
+      const maxOffsetY = Math.max(
+        0,
+        (contentSize?.height || 0) - (layoutMeasurement?.height || 0),
+      );
+      const isNearBottom = currentY >= Math.max(0, maxOffsetY - 8);
       const diff = currentY - lastScrollY.current;
       lastScrollY.current = currentY;
 
-      if (diff > 8 && searchBarVisible.current) {
-        searchBarVisible.current = false;
-        Animated.timing(searchBarAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: false,
-        }).start();
-      } else if (diff < -8 && !searchBarVisible.current) {
-        searchBarVisible.current = true;
-        Animated.timing(searchBarAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: false,
-        }).start();
+      if (currentY <= 0) {
+        searchBarVisibilityRef.current = 1;
+        searchBarAnim.stopAnimation();
+        searchBarAnim.setValue(1);
+        return;
+      }
+
+      if (diff > 0) {
+        const nextVisibility = Math.max(
+          0,
+          searchBarVisibilityRef.current - diff / 72,
+        );
+        searchBarVisibilityRef.current = nextVisibility;
+        searchBarAnim.stopAnimation();
+        searchBarAnim.setValue(nextVisibility);
+        return;
+      }
+
+      if (diff < 0 && !isNearBottom) {
+        searchBarVisibilityRef.current = 1;
+        searchBarAnim.stopAnimation();
+        searchBarAnim.setValue(1);
       }
     },
     [searchBarAnim],
@@ -419,12 +434,9 @@ export default function HomeScreen({ navigation }) {
   // Always restore the search bar when the user is actively using it.
   useEffect(() => {
     if (isSearchFocused || searchQuery.length > 0) {
-      searchBarVisible.current = true;
-      Animated.timing(searchBarAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
+      searchBarVisibilityRef.current = 1;
+      searchBarAnim.stopAnimation();
+      searchBarAnim.setValue(1);
     }
   }, [isSearchFocused, searchQuery, searchBarAnim]);
 
@@ -611,10 +623,11 @@ export default function HomeScreen({ navigation }) {
                   Delivery location
                 </Text>
                 <Pressable
+                  style={styles.homeLocationModalCloseButton}
                   onPress={() => setIsLocationModalVisible(false)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="close" size={22} color={colors.textDark} />
+                  <Ionicons name="close" size={22} color={colors.white} />
                 </Pressable>
               </View>
 
@@ -642,10 +655,11 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.homeLocationModalHeader}>
                 <Text style={styles.homeLocationModalTitle}>Quick filters</Text>
                 <Pressable
+                  style={styles.homeLocationModalCloseButton}
                   onPress={() => setIsFilterModalVisible(false)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="close" size={22} color={colors.textDark} />
+                  <Ionicons name="close" size={22} color={colors.white} />
                 </Pressable>
               </View>
 
@@ -694,10 +708,11 @@ export default function HomeScreen({ navigation }) {
                   AI Recommendations
                 </Text>
                 <Pressable
+                  style={styles.homeLocationModalCloseButton}
                   onPress={() => setIsAiModalVisible(false)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="close" size={22} color={colors.textDark} />
+                  <Ionicons name="close" size={22} color={colors.white} />
                 </Pressable>
               </View>
 
@@ -733,7 +748,26 @@ export default function HomeScreen({ navigation }) {
           setSelectedFood={setSelectedFood}
         />
 
-        <View style={styles.searchRowWrap}>
+        <Animated.View
+          style={[
+            styles.searchRowWrap,
+            {
+              maxHeight: searchBarAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 86],
+              }),
+              opacity: searchBarAnim,
+              transform: [
+                {
+                  translateY: searchBarAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <HomeSearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -779,7 +813,7 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="sparkles" size={26} color="#263238" />
             </Pressable>
           </Animated.View>
-        </View>
+        </Animated.View>
 
         <FlatList
           data={restaurants}
@@ -917,6 +951,7 @@ const styles = {
       paddingHorizontal: 12,
       marginTop: 10,
       gap: 10,
+      overflow: "hidden",
     },
     searchActionsWrap: {
       flexDirection: "row",
@@ -1092,6 +1127,16 @@ const styles = {
       alignItems: "center",
       justifyContent: "space-between",
       marginBottom: 14,
+    },
+    homeLocationModalCloseButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.black,
+      borderWidth: 1,
+      borderColor: colors.black,
     },
     homeLocationModalTitle: {
       fontFamily: "Nunito_900Black",

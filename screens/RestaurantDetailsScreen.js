@@ -53,18 +53,20 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
   const [error, setError] = useState("");
   const [addingItemId, setAddingItemId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemQty, setSelectedItemQty] = useState(1);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const [itemSheetImageLoaded, setItemSheetImageLoaded] = useState(false);
   const [menuImageLoadedMap, setMenuImageLoadedMap] = useState({});
 
-  const handleAddToCart = async (item) => {
+  const handleAddToCart = async (item, quantity = 1) => {
     if (!restaurant || addingItemId) {
       return;
     }
+    const qtyToAdd = Math.max(1, Number(quantity) || 1);
 
     setAddingItemId(String(item.id));
     try {
-      await addToCart(item, restaurant);
+      await addToCart(item, restaurant, qtyToAdd);
     } catch (addError) {
       Alert.alert(
         "Could not add item",
@@ -123,6 +125,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
 
   useEffect(() => {
     setItemSheetImageLoaded(false);
+    setSelectedItemQty(1);
   }, [selectedItem?.id]);
 
   if (loading) {
@@ -292,7 +295,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
               style={styles.itemSheetClose}
               onPress={() => setSelectedItem(null)}
             >
-              <Ionicons name="close" size={22} color={colors.textWarmDark} />
+              <Ionicons name="close" size={22} color={colors.white} />
             </Pressable>
           </View>
 
@@ -314,35 +317,68 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
             </Text>
           </ScrollView>
 
-          {/* Add to cart button pinned at bottom */}
-          <TouchableOpacity
-            style={[
-              styles.itemSheetAddButton,
-              addingItemId === String(selectedItem?.id) &&
-                styles.itemSheetAddButtonBusy,
-            ]}
-            onPress={() => {
-              handleAddToCart(selectedItem);
-              setSelectedItem(null);
-            }}
-            disabled={addingItemId === String(selectedItem?.id)}
-          >
-            <Ionicons
-              name={
-                addingItemId === String(selectedItem?.id)
-                  ? "time-outline"
-                  : "cart-outline"
-              }
-              size={20}
-              color={colors.white}
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.itemSheetAddButtonText}>
-              {addingItemId === String(selectedItem?.id)
-                ? "Adding..."
-                : "Add to Cart"}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.itemSheetFooterRow}>
+            <View style={styles.itemSheetQtyControl}>
+              <Pressable
+                style={[
+                  styles.itemSheetQtyButton,
+                  (selectedItemQty <= 1 ||
+                    addingItemId === String(selectedItem?.id)) &&
+                    styles.itemSheetQtyButtonDisabled,
+                ]}
+                onPress={() =>
+                  setSelectedItemQty((prev) => Math.max(1, prev - 1))
+                }
+                disabled={
+                  selectedItemQty <= 1 ||
+                  addingItemId === String(selectedItem?.id)
+                }
+              >
+                <Ionicons name="remove" size={18} color={colors.textBody} />
+              </Pressable>
+              <Text style={styles.itemSheetQtyValue}>{selectedItemQty}</Text>
+              <Pressable
+                style={[
+                  styles.itemSheetQtyButton,
+                  addingItemId === String(selectedItem?.id) &&
+                    styles.itemSheetQtyButtonDisabled,
+                ]}
+                onPress={() => setSelectedItemQty((prev) => prev + 1)}
+                disabled={addingItemId === String(selectedItem?.id)}
+              >
+                <Ionicons name="add" size={18} color={colors.textBody} />
+              </Pressable>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.itemSheetAddButton,
+                addingItemId === String(selectedItem?.id) &&
+                  styles.itemSheetAddButtonBusy,
+              ]}
+              onPress={() => {
+                handleAddToCart(selectedItem, selectedItemQty);
+                setSelectedItem(null);
+              }}
+              disabled={addingItemId === String(selectedItem?.id)}
+            >
+              <Ionicons
+                name={
+                  addingItemId === String(selectedItem?.id)
+                    ? "time-outline"
+                    : "cart-outline"
+                }
+                size={20}
+                color={colors.white}
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.itemSheetAddButtonText}>
+                {addingItemId === String(selectedItem?.id)
+                  ? "Adding..."
+                  : `Add ${selectedItemQty} to Cart`}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -563,9 +599,9 @@ const styles = {
       width: 38,
       height: 38,
       borderRadius: 19,
-      backgroundColor: colors.overlays.closeButtonBg,
+      backgroundColor: colors.black,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.black,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -605,14 +641,51 @@ const styles = {
       color: colors.textMenuMeta,
       lineHeight: 20,
     },
+    itemSheetFooterRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginHorizontal: 18,
+      marginBottom: 36,
+      marginTop: 10,
+    },
+    itemSheetQtyControl: {
+      minWidth: 110,
+      height: 52,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+      backgroundColor: colors.white,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 8,
+    },
+    itemSheetQtyButton: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.bgWarm,
+    },
+    itemSheetQtyButtonDisabled: {
+      opacity: 0.45,
+    },
+    itemSheetQtyValue: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 18,
+      fontWeight: "800",
+      color: colors.textBody,
+      minWidth: 18,
+      textAlign: "center",
+    },
     itemSheetAddButton: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: "#ff5a1f",
-      marginHorizontal: 18,
-      marginBottom: 36,
-      marginTop: 10,
       borderRadius: 14,
       paddingVertical: 16,
     },

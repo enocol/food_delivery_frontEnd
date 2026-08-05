@@ -2,52 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AnimatedTabBarButton from "../components/AnimatedTabBarButton";
+
 import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 import HomeScreen from "../screens/HomeScreen";
 import OrdersScreen from "../screens/OrdersScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-
-const styles = {
-  ...sharedStyles,
-  ...StyleSheet.create({
-    tabBar: {
-      position: "absolute",
-      // backgroundColor: colors.overlays.tabBarBg,
-      height: 75,
-      borderRadius: 24,
-      borderWidth: 1,
-      // borderColor: colors.overlays.tabBarBorder,
-      alignItems: "center",
-      justifyContent: "center",
-      marginHorizontal: 20,
-      paddingTop: Platform.OS === "android" ? 20 : 15,
-      bottom: 16,
-      overflow: "hidden",
-      elevation: 18,
-      shadowColor: colors.shadow,
-      shadowOpacity: 0.2,
-      shadowOffset: { width: 0, height: 12 },
-      shadowRadius: 24,
-    },
-    tabBarGlassWrap: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      borderRadius: 24,
-      overflow: "hidden",
-      backgroundColor: "#120f0d",
-    },
-    tabBarLabel: {
-      fontFamily: "Nunito_800ExtraBold",
-      fontSize: 12,
-      fontWeight: "800",
-    },
-  }),
-};
 
 const Tab = createBottomTabNavigator();
 
@@ -58,11 +18,8 @@ export default function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: "#ff5a1f",
-        tabBarInactiveTintColor: colors.white,
+        tabBarInactiveTintColor: colors.black,
         tabBarStyle: [styles.tabBar, { bottom: 16 + insets.bottom }],
-        tabBarBackground: () => <View style={styles.tabBarGlassWrap}></View>,
-        tabBarButton: (props) => <AnimatedTabBarButton {...props} />,
-
         tabBarItemStyle: {
           flex: 1,
           justifyContent: "center",
@@ -71,8 +28,9 @@ export default function TabNavigator() {
         },
         tabBarIconStyle: {
           alignSelf: "center",
-          margin: 0,
+          margin: 5,
         },
+        tabBarLabelStyle: styles.tabBarLabel,
 
         // sceneStyle: { backgroundColor: "red", flex: 1 },
         tabBarIcon: ({ color, focused, size }) => {
@@ -132,3 +90,32 @@ export default function TabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const styles = {
+  ...sharedStyles,
+  ...StyleSheet.create({
+    tabBar: {
+      position: "absolute",
+      height: 82,
+      borderRadius: 32,
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginHorizontal: 20,
+      paddingTop: Platform.OS === "android" ? 18 : 14,
+      paddingBottom: Platform.OS === "android" ? 10 : 12,
+      bottom: 14,
+      overflow: "hidden",
+      shadowColor: colors.dangerText,
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 6 },
+      shadowRadius: 10,
+      zIndex: 10,
+    },
+
+    tabBarLabel: {
+      fontFamily: "Nunito_800ExtraBold",
+      fontSize: 12,
+      fontWeight: "800",
+    },
+  }),
+};

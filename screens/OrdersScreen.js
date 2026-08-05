@@ -513,10 +513,11 @@ export default function OrdersScreen({ navigation }) {
                   Delivery location
                 </Text>
                 <Pressable
+                  style={styles.homeLocationModalCloseButton}
                   onPress={() => setIsLocationModalVisible(false)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="close" size={22} color={colors.textDark} />
+                  <Ionicons name="close" size={22} color={colors.white} />
                 </Pressable>
               </View>
 
@@ -586,6 +587,16 @@ const styles = {
       alignItems: "center",
       justifyContent: "space-between",
       marginBottom: 14,
+    },
+    homeLocationModalCloseButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.black,
+      borderWidth: 1,
+      borderColor: colors.black,
     },
     homeLocationModalTitle: {
       fontFamily: "Nunito_900Black",

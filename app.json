@@ -2,6 +2,7 @@
   "expo": {
     "name": "Mbolo Eats",
     "slug": "mbolo-eats",
+    "newArchEnabled": false,
     "scheme": "mboloeats",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,7 +23,6 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-        
       },
       "googleServicesFile": "./google-services.json",
       "package": "com.anonymous.mboloeats",
@@ -41,7 +41,8 @@
       "expo-audio",
       "expo-font",
       "expo-asset",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-router"
     ],
     "extra": {
       "eas": {

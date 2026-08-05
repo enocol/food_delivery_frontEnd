@@ -224,8 +224,9 @@ export function CartProvider({ children }) {
   }, [cartId, firebaseUid, getAuthToken]);
 
   const addToCart = useCallback(
-    async (item, restaurant) => {
+    async (item, restaurant, quantity = 1) => {
       const { token, activeCartId } = await ensureCart();
+      const nextQuantity = Math.max(1, Number(quantity) || 1);
 
       let payload;
       try {
@@ -234,7 +235,7 @@ export function CartProvider({ children }) {
           activeCartId,
           {
             menuItemId: String(item.id),
-            quantity: 1,
+            quantity: nextQuantity,
             firebase_uid: firebaseUid,
           },
           firebaseUid,
@@ -245,7 +246,6 @@ export function CartProvider({ children }) {
 
       if (payload?.items) {
         setCartItems(toItemMap(payload));
-        setCartSheetOpen(true);
         void triggerAddToCartFeedback();
         return;
       }
@@ -256,7 +256,7 @@ export function CartProvider({ children }) {
         if (existing) {
           return {
             ...current,
-            [key]: { ...existing, qty: existing.qty + 1 },
+            [key]: { ...existing, qty: existing.qty + nextQuantity },
           };
         }
 
@@ -266,13 +266,12 @@ export function CartProvider({ children }) {
             ...item,
             id: key,
             image: normalizeImageForState(item.image),
-            qty: 1,
+            qty: nextQuantity,
             restaurantId: restaurant?.id,
             restaurantName: restaurant?.name,
           },
         };
       });
-      setCartSheetOpen(true);
       void triggerAddToCartFeedback();
     },
     [ensureCart, firebaseUid],

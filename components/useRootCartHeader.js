@@ -1,6 +1,6 @@
 import React from "react";
+import { useNavigation } from "expo-router";
 import CartHeaderButton from "./CartHeaderButton";
-import { View, Image, Text, Platform } from "react-native";
 
 export default function useRootCartHeader(
   navigation,
@@ -16,10 +16,23 @@ export default function useRootCartHeader(
   const headerBackgroundColor = config?.headerBackgroundColor;
   const headerLeft = config?.headerLeft;
   const headerLeftContainerStyle = config?.headerLeftContainerStyle;
+  const routerNavigation = useNavigation();
+
+  const targetNavigation =
+    navigation && typeof navigation.setOptions === "function"
+      ? navigation
+      : routerNavigation;
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({
-      ...(title !== undefined ? { title } : null),
+    if (
+      !targetNavigation ||
+      typeof targetNavigation.setOptions !== "function"
+    ) {
+      return;
+    }
+
+    targetNavigation.setOptions({
+      ...(title !== undefined ? { title } : {}),
       ...(headerHeight
         ? {
             headerStyle: {
@@ -27,15 +40,14 @@ export default function useRootCartHeader(
               backgroundColor: headerBackgroundColor,
             },
           }
-        : null),
-      ...(headerLeft ? { headerLeft, headerLeftContainerStyle } : null),
+        : {}),
+      ...(headerLeft ? { headerLeft, headerLeftContainerStyle } : {}),
       headerRight: () => (
         <CartHeaderButton count={cartCount} onPress={onCartPress} />
       ),
-      // Placeholder to keep title centered when cart button is shown
     });
   }, [
-    navigation,
+    targetNavigation,
     cartCount,
     onCartPress,
     title,

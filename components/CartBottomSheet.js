@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Animated,
+  Easing,
   Image,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -79,14 +81,14 @@ const styles = {
       fontWeight: "700",
     },
     sheetCloseButton: {
-      backgroundColor: colors.bgCream,
+      backgroundColor: colors.black,
       borderRadius: 18,
       width: 36,
       height: 36,
       alignItems: "center",
       justifyContent: "center",
       borderWidth: 1,
-      borderColor: colors.borderSheet,
+      borderColor: colors.black,
     },
     cartList: {
       paddingHorizontal: 14,
@@ -254,16 +256,16 @@ const styles = {
     },
     checkoutText: {
       fontFamily: "Nunito_800ExtraBold",
-      color: colors.textAmberButton,
+      color: colors.white,
       fontSize: 15,
       fontWeight: "800",
     },
     checkoutMetaText: {
       fontFamily: "Inter_400Regular",
-      color: colors.textAmberButton,
+      color: colors.white,
       fontSize: 11,
       marginTop: 2,
-      opacity: 0.78,
+      opacity: 1,
     },
     orderNowButton: {
       marginTop: 20,
@@ -287,13 +289,15 @@ export default function CartBottomSheet({
   onCheckout,
   onOrderNow,
 }) {
+  const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { cartItems, cartTotal, increaseQty, decreaseQty, clearCart } =
     useCart();
   const entries = Object.values(cartItems);
   const itemCount = entries.reduce((sum, item) => sum + item.qty, 0);
+  const hiddenTranslateY = windowHeight + Math.max(insets.bottom, 24);
   const [isMounted, setIsMounted] = useState(visible);
-  const translateY = React.useRef(new Animated.Value(420)).current;
+  const translateY = React.useRef(new Animated.Value(hiddenTranslateY)).current;
   const isDismissingRef = React.useRef(false);
 
   const runDismiss = React.useCallback(() => {
@@ -302,50 +306,55 @@ export default function CartBottomSheet({
     }
 
     isDismissingRef.current = true;
-
-    Animated.timing(translateY, {
-      toValue: 420,
-      duration: 150,
-      useNativeDriver: true,
-    }).start(() => {
-      isDismissingRef.current = false;
-      onClose();
-    });
-  }, [onClose, translateY]);
+    onClose();
+  }, [onClose]);
 
   React.useEffect(() => {
     if (visible) {
+      isDismissingRef.current = false;
       setIsMounted(true);
-      translateY.setValue(420);
+      translateY.setValue(hiddenTranslateY);
       Animated.timing(translateY, {
         toValue: 0,
-        duration: 150,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start();
       return;
     }
 
-    translateY.setValue(420);
-    setIsMounted(false);
-  }, [visible, translateY]);
+    if (!isMounted) {
+      return;
+    }
+
+    Animated.timing(translateY, {
+      toValue: hiddenTranslateY,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => {
+      isDismissingRef.current = false;
+      setIsMounted(false);
+    });
+  }, [hiddenTranslateY, isMounted, translateY, visible]);
 
   if (!isMounted) {
     return null;
   }
 
   const backdropOpacity = translateY.interpolate({
-    inputRange: [0, 420],
+    inputRange: [0, hiddenTranslateY],
     outputRange: [0.52, 0],
     extrapolate: "clamp",
   });
   const topInset = Math.max(insets.top, StatusBar.currentHeight || 0);
   const footerTranslateY = translateY.interpolate({
-    inputRange: [0, 420],
+    inputRange: [0, hiddenTranslateY],
     outputRange: [0, 28],
     extrapolate: "clamp",
   });
   const footerOpacity = translateY.interpolate({
-    inputRange: [0, 180, 420],
+    inputRange: [0, hiddenTranslateY * 0.45, hiddenTranslateY],
     outputRange: [1, 0.92, 0],
     extrapolate: "clamp",
   });
@@ -377,7 +386,7 @@ export default function CartBottomSheet({
                   onPress={() => runDismiss()}
                   style={styles.sheetCloseButton}
                 >
-                  <Ionicons name="close" size={18} color={colors.textClose} />
+                  <Ionicons name="close" size={18} color={colors.white} />
                 </Pressable>
               </View>
             </View>
