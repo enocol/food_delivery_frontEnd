@@ -8,6 +8,7 @@ import React, {
 import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import {
   Animated,
   FlatList,
@@ -80,7 +81,9 @@ function restaurantMatchesQuery(restaurant, query) {
   return text.includes(query);
 }
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation: navigationProp }) {
+  const routeNavigation = useNavigation();
+  const navigation = navigationProp ?? routeNavigation;
   const insets = useSafeAreaInsets();
   const { cartCount, openCartSheet } = useCart();
   const { firebaseUid, user } = useAuth();

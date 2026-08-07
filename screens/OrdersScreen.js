@@ -305,11 +305,11 @@ export default function OrdersScreen({ navigation }) {
       >
         <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
         <View style={styles.homeHeaderLocationRow}>
-          <Ionicons name="location" size={20} color={colors.primaryDeep} />
+          <Ionicons name="location" size={25} color={colors.white} />
           <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
             {deliveryLocation}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={colors.primaryDeep} />
+          <Ionicons name="chevron-down" size={20} color={colors.white} />
         </View>
       </Pressable>
     ),
@@ -564,7 +564,7 @@ const styles = {
       flexShrink: 1,
       fontSize: 14,
       fontWeight: "800",
-      color: colors.textDark,
+      color: colors.white,
     },
     homeLocationModalBackdrop: {
       flex: 1,

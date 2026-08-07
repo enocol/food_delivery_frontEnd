@@ -1,3 +1,4 @@
+import "react-native-reanimated";
 import React, { useEffect, useRef } from "react";
 import { Image, View } from "react-native";
 import * as Notifications from "expo-notifications";

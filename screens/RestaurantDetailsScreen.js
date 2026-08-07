@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import {
   Alert,
   Animated,
@@ -28,7 +29,13 @@ import * as colors from "../utils/colors";
 import { fetchRestaurantMenu } from "../apis/restaurantApi";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
 
-export default function RestaurantDetailsScreen({ route, navigation }) {
+export default function RestaurantDetailsScreen({ route }) {
+  const localParams = useLocalSearchParams();
+  const rawRestaurantId =
+    route?.params?.restaurantId ?? localParams?.restaurantId;
+  const restaurantId = Array.isArray(rawRestaurantId)
+    ? rawRestaurantId[0]
+    : rawRestaurantId;
   const insets = useSafeAreaInsets();
   const modalTopInset =
     Platform.OS === "android"
@@ -85,7 +92,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
       setError("");
 
       try {
-        const data = await fetchRestaurantMenu(route.params?.restaurantId);
+        const data = await fetchRestaurantMenu(restaurantId);
         if (!isActive) {
           return;
         }
@@ -105,7 +112,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
       }
     };
 
-    if (route.params?.restaurantId) {
+    if (restaurantId) {
       loadRestaurant();
     } else {
       setRestaurant(null);
@@ -116,7 +123,7 @@ export default function RestaurantDetailsScreen({ route, navigation }) {
     return () => {
       isActive = false;
     };
-  }, [route.params?.restaurantId]);
+  }, [restaurantId]);
 
   useEffect(() => {
     setHeroImageLoaded(false);

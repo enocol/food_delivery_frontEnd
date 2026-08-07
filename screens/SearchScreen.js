@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
 import {
   Image,
   ScrollView,
@@ -153,7 +154,9 @@ function SearchResultCard({ restaurant, navigation }) {
   );
 }
 
-export default function SearchScreen({ navigation }) {
+export default function SearchScreen({ navigation: navigationProp }) {
+  const routeNavigation = useNavigation();
+  const navigation = navigationProp ?? routeNavigation;
   const { cartCount, openCartSheet } = useCart();
   const [query, setQuery] = useState("");
   const [restaurants, setRestaurants] = useState([]);

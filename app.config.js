@@ -5,7 +5,7 @@ module.exports = ({ config }) => {
     ...appJson,
     expo: {
       ...appJson.expo,
-      newArchEnabled: false,
+      newArchEnabled: true,
     },
   };
 };
