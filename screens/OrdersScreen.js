@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
@@ -245,7 +244,6 @@ function keyExtractor(item, index) {
 }
 
 export default function OrdersScreen({ navigation }) {
-  const { cartCount, openCartSheet } = useCart();
   const { firebaseUid, getAuthToken } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -316,7 +314,7 @@ export default function OrdersScreen({ navigation }) {
     [deliveryLocation],
   );
 
-  useRootCartHeader(navigation, cartCount, "Orders", openCartSheet, {
+  useRootCartHeader(navigation, "Orders", {
     headerHeight: 130,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,

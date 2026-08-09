@@ -20,6 +20,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import CartBottomSheet from "../components/CartBottomSheet";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { CartProvider, useCart } from "../context/CartContext";
+import {
+  NotificationsProvider,
+  useNotifications,
+} from "../context/NotificationsContext";
 import { auth } from "../utils/firebase";
 import * as colors from "../utils/colors";
 
@@ -39,7 +43,8 @@ function RootNavigator() {
   const segments = useSegments();
   const { user, authLoading } = useAuth();
   const previousUserRef = useRef(user);
-  const { cartCount, closeCartSheet, isCartSheetOpen } = useCart();
+  const { closeCartSheet, isCartSheetOpen } = useCart();
+  const { saveExpoNotification } = useNotifications();
 
   useEffect(() => {
     if (authLoading) {
@@ -74,11 +79,18 @@ function RootNavigator() {
       return undefined;
     }
 
-    const handleNotificationResponse = () => {
-      router.navigate("/MainTabs/OrdersTab");
+    const handleNotificationResponse = (response) => {
+      saveExpoNotification(response?.notification);
+      router.navigate("/Notifications");
     };
 
-    const receivedSub = Notifications.addNotificationReceivedListener(() => {});
+    const handleNotificationReceived = (notification) => {
+      saveExpoNotification(notification);
+    };
+
+    const receivedSub = Notifications.addNotificationReceivedListener(
+      handleNotificationReceived,
+    );
     const responseSub = Notifications.addNotificationResponseReceivedListener(
       handleNotificationResponse,
     );
@@ -86,7 +98,7 @@ function RootNavigator() {
     Notifications.getLastNotificationResponseAsync()
       .then((response) => {
         if (response) {
-          handleNotificationResponse();
+          handleNotificationResponse(response);
         }
       })
       .catch(() => {});
@@ -95,7 +107,7 @@ function RootNavigator() {
       receivedSub.remove();
       responseSub.remove();
     };
-  }, [router, user]);
+  }, [router, saveExpoNotification, user]);
 
   if (authLoading) {
     return (
@@ -128,6 +140,16 @@ function RootNavigator() {
         <Stack.Screen name="Auth" options={{ headerShown: false }} />
         <Stack.Screen name="Register" options={{ headerShown: false }} />
         <Stack.Screen name="MainTabs" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Notifications"
+          options={{
+            title: "",
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            headerBackTitleVisible: false,
+            headerTintColor: colors.white,
+          }}
+        />
         <Stack.Screen
           name="RestaurantDetails"
           options={{
@@ -189,9 +211,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <CartProvider>
-          <RootNavigator />
-        </CartProvider>
+        <NotificationsProvider>
+          <CartProvider>
+            <RootNavigator />
+          </CartProvider>
+        </NotificationsProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

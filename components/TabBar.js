@@ -61,12 +61,12 @@ export default function TabBar({ state, descriptors, navigation }) {
   const tabPositionX = useSharedValue(0);
 
   const springConfig = {
-    damping: 14,
-    stiffness: 140,
-    mass: 0.8,
+    damping: 12,
+    stiffness: 180,
+    mass: 0.75,
     overshootClamping: false,
-    restDisplacementThreshold: 0.1,
-    restSpeedThreshold: 0.1,
+    restDisplacementThreshold: 0.01,
+    restSpeedThreshold: 0.01,
   };
 
   useEffect(() => {

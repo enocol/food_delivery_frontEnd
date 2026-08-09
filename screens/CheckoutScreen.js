@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useNavigation } from "@react-navigation/native";
 import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 import { useCart } from "../context/CartContext";
@@ -26,7 +27,9 @@ const PAYMENT_METHODS = [
   { id: "cash", label: "Cash on Delivery" },
 ];
 
-export default function CheckoutScreen({ navigation }) {
+export default function CheckoutScreen({ navigation: navigationProp }) {
+  const routeNavigation = useNavigation();
+  const navigation = navigationProp ?? routeNavigation;
   const { cartItems, cartTotal, clearCart } = useCart();
   const { firebaseUid, userPhone, getAuthToken } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =

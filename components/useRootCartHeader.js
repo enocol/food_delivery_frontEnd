@@ -1,27 +1,25 @@
 import React from "react";
-import { useNavigation } from "expo-router";
-import CartHeaderButton from "./CartHeaderButton";
+import { useNavigation, useRouter } from "expo-router";
+import NotificationHeaderButton from "./NotificationHeaderButton";
+import { useNotifications } from "../context/NotificationsContext";
 
-export default function useRootCartHeader(
-  navigation,
-  cartCount,
-  titleOrOnCartPress,
-  maybeOnCartPress,
-  config,
-) {
-  const hasTitleArg = typeof titleOrOnCartPress === "string";
-  const title = hasTitleArg ? titleOrOnCartPress : undefined;
-  const onCartPress = hasTitleArg ? maybeOnCartPress : titleOrOnCartPress;
+export default function useRootCartHeader(navigation, title, config) {
   const headerHeight = config?.headerHeight;
   const headerBackgroundColor = config?.headerBackgroundColor;
   const headerLeft = config?.headerLeft;
   const headerLeftContainerStyle = config?.headerLeftContainerStyle;
   const routerNavigation = useNavigation();
+  const router = useRouter();
+  const { unreadCount } = useNotifications();
 
   const targetNavigation =
     navigation && typeof navigation.setOptions === "function"
       ? navigation
       : routerNavigation;
+
+  const handleNotificationPress = React.useCallback(() => {
+    router.navigate("/Notifications");
+  }, [router]);
 
   React.useLayoutEffect(() => {
     if (
@@ -43,13 +41,16 @@ export default function useRootCartHeader(
         : {}),
       ...(headerLeft ? { headerLeft, headerLeftContainerStyle } : {}),
       headerRight: () => (
-        <CartHeaderButton count={cartCount} onPress={onCartPress} />
+        <NotificationHeaderButton
+          count={unreadCount}
+          onPress={handleNotificationPress}
+        />
       ),
     });
   }, [
     targetNavigation,
-    cartCount,
-    onCartPress,
+    unreadCount,
+    handleNotificationPress,
     title,
     headerHeight,
     headerBackgroundColor,

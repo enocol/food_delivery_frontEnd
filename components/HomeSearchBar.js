@@ -34,6 +34,7 @@ export default function HomeSearchBar({
   const animA = useRef(new Animated.Value(0)).current;
   const animB = useRef(new Animated.Value(PLACEHOLDER_WORD_HEIGHT)).current;
   const placeholderForward = useRef(true);
+  const activePlaceholderAnimationRef = useRef(null);
 
   useEffect(() => {
     const runCycle = () => {
@@ -41,7 +42,9 @@ export default function HomeSearchBar({
       const exitAnim = forward ? animA : animB;
       const enterAnim = forward ? animB : animA;
 
-      Animated.parallel([
+      activePlaceholderAnimationRef.current?.stop?.();
+
+      const nextAnimation = Animated.parallel([
         Animated.timing(exitAnim, {
           toValue: -PLACEHOLDER_WORD_HEIGHT,
           duration: 350,
@@ -54,14 +57,23 @@ export default function HomeSearchBar({
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-      ]).start(() => {
+      ]);
+
+      activePlaceholderAnimationRef.current = nextAnimation;
+
+      nextAnimation.start(() => {
         exitAnim.setValue(PLACEHOLDER_WORD_HEIGHT);
         placeholderForward.current = !forward;
       });
     };
 
     const interval = setInterval(runCycle, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      activePlaceholderAnimationRef.current?.stop?.();
+      animA.stopAnimation();
+      animB.stopAnimation();
+    };
   }, [animA, animB]);
 
   return (

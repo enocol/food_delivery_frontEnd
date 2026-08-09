@@ -52,6 +52,12 @@ export default function FloatingBasketButton({
     });
   }, [count, isRendered, isVisible, progress]);
 
+  useEffect(() => {
+    return () => {
+      progress.stopAnimation();
+    };
+  }, [progress]);
+
   if (!isRendered) {
     return null;
   }

@@ -23,6 +23,7 @@ export function SkeletonBlock({ style, shimmer = true }) {
 
     return () => {
       shimmerLoop.stop();
+      shimmerProgress.stopAnimation();
       shimmerProgress.setValue(-1);
     };
   }, [shimmer, shimmerProgress]);

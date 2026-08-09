@@ -219,7 +219,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
     [deliveryLocation],
   );
 
-  useRootCartHeader(navigation, cartCount, "", openCartSheet, {
+  useRootCartHeader(navigation, "", {
     headerHeight: 130,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,

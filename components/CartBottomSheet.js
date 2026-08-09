@@ -338,6 +338,12 @@ export default function CartBottomSheet({
     });
   }, [hiddenTranslateY, isMounted, translateY, visible]);
 
+  React.useEffect(() => {
+    return () => {
+      translateY.stopAnimation();
+    };
+  }, [translateY]);
+
   if (!isMounted) {
     return null;
   }

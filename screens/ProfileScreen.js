@@ -24,7 +24,7 @@ import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 
 export default function ProfileScreen({ navigation }) {
-  const { cartCount, cartTotal, openCartSheet } = useCart();
+  const { cartTotal } = useCart();
   const { user, signOutUser, authActionLoading } = useAuth();
   const [locationLabel, setLocationLabel] = useState(
     "Fetching your location...",
@@ -52,7 +52,7 @@ export default function ProfileScreen({ navigation }) {
     [locationLabel],
   );
 
-  useRootCartHeader(navigation, cartCount, "Profile", openCartSheet, {
+  useRootCartHeader(navigation, "Profile", {
     headerHeight: 130,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
@@ -181,7 +181,6 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={styles.infoCard}>
             <Text style={styles.infoCardTitle}>Account summary</Text>
-            <Text style={styles.infoLine}>Open cart items: {cartCount}</Text>
             <Text style={styles.infoLine}>
               Current cart total: {formatXaf(cartTotal)}
             </Text>
