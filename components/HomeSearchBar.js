@@ -49,13 +49,13 @@ export default function HomeSearchBar({
           toValue: -PLACEHOLDER_WORD_HEIGHT,
           duration: 350,
           easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(enterAnim, {
           toValue: 0,
           duration: 350,
           easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]);
 

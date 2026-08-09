@@ -15,7 +15,7 @@ export function SkeletonBlock({ style, shimmer = true }) {
       Animated.timing(shimmerProgress, {
         toValue: 1,
         duration: 1100,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     );
 
