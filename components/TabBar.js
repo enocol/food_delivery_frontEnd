@@ -35,9 +35,10 @@ export default function TabBar({ state, descriptors, navigation }) {
     state.routes.length > 0 ? contentWidth / state.routes.length : 0;
   const activeRouteKey = state.routes[state.index]?.key;
   const activeContentWidth = activeRouteKey ? contentWidths[activeRouteKey] : 0;
+  //   setting the pill with
   const pillWidth = activeContentWidth
-    ? Math.min(buttonWidth - 8, activeContentWidth + 18)
-    : Math.max(48, buttonWidth * 0.6);
+    ? Math.min(buttonWidth - 4, activeContentWidth + 32)
+    : Math.max(60, buttonWidth * 0.74);
   const pillOffsetX = Math.max(0, (buttonWidth - pillWidth) / 2);
   const insets = useSafeAreaInsets();
 
@@ -61,8 +62,8 @@ export default function TabBar({ state, descriptors, navigation }) {
   const tabPositionX = useSharedValue(0);
 
   const springConfig = {
-    damping: 12,
-    stiffness: 180,
+    damping: 9,
+    stiffness: 175,
     mass: 0.75,
     overshootClamping: false,
     restDisplacementThreshold: 0.01,
@@ -119,11 +120,6 @@ export default function TabBar({ state, descriptors, navigation }) {
               target: route.key,
               canPreventDefault: true,
             });
-
-            tabPositionX.value = withSpring(
-              index * buttonWidth + pillOffsetX,
-              springConfig,
-            );
 
             if (!focused && !event.defaultPrevented) {
               navigation.navigate(route.name);
@@ -182,7 +178,7 @@ const styles = {
     indicator: {
       position: "absolute",
       top: 14,
-      borderRadius: 24,
+      borderRadius: 999,
       backgroundColor: colors.danger,
       zIndex: 0,
       elevation: -1,

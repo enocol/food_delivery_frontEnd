@@ -18,11 +18,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import sharedStyles from "../components/styles";
+import { useRouter } from "expo-router";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const NAME_REGEX = /^[A-Za-z]+(?:-[A-Za-z]+)*$/;
+const NAME_REGEX = /^(?:[A-Za-z]+(?:[ -][A-Za-z]+)*)$/;
 
 export default function RegisterScreen({ onGoToSignIn, navigation }) {
+  const router = useRouter();
   const { authActionLoading, createAccountWithEmailPassword } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,7 +57,7 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
 
     if (!NAME_REGEX.test(normalizedName)) {
       setNameError(
-        "Name can only contain letters and hyphens. Numbers are not allowed.",
+        "Name can only contain letters, spaces, and hyphens. Numbers are not allowed.",
       );
       return;
     }
@@ -75,8 +77,8 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
       return;
     }
 
-    if (normalizedPassword.length < 5) {
-      setPasswordError("Password must be at least 5 characters.");
+    if (normalizedPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
       return;
     }
 
@@ -107,12 +109,12 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
       return;
     }
 
-    if (navigation?.canGoBack?.()) {
-      navigation.goBack();
+    if (navigation?.navigate) {
+      navigation.navigate("Auth");
       return;
     }
 
-    navigation?.navigate("Auth");
+    router.navigate("/Auth");
   };
 
   return (

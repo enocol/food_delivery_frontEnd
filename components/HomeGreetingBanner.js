@@ -18,10 +18,10 @@ export default function HomeGreetingBanner({ customerName = "Alex", now }) {
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: "#fffaf0",
-    paddingHorizontal: 16,
-    paddingTop: 5,
-    paddingBottom: 3,
+    backgroundColor: "red",
+    padding: 20,
+
+    justifyContent: "center",
   },
   greetingLine: {
     fontFamily: "Jakarta Sans",

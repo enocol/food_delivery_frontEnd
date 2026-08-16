@@ -11,8 +11,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import {
   Animated,
+  Easing,
   FlatList,
   Modal,
+  PixelRatio,
   Pressable,
   StyleSheet,
   Text,
@@ -68,6 +70,9 @@ function menuItemMatchesFilter(menuItem, terms) {
 
   return terms.some((term) => text.includes(term));
 }
+
+const SCROLL_DELTA_DEADZONE = 2;
+const HOME_HEADER_CONTENT_HEIGHT = 86;
 
 function restaurantMatchesQuery(restaurant, query) {
   const text = `${restaurant?.name || ""} ${restaurant?.cuisine || ""}`
@@ -219,8 +224,15 @@ export default function HomeScreen({ navigation: navigationProp }) {
     [deliveryLocation],
   );
 
+  // 130 was tuned for a ~44px top inset (iPhone notch) at the default font
+  // scale. Devices with a taller/shorter status bar - or Android phones that
+  // ship with a larger default font scale, common on lower-resolution
+  // handsets - need the header height recalculated per device, otherwise
+  // the headerLeft content overflows past its declared height and covers
+  // the greeting banner below it.
+  const headerFontScale = Math.max(1, PixelRatio.getFontScale());
   useRootCartHeader(navigation, "", {
-    headerHeight: 130,
+    headerHeight: insets.top + HOME_HEADER_CONTENT_HEIGHT * headerFontScale,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
@@ -410,7 +422,20 @@ export default function HomeScreen({ navigation: navigationProp }) {
       if (currentY <= 0) {
         searchBarVisibilityRef.current = 1;
         searchBarAnim.stopAnimation();
-        searchBarAnim.setValue(1);
+        Animated.timing(searchBarAnim, {
+          toValue: 1,
+          duration: 150,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }).start();
+        return;
+      }
+
+      // Android reports noisier, non-monotonic scroll deltas than iOS
+      // (touch sampling jitter, list recycling remeasures). Ignoring
+      // sub-threshold deltas keeps that jitter from flipping direction
+      // and popping the search bar back open mid-hide.
+      if (Math.abs(diff) < SCROLL_DELTA_DEADZONE) {
         return;
       }
 
@@ -421,14 +446,24 @@ export default function HomeScreen({ navigation: navigationProp }) {
         );
         searchBarVisibilityRef.current = nextVisibility;
         searchBarAnim.stopAnimation();
-        searchBarAnim.setValue(nextVisibility);
+        Animated.timing(searchBarAnim, {
+          toValue: nextVisibility,
+          duration: 90,
+          easing: Easing.linear,
+          useNativeDriver: false,
+        }).start();
         return;
       }
 
       if (diff < 0 && !isNearBottom) {
         searchBarVisibilityRef.current = 1;
         searchBarAnim.stopAnimation();
-        searchBarAnim.setValue(1);
+        Animated.timing(searchBarAnim, {
+          toValue: 1,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }).start();
       }
     },
     [searchBarAnim],

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -21,7 +22,11 @@ import sharedStyles from "../components/styles";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function AuthScreen({ onGoToCreateAccount, navigation }) {
+export default function AuthScreen({
+  onGoToCreateAccount: onGoToCreateAccountProp,
+  navigation,
+}) {
+  const router = useRouter();
   const { authActionLoading, signInWithEmailPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,8 +58,8 @@ export default function AuthScreen({ onGoToCreateAccount, navigation }) {
       return;
     }
 
-    if (normalizedPassword.length < 5) {
-      setPasswordError("Password must be at least 5 characters.");
+    if (normalizedPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
       return;
     }
 
@@ -76,12 +81,26 @@ export default function AuthScreen({ onGoToCreateAccount, navigation }) {
   };
 
   const handleGoToCreateAccount = () => {
-    if (typeof onGoToCreateAccount === "function") {
-      onGoToCreateAccount();
+    if (typeof onGoToCreateAccountProp === "function") {
+      onGoToCreateAccountProp();
       return;
     }
 
-    navigation?.navigate("Register");
+    if (navigation?.navigate) {
+      navigation.navigate("Register");
+      return;
+    }
+
+    router.navigate("/Register");
+  };
+
+  const handleGoToForgotPassword = () => {
+    if (navigation?.navigate) {
+      navigation.navigate("ForgotPassword");
+      return;
+    }
+
+    router.navigate("/ForgotPassword");
   };
 
   return (
@@ -168,6 +187,16 @@ export default function AuthScreen({ onGoToCreateAccount, navigation }) {
                 {passwordError ? (
                   <Text style={styles.authFieldErrorText}>{passwordError}</Text>
                 ) : null}
+
+                <Pressable
+                  style={styles.authForgotPasswordLink}
+                  onPress={handleGoToForgotPassword}
+                  disabled={authActionLoading}
+                >
+                  <Text style={styles.authForgotPasswordLinkText}>
+                    Forgot password?
+                  </Text>
+                </Pressable>
 
                 <Pressable
                   style={styles.authPrimaryButton}
@@ -275,6 +304,14 @@ const styles = {
       fontFamily: "Inter_400Regular",
       fontSize: 12,
       color: colors.danger,
+    },
+    authForgotPasswordLink: {
+      alignSelf: "flex-end",
+    },
+    authForgotPasswordLinkText: {
+      fontFamily: "Inter_500Medium",
+      fontSize: 13,
+      color: colors.primary,
     },
     authPrimaryButton: {
       marginTop: 2,

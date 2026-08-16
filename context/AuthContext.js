@@ -10,6 +10,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   updateProfile,
   signOut,
 } from "firebase/auth";
@@ -39,9 +40,11 @@ function mapAuthError(error) {
     case "auth/email-already-in-use":
       return "This email already has an account. Try signing in with your password.";
     case "auth/user-not-found":
-      return "No account was found for that email. A new account will be created when you sign in.";
+      return "No account was found for that email.";
     case "auth/wrong-password":
       return "The password is incorrect.";
+    case "auth/invalid-credential":
+      return "Incorrect email or password.";
     case "auth/user-disabled":
       return "This account has been disabled.";
     case "auth/too-many-requests":
@@ -53,7 +56,7 @@ function mapAuthError(error) {
 
 function formatAuthError(error) {
   const message = mapAuthError(error);
-  if (!error?.code) {
+  if (!__DEV__ || !error?.code) {
     return message;
   }
   return `[${error.code}] ${message}`;
@@ -64,6 +67,9 @@ export function AuthProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [authActionLoading, setAuthActionLoading] = useState(false);
   const newSignupUidRef = useRef(null);
+  // Set while createAccountWithEmailPassword is applying the display name,
+  // so the sync below can wait for it instead of syncing a nameless user.
+  const pendingSignupProfileRef = useRef(null);
 
   const ensureCustomerAccountSynced = async (firebaseUser) => {
     // Retry once in case backend upsert races with fresh token propagation.
@@ -83,6 +89,9 @@ export function AuthProvider({ children }) {
 
       if (nextUser) {
         try {
+          if (pendingSignupProfileRef.current) {
+            await pendingSignupProfileRef.current;
+          }
           await ensureCustomerAccountSynced(nextUser);
           connectSocket(() => nextUser.getIdToken());
 
@@ -160,28 +169,14 @@ export function AuthProvider({ children }) {
         throw new Error("Password is required.");
       }
 
-      let result;
-      try {
-        result = await signInWithEmailAndPassword(
-          auth,
-          normalizedEmail,
-          normalizedPassword,
-        );
-      } catch (error) {
-        if (error?.code !== "auth/user-not-found") {
-          throw error;
-        }
+      // No profile mutation happens on sign-in, so the sync triggered by
+      // onAuthStateChanged is sufficient — no need to sync again here.
+      const result = await signInWithEmailAndPassword(
+        auth,
+        normalizedEmail,
+        normalizedPassword,
+      );
 
-        result = await createUserWithEmailAndPassword(
-          auth,
-          normalizedEmail,
-          normalizedPassword,
-        );
-      }
-
-      // Sync the authenticated Firebase user to the Neon users table.
-      // Fire-and-forget: a network failure here does not block sign-in.
-      syncUserWithNeon(result.user);
       return result;
     } catch (error) {
       if (error.code) {
@@ -201,6 +196,10 @@ export function AuthProvider({ children }) {
 
   const createAccountWithEmailPassword = async (name, email, password) => {
     setAuthActionLoading(true);
+    let resolvePendingSignupProfile;
+    pendingSignupProfileRef.current = new Promise((resolve) => {
+      resolvePendingSignupProfile = resolve;
+    });
     try {
       const normalizedName = String(name || "").trim();
       const normalizedEmail = String(email || "")
@@ -232,9 +231,11 @@ export function AuthProvider({ children }) {
         displayName: normalizedName,
       });
 
-      // Sync the authenticated Firebase user to the Neon users table.
-      // Fire-and-forget: a network failure here does not block sign-in.
-      syncUserWithNeon(result.user);
+      // Force a token refresh so the cached ID token reflects the display
+      // name just set above — the sync that onAuthStateChanged is waiting
+      // to run (see pendingSignupProfileRef) picks up this refreshed token.
+      await result.user.getIdToken(true);
+
       return result;
     } catch (error) {
       if (error.code) {
@@ -250,6 +251,8 @@ export function AuthProvider({ children }) {
         error.message || "Could not create the account. Please try again.",
       );
     } finally {
+      resolvePendingSignupProfile();
+      pendingSignupProfileRef.current = null;
       setAuthActionLoading(false);
     }
   };
@@ -271,6 +274,36 @@ export function AuthProvider({ children }) {
     return auth.currentUser.getIdToken();
   };
 
+  const resetPassword = async (email) => {
+    setAuthActionLoading(true);
+    try {
+      const normalizedEmail = String(email || "")
+        .trim()
+        .toLowerCase();
+
+      if (!normalizedEmail) {
+        throw new Error("Email is required.");
+      }
+
+      await sendPasswordResetEmail(auth, normalizedEmail);
+    } catch (error) {
+      if (error.code) {
+        if (__DEV__) {
+          console.warn("[AuthContext] resetPassword failed", {
+            code: error.code,
+            message: error.message,
+          });
+        }
+        throw new Error(formatAuthError(error));
+      }
+      throw new Error(
+        error.message || "Could not send the reset email. Please try again.",
+      );
+    } finally {
+      setAuthActionLoading(false);
+    }
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -281,6 +314,7 @@ export function AuthProvider({ children }) {
       authActionLoading,
       signInWithEmailPassword,
       createAccountWithEmailPassword,
+      resetPassword,
       signOutUser,
       getAuthToken,
     }),

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   Animated,
   Easing,
+  PixelRatio,
   Pressable,
   StyleSheet,
   Text,
@@ -12,7 +13,7 @@ import {
 import * as colors from "../utils/colors";
 
 const PLACEHOLDER_WORDS = ["restaurants", "Food items"];
-const PLACEHOLDER_WORD_HEIGHT = 28;
+const PLACEHOLDER_WORD_HEIGHT = 24;
 
 function getWordOpacity(animatedValue) {
   return animatedValue.interpolate({
@@ -35,6 +36,10 @@ export default function HomeSearchBar({
   const animB = useRef(new Animated.Value(PLACEHOLDER_WORD_HEIGHT)).current;
   const placeholderForward = useRef(true);
   const activePlaceholderAnimationRef = useRef(null);
+  const adaptiveTextSize = Math.max(
+    12,
+    Math.min(14, 14 / (1 + (PixelRatio.getFontScale() - 1) * 0.6)),
+  );
 
   useEffect(() => {
     const runCycle = () => {
@@ -113,12 +118,20 @@ export default function HomeSearchBar({
           />
           {searchQuery.length === 0 && !isSearchFocused && (
             <View pointerEvents="none" style={styles.fakePlaceholder}>
-              <Text style={styles.fakePlaceholderStatic}>Search for </Text>
+              <Text
+                style={[
+                  styles.fakePlaceholderStatic,
+                  { fontSize: adaptiveTextSize },
+                ]}
+              >
+                Search for
+              </Text>
               <View style={styles.fakePlaceholderSlot}>
                 <Animated.Text
                   style={[
                     styles.fakePlaceholderWord,
                     {
+                      fontSize: adaptiveTextSize,
                       transform: [{ translateY: animA }],
                       opacity: getWordOpacity(animA),
                     },
@@ -131,6 +144,7 @@ export default function HomeSearchBar({
                     styles.fakePlaceholderWord,
                     { position: "absolute", top: 0 },
                     {
+                      fontSize: adaptiveTextSize,
                       transform: [{ translateY: animB }],
                       opacity: getWordOpacity(animB),
                     },
@@ -184,6 +198,8 @@ const styles = StyleSheet.create({
 
   searchInputWrapper: {
     flex: 1,
+    justifyContent: "center",
+    minWidth: 0,
   },
   fakePlaceholder: {
     position: "absolute",
@@ -193,28 +209,40 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     alignItems: "center",
+    width: "100%",
+    minWidth: 0,
+    paddingRight: 8,
   },
   fakePlaceholderStatic: {
     fontFamily: "Inter_400Regular",
-    fontSize: 15,
     color: colors.textSubMuted,
+    flexShrink: 0,
+    includeFontPadding: false,
   },
   fakePlaceholderSlot: {
     height: PLACEHOLDER_WORD_HEIGHT,
     overflow: "hidden",
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 4,
   },
+  // This is the animated placeholder word that will fade in and out
   fakePlaceholderWord: {
     fontFamily: "Inter_400Regular",
-    fontSize: 15,
     color: colors.textSubMuted,
     height: PLACEHOLDER_WORD_HEIGHT,
     lineHeight: PLACEHOLDER_WORD_HEIGHT,
+    width: "100%",
+    minWidth: 0,
+    includeFontPadding: false,
   },
   homeSearchInput: {
     fontFamily: "Inter_400Regular",
     flex: 1,
-    fontSize: 15,
     color: colors.textWarmDark,
     backgroundColor: "transparent",
+    width: "100%",
+    paddingVertical: 0,
+    includeFontPadding: false,
   },
 });

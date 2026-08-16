@@ -2,6 +2,7 @@ import "react-native-reanimated";
 import React, { useEffect, useRef } from "react";
 import { Image, View } from "react-native";
 import * as Notifications from "expo-notifications";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -56,13 +57,18 @@ function RootNavigator() {
     const rootSegment = segments[0];
 
     if (!isAuthenticated) {
-      if (rootSegment !== "Auth" && rootSegment !== "Register") {
+      if (
+        rootSegment !== "Auth" &&
+        rootSegment !== "Register" &&
+        rootSegment !== "ForgotPassword"
+      ) {
         router.replace("/Auth");
       }
     } else if (
       !rootSegment ||
       rootSegment === "Auth" ||
-      rootSegment === "Register"
+      rootSegment === "Register" ||
+      rootSegment === "ForgotPassword"
     ) {
       router.replace("/MainTabs/HomeTab");
     }
@@ -139,15 +145,38 @@ function RootNavigator() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="Auth" options={{ headerShown: false }} />
         <Stack.Screen name="Register" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="ForgotPassword"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="MainTabs" options={{ headerShown: false }} />
         <Stack.Screen
           name="Notifications"
           options={{
-            title: "",
+            title: "Notifications",
             headerShown: true,
             headerBackButtonDisplayMode: "minimal",
-            headerBackTitleVisible: false,
-            headerTintColor: colors.white,
+
+            headerStyle: {
+              backgroundColor: "#ff5a1f",
+            },
+            headerTransparent: true,
+            headerTitleStyle: {
+              color: "#fff",
+              fontSize: 20,
+              fontWeight: "bold",
+            },
+            // headerRight: () => (
+            //   <View
+            //     style={{
+            //       marginRight: 16,
+            //       alignItems: "center",
+            //       justifyContent: "center",
+            //     }}
+            //   >
+            //     {/* <Ionicons name="notifications" size={24} color={colors.white} /> */}
+            //   </View>
+            // ),
           }}
         />
         <Stack.Screen

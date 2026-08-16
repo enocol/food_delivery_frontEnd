@@ -1,1 +1,5 @@
-export { default } from "../screens/RestaurantDetailsScreen";
+import RestaurantDetailsScreen from "../screens/RestaurantDetailsScreen";
+
+export default function RestaurantDetailsRoute(props) {
+  return <RestaurantDetailsScreen {...props} />;
+}

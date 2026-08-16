@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import {
   Alert,
   Animated,
@@ -37,6 +38,7 @@ export default function RestaurantDetailsScreen({ route }) {
     ? rawRestaurantId[0]
     : rawRestaurantId;
   const insets = useSafeAreaInsets();
+  const heroTopInset = Math.max(insets.top, 0);
   const modalTopInset =
     Platform.OS === "android"
       ? Math.max(insets.top, StatusBar.currentHeight || 0)
@@ -64,6 +66,27 @@ export default function RestaurantDetailsScreen({ route }) {
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const [itemSheetImageLoaded, setItemSheetImageLoaded] = useState(false);
   const [menuImageLoadedMap, setMenuImageLoadedMap] = useState({});
+
+  useFocusEffect(
+    React.useCallback(() => {
+      StatusBar.setBarStyle("light-content");
+      StatusBar.setHidden(false);
+
+      if (Platform.OS === "android") {
+        StatusBar.setBackgroundColor("rgba(0,0,0,0.4)");
+        StatusBar.setTranslucent(false);
+      }
+
+      return () => {
+        StatusBar.setBarStyle("default");
+
+        if (Platform.OS === "android") {
+          StatusBar.setBackgroundColor("transparent");
+          StatusBar.setTranslucent(false);
+        }
+      };
+    }, []),
+  );
 
   const handleAddToCart = async (item, quantity = 1) => {
     if (!restaurant || addingItemId) {
@@ -172,223 +195,253 @@ export default function RestaurantDetailsScreen({ route }) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
-      {/* Sticky restaurant name bar */}
-      <Animated.View
-        style={[
-          styles.detailsStickyHeader,
-          {
-            opacity: stickyHeaderOpacity,
-            transform: [{ translateY: stickyHeaderTranslateY }],
-          },
-        ]}
-        pointerEvents="none"
-      >
-        <Text style={styles.detailsStickyTitle} numberOfLines={1}>
-          {formatRestaurantName(restaurant.name)}
-        </Text>
-      </Animated.View>
+    <>
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="rgba(0,0,0,0.4)"
+      />
+      <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
+        {/* Sticky restaurant name bar */}
+        <Animated.View
+          style={[
+            styles.detailsStickyHeader,
+            {
+              paddingTop: Math.max(insets.top + 12, 12),
+              backgroundColor: "rgba(17, 17, 17, 0.55)",
+              opacity: stickyHeaderOpacity,
+              transform: [{ translateY: stickyHeaderTranslateY }],
+            },
+          ]}
+          pointerEvents="none"
+        >
+          <Text style={styles.detailsStickyTitle} numberOfLines={1}>
+            {formatRestaurantName(restaurant.name)}
+          </Text>
+        </Animated.View>
 
-      <Animated.ScrollView
-        style={styles.screen}
-        contentContainerStyle={styles.detailsContainer}
-        showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
-        scrollEventThrottle={16}
-      >
-        <View style={styles.detailsHeroImageWrap}>
-          <Image
-            source={toImageSource(restaurant.image)}
-            style={styles.detailsHeroImage}
-            onLoad={() => setHeroImageLoaded(true)}
-            onError={() => setHeroImageLoaded(true)}
-          />
-          {!heroImageLoaded ? (
-            <SkeletonBlock style={styles.detailsHeroImagePlaceholder} />
-          ) : null}
-        </View>
-        <Text style={styles.detailsTitle}>
-          {formatRestaurantName(restaurant.name)}
-        </Text>
-        <Text style={styles.detailsMeta}>
-          {restaurant.cuisine} • {restaurant.eta}
-        </Text>
-
-        {restaurant.menu.map((item) => (
-          <Pressable
-            key={item.id}
-            style={styles.menuCard}
-            onPress={() => setSelectedItem(item)}
+        <Animated.ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.detailsContainer}
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true },
+          )}
+          scrollEventThrottle={16}
+        >
+          <View
+            style={[
+              styles.detailsHeroImageWrap,
+              {
+                height: 380 + heroTopInset,
+                marginTop: -heroTopInset,
+              },
+            ]}
           >
-            <View style={styles.menuTextWrap}>
-              <Text style={styles.menuName}>
-                {formatRestaurantName(item.name)}
-              </Text>
-              <Text style={styles.menuDescription}>{item.description}</Text>
-              <Text style={styles.menuPrice}>{formatXaf(item.price)}</Text>
-            </View>
-            <View style={styles.menuImageContainer}>
+            <Image
+              source={toImageSource(restaurant.image)}
+              style={styles.detailsHeroImage}
+              onLoad={() => setHeroImageLoaded(true)}
+              onError={() => setHeroImageLoaded(true)}
+            />
+            <LinearGradient
+              colors={[
+                "rgba(0,0,0,0.24)",
+                "rgba(0,0,0,0.06)",
+                "rgba(0,0,0,0.16)",
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.detailsHeroFade}
+              pointerEvents="none"
+            />
+            {!heroImageLoaded ? (
+              <SkeletonBlock style={styles.detailsHeroImagePlaceholder} />
+            ) : null}
+          </View>
+          <Text style={styles.detailsTitle}>
+            {formatRestaurantName(restaurant.name)}
+          </Text>
+          <Text style={styles.detailsMeta}>
+            {restaurant.cuisine} • {restaurant.eta}
+          </Text>
+
+          {restaurant.menu.map((item) => (
+            <Pressable
+              key={item.id}
+              style={styles.menuCard}
+              onPress={() => setSelectedItem(item)}
+            >
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuName}>
+                  {formatRestaurantName(item.name)}
+                </Text>
+                <Text style={styles.menuDescription}>{item.description}</Text>
+                <Text style={styles.menuPrice}>{formatXaf(item.price)}</Text>
+              </View>
+              <View style={styles.menuImageContainer}>
+                <Image
+                  source={toImageSource(item.image)}
+                  style={styles.menuImage}
+                  onLoad={() =>
+                    setMenuImageLoadedMap((previous) => ({
+                      ...previous,
+                      [item.id]: true,
+                    }))
+                  }
+                  onError={() =>
+                    setMenuImageLoadedMap((previous) => ({
+                      ...previous,
+                      [item.id]: true,
+                    }))
+                  }
+                />
+                {!menuImageLoadedMap[item.id] ? (
+                  <SkeletonBlock style={styles.menuImagePlaceholder} />
+                ) : null}
+                <TouchableOpacity
+                  style={styles.menuPlusButton}
+                  onPress={() => handleAddToCart(item)}
+                  disabled={addingItemId === String(item.id)}
+                >
+                  <Ionicons
+                    name={
+                      addingItemId === String(item.id) ? "time-outline" : "add"
+                    }
+                    size={20}
+                    color={colors.white}
+                  />
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          ))}
+        </Animated.ScrollView>
+
+        <FloatingBasketButton
+          count={cartCount}
+          onPress={openCartSheet}
+          bottom={Math.max(insets.bottom + 16, 16)}
+        />
+
+        {/* Menu item detail full-screen modal */}
+        <Modal
+          visible={!!selectedItem}
+          transparent={false}
+          animationType="slide"
+          statusBarTranslucent={true}
+          onRequestClose={() => setSelectedItem(null)}
+        >
+          <SafeAreaView
+            style={styles.itemSheetScreen}
+            edges={["left", "right", "bottom"]}
+          >
+            <View
+              style={[styles.itemSheetTopInset, { height: modalTopInset }]}
+            />
+            {/* Image with close button overlaid top-left */}
+            <View style={styles.itemSheetImageWrap}>
               <Image
-                source={toImageSource(item.image)}
-                style={styles.menuImage}
-                onLoad={() =>
-                  setMenuImageLoadedMap((previous) => ({
-                    ...previous,
-                    [item.id]: true,
-                  }))
-                }
-                onError={() =>
-                  setMenuImageLoadedMap((previous) => ({
-                    ...previous,
-                    [item.id]: true,
-                  }))
-                }
+                source={toImageSource(selectedItem?.image)}
+                style={styles.itemSheetImage}
+                onLoad={() => setItemSheetImageLoaded(true)}
+                onError={() => setItemSheetImageLoaded(true)}
               />
-              {!menuImageLoadedMap[item.id] ? (
-                <SkeletonBlock style={styles.menuImagePlaceholder} />
+              {!itemSheetImageLoaded ? (
+                <SkeletonBlock style={styles.itemSheetImagePlaceholder} />
               ) : null}
+              <Pressable
+                style={styles.itemSheetClose}
+                onPress={() => setSelectedItem(null)}
+              >
+                <Ionicons name="close" size={22} color={colors.white} />
+              </Pressable>
+            </View>
+
+            {/* Scrollable body */}
+            <ScrollView
+              style={styles.screen}
+              contentContainerStyle={styles.itemSheetBody}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.itemSheetNameRow}>
+                <Text style={styles.itemSheetName}>{selectedItem?.name}</Text>
+                <Text style={styles.itemSheetPrice}>
+                  {formatXaf(selectedItem?.price)}
+                </Text>
+              </View>
+              <View style={styles.itemSheetDivider} />
+              <Text style={styles.itemSheetDescription}>
+                {selectedItem?.description}
+              </Text>
+            </ScrollView>
+
+            <View style={styles.itemSheetFooterRow}>
+              <View style={styles.itemSheetQtyControl}>
+                <Pressable
+                  style={[
+                    styles.itemSheetQtyButton,
+                    (selectedItemQty <= 1 ||
+                      addingItemId === String(selectedItem?.id)) &&
+                      styles.itemSheetQtyButtonDisabled,
+                  ]}
+                  onPress={() =>
+                    setSelectedItemQty((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={
+                    selectedItemQty <= 1 ||
+                    addingItemId === String(selectedItem?.id)
+                  }
+                >
+                  <Ionicons name="remove" size={18} color={colors.textBody} />
+                </Pressable>
+                <Text style={styles.itemSheetQtyValue}>{selectedItemQty}</Text>
+                <Pressable
+                  style={[
+                    styles.itemSheetQtyButton,
+                    addingItemId === String(selectedItem?.id) &&
+                      styles.itemSheetQtyButtonDisabled,
+                  ]}
+                  onPress={() => setSelectedItemQty((prev) => prev + 1)}
+                  disabled={addingItemId === String(selectedItem?.id)}
+                >
+                  <Ionicons name="add" size={18} color={colors.textBody} />
+                </Pressable>
+              </View>
+
               <TouchableOpacity
-                style={styles.menuPlusButton}
-                onPress={() => handleAddToCart(item)}
-                disabled={addingItemId === String(item.id)}
+                style={[
+                  styles.itemSheetAddButton,
+                  addingItemId === String(selectedItem?.id) &&
+                    styles.itemSheetAddButtonBusy,
+                ]}
+                onPress={() => {
+                  handleAddToCart(selectedItem, selectedItemQty);
+                  setSelectedItem(null);
+                }}
+                disabled={addingItemId === String(selectedItem?.id)}
               >
                 <Ionicons
                   name={
-                    addingItemId === String(item.id) ? "time-outline" : "add"
+                    addingItemId === String(selectedItem?.id)
+                      ? "time-outline"
+                      : "cart-outline"
                   }
                   size={20}
                   color={colors.white}
+                  style={{ marginRight: 8 }}
                 />
+                <Text style={styles.itemSheetAddButtonText}>
+                  {addingItemId === String(selectedItem?.id)
+                    ? "Adding..."
+                    : `Add ${selectedItemQty} to Cart`}
+                </Text>
               </TouchableOpacity>
             </View>
-          </Pressable>
-        ))}
-      </Animated.ScrollView>
-
-      <FloatingBasketButton
-        count={cartCount}
-        onPress={openCartSheet}
-        bottom={Math.max(insets.bottom + 16, 16)}
-      />
-
-      {/* Menu item detail full-screen modal */}
-      <Modal
-        visible={!!selectedItem}
-        transparent={false}
-        animationType="slide"
-        statusBarTranslucent={false}
-        onRequestClose={() => setSelectedItem(null)}
-      >
-        <SafeAreaView
-          style={styles.itemSheetScreen}
-          edges={["left", "right", "bottom"]}
-        >
-          <View style={[styles.itemSheetTopInset, { height: modalTopInset }]} />
-          {/* Image with close button overlaid top-left */}
-          <View style={styles.itemSheetImageWrap}>
-            <Image
-              source={toImageSource(selectedItem?.image)}
-              style={styles.itemSheetImage}
-              onLoad={() => setItemSheetImageLoaded(true)}
-              onError={() => setItemSheetImageLoaded(true)}
-            />
-            {!itemSheetImageLoaded ? (
-              <SkeletonBlock style={styles.itemSheetImagePlaceholder} />
-            ) : null}
-            <Pressable
-              style={styles.itemSheetClose}
-              onPress={() => setSelectedItem(null)}
-            >
-              <Ionicons name="close" size={22} color={colors.white} />
-            </Pressable>
-          </View>
-
-          {/* Scrollable body */}
-          <ScrollView
-            style={styles.screen}
-            contentContainerStyle={styles.itemSheetBody}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.itemSheetNameRow}>
-              <Text style={styles.itemSheetName}>{selectedItem?.name}</Text>
-              <Text style={styles.itemSheetPrice}>
-                {formatXaf(selectedItem?.price)}
-              </Text>
-            </View>
-            <View style={styles.itemSheetDivider} />
-            <Text style={styles.itemSheetDescription}>
-              {selectedItem?.description}
-            </Text>
-          </ScrollView>
-
-          <View style={styles.itemSheetFooterRow}>
-            <View style={styles.itemSheetQtyControl}>
-              <Pressable
-                style={[
-                  styles.itemSheetQtyButton,
-                  (selectedItemQty <= 1 ||
-                    addingItemId === String(selectedItem?.id)) &&
-                    styles.itemSheetQtyButtonDisabled,
-                ]}
-                onPress={() =>
-                  setSelectedItemQty((prev) => Math.max(1, prev - 1))
-                }
-                disabled={
-                  selectedItemQty <= 1 ||
-                  addingItemId === String(selectedItem?.id)
-                }
-              >
-                <Ionicons name="remove" size={18} color={colors.textBody} />
-              </Pressable>
-              <Text style={styles.itemSheetQtyValue}>{selectedItemQty}</Text>
-              <Pressable
-                style={[
-                  styles.itemSheetQtyButton,
-                  addingItemId === String(selectedItem?.id) &&
-                    styles.itemSheetQtyButtonDisabled,
-                ]}
-                onPress={() => setSelectedItemQty((prev) => prev + 1)}
-                disabled={addingItemId === String(selectedItem?.id)}
-              >
-                <Ionicons name="add" size={18} color={colors.textBody} />
-              </Pressable>
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.itemSheetAddButton,
-                addingItemId === String(selectedItem?.id) &&
-                  styles.itemSheetAddButtonBusy,
-              ]}
-              onPress={() => {
-                handleAddToCart(selectedItem, selectedItemQty);
-                setSelectedItem(null);
-              }}
-              disabled={addingItemId === String(selectedItem?.id)}
-            >
-              <Ionicons
-                name={
-                  addingItemId === String(selectedItem?.id)
-                    ? "time-outline"
-                    : "cart-outline"
-                }
-                size={20}
-                color={colors.white}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.itemSheetAddButtonText}>
-                {addingItemId === String(selectedItem?.id)
-                  ? "Adding..."
-                  : `Add ${selectedItemQty} to Cart`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </Modal>
-    </SafeAreaView>
+          </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </>
   );
 }
 
@@ -459,6 +512,17 @@ const styles = {
       position: "relative",
       width: "100%",
       height: 380,
+      backgroundColor: colors.bgWarm,
+      overflow: "hidden",
+    },
+    detailsHeroImage: {
+      width: "100%",
+      height: "100%",
+      resizeMode: "cover",
+    },
+    detailsHeroFade: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 1,
     },
     detailsHeroImagePlaceholder: {
       ...StyleSheet.absoluteFillObject,
@@ -471,12 +535,16 @@ const styles = {
       left: 0,
       right: 0,
       zIndex: 20,
-      backgroundColor: colors.bgWarm,
-      paddingTop: 50,
+      backgroundColor: "rgba(17, 17, 17, 0.55)",
       paddingBottom: 12,
       paddingHorizontal: 16,
       borderBottomWidth: 1,
-      borderBottomColor: colors.borderMid,
+      borderBottomColor: "rgba(255,255,255,0.12)",
+      shadowColor: "#000",
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 2 },
+      backdropFilter: "blur(8px)",
     },
     detailsStickyTitle: {
       fontFamily: "Nunito_800ExtraBold",

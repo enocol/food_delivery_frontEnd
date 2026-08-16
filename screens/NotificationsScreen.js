@@ -22,10 +22,10 @@ export default function NotificationsScreen({ navigation: navigationProp }) {
     clearNotifications,
   } = useNotifications();
 
-  useRootCartHeader(navigation, "Notifications", {
-    headerHeight: 110,
-    headerBackgroundColor: "#ff5a1f",
-  });
+  //   useRootCartHeader(navigation, "Notification", {
+  //     headerHeight: 80,
+  //     headerBackgroundColor: "#ff5a1f",
+  //   });
 
   const renderItem = useCallback(
     ({ item }) => (
@@ -89,7 +89,7 @@ export default function NotificationsScreen({ navigation: navigationProp }) {
               <Ionicons
                 name="notifications-off-outline"
                 size={34}
-                color={colors.primary}
+                color={colors.textMuted}
               />
             </View>
             <Text style={styles.emptyTitle}>No notifications yet</Text>
@@ -164,7 +164,7 @@ const styles = {
       width: 78,
       height: 78,
       borderRadius: 39,
-      backgroundColor: colors.bgEmptyOrange,
+      //   backgroundColor: colors.bgEmptyOrange,
       borderWidth: 1,
       borderColor: colors.borderOrange,
       alignItems: "center",

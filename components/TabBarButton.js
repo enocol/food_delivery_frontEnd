@@ -18,9 +18,15 @@ export default function TabBarButton({
 }) {
   const scale = useSharedValue(0);
   const buttonColor = focused ? "#FFFFFF" : color;
+  const buttonSpringConfig = {
+    damping: 14,
+    stiffness: 220,
+    mass: 0.7,
+    overshootClamping: true,
+  };
 
   useEffect(() => {
-    scale.value = withSpring(focused ? 1 : 0, { duration: 350 });
+    scale.value = withSpring(focused ? 1 : 0, buttonSpringConfig);
   }, [scale, focused]);
 
   const animatedTextStyle = useAnimatedStyle(() => {
