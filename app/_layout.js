@@ -24,6 +24,7 @@ import {
 } from "../context/NotificationsContext";
 import { auth } from "../utils/firebase";
 import { markAppReady } from "../utils/appReady";
+import { consumePostAuthRedirect } from "../utils/postAuthRedirect";
 import * as colors from "../utils/colors";
 
 auth.languageCode = "en";
@@ -59,25 +60,24 @@ function RootNavigator() {
     const isAuthenticated = Boolean(user);
     const rootSegment = segments[0];
 
-    if (!isAuthenticated) {
-      if (
-        rootSegment !== "Auth" &&
-        rootSegment !== "Register" &&
-        rootSegment !== "ForgotPassword"
-      ) {
-        router.replace("/Auth");
-      }
-    } else if (
-      !rootSegment ||
-      rootSegment === "Auth" ||
-      rootSegment === "Register" ||
-      rootSegment === "ForgotPassword"
+    // Guests browse freely — the account requirement is enforced at checkout,
+    // not at the door. So the only redirect left is moving someone who has just
+    // signed in off the auth screens.
+    if (
+      isAuthenticated &&
+      (!rootSegment ||
+        rootSegment === "Auth" ||
+        rootSegment === "Register" ||
+        rootSegment === "ForgotPassword")
     ) {
-      router.replace("/MainTabs/HomeTab");
+      // Someone who was interrupted mid-checkout goes back there rather than
+      // to the home tab.
+      router.replace(consumePostAuthRedirect() || "/MainTabs/HomeTab");
     }
 
+    // Signing out drops you back into browsing as a guest, not onto a login wall.
     if (wasAuthenticated && !isAuthenticated) {
-      router.replace("/Auth");
+      router.replace("/MainTabs/HomeTab");
     }
 
     previousUserRef.current = user;
@@ -188,20 +188,19 @@ function RootNavigator() {
           }}
         />
       </Stack>
-      {user ? (
-        <CartBottomSheet
-          visible={isCartSheetOpen}
-          onClose={closeCartSheet}
-          onCheckout={() => {
-            closeCartSheet();
-            router.navigate("/Checkout");
-          }}
-          onOrderNow={() => {
-            closeCartSheet();
-            router.navigate("/MainTabs/HomeTab");
-          }}
-        />
-      ) : null}
+      {/* Mounted for guests too: they build carts before they have accounts. */}
+      <CartBottomSheet
+        visible={isCartSheetOpen}
+        onClose={closeCartSheet}
+        onCheckout={() => {
+          closeCartSheet();
+          router.navigate("/Checkout");
+        }}
+        onOrderNow={() => {
+          closeCartSheet();
+          router.navigate("/MainTabs/HomeTab");
+        }}
+      />
     </>
   );
 }

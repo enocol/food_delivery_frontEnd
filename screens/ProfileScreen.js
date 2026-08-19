@@ -13,7 +13,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
+import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
+import { clearPostAuthRedirect } from "../utils/postAuthRedirect";
 import { formatXaf } from "../utils/formatXaf";
 import {
   getCurrentLocation,
@@ -27,6 +29,7 @@ import * as colors from "../utils/colors";
 export default function ProfileScreen({ navigation }) {
   const { cartTotal } = useCart();
   const { user, signOutUser, authActionLoading } = useAuth();
+  const router = useRouter();
   const [locationLabel, setLocationLabel] = useState(
     "Fetching your location...",
   );
@@ -97,8 +100,13 @@ export default function ProfileScreen({ navigation }) {
     loadCurrentLocation();
   }, [loadCurrentLocation]);
 
-  const profileName = user?.displayName || "Mbolo member";
-  const profileMeta = user?.email || user?.phoneNumber || "Connected account";
+  const isSignedIn = Boolean(user);
+  const profileName = isSignedIn
+    ? user?.displayName || "Mbolo member"
+    : "Browsing as a guest";
+  const profileMeta = isSignedIn
+    ? user?.email || user?.phoneNumber || "Connected account"
+    : "Sign in to keep your orders and delivery address";
   const initials = profileName
     .split(" ")
     .filter(Boolean)
@@ -165,20 +173,36 @@ export default function ProfileScreen({ navigation }) {
         >
           <View style={styles.profileCard}>
             <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{initials || "ME"}</Text>
+              <Text style={styles.avatarText}>
+                {isSignedIn ? initials || "ME" : "?"}
+              </Text>
             </View>
             <Text style={styles.profileName}>{profileName}</Text>
             <Text style={styles.profileMeta}>{profileMeta}</Text>
-            <Pressable
-              style={[
-                styles.profileSignOutButton,
-                authActionLoading && styles.profileSignOutButtonDisabled,
-              ]}
-              onPress={handleSignOut}
-              disabled={authActionLoading}
-            >
-              <Text style={styles.profileSignOutText}>Sign out</Text>
-            </Pressable>
+            {isSignedIn ? (
+              <Pressable
+                style={[
+                  styles.profileSignOutButton,
+                  authActionLoading && styles.profileSignOutButtonDisabled,
+                ]}
+                onPress={handleSignOut}
+                disabled={authActionLoading}
+              >
+                <Text style={styles.profileSignOutText}>Sign out</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={styles.profileSignOutButton}
+                onPress={() => {
+                  // Deliberate sign-in: do not inherit a checkout redirect
+                  // queued earlier and abandoned.
+                  clearPostAuthRedirect();
+                  router.navigate("/Auth");
+                }}
+              >
+                <Text style={styles.profileSignOutText}>Sign in</Text>
+              </Pressable>
+            )}
           </View>
         </ScrollView>
       </LinearGradient>

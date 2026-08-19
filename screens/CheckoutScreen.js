@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 import { useCart } from "../context/CartContext";
@@ -19,6 +20,7 @@ import { createOrder } from "../apis/orderApi";
 import { requestMobileMoneyPayment } from "../apis/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
 import { getCurrentLocation } from "../utils/locationService";
+import { setPostAuthRedirect } from "../utils/postAuthRedirect";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useTransparentHeaderOffset,
@@ -36,6 +38,8 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const navigation = navigationProp ?? routeNavigation;
   const { cartItems, cartTotal, clearCart } = useCart();
   const { firebaseUid, userPhone, getAuthToken } = useAuth();
+  const router = useRouter();
+  const needsAccount = !firebaseUid;
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState("mtn-momo");
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
@@ -129,6 +133,19 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
         "Add at least one item before placing your order.",
       );
       navigation.goBack();
+      return;
+    }
+
+    // The account requirement is enforced here rather than on screen entry, so
+    // a guest sees the full total before being asked to sign up — seeing the
+    // real number is what motivates finishing. Checked before phone validation
+    // so a guest is not told their number is wrong first.
+    //
+    // When email verification ships, its check belongs right here too:
+    //   if (!emailVerified) { router.navigate("/VerifyEmail"); return; }
+    if (needsAccount) {
+      setPostAuthRedirect("/Checkout");
+      router.navigate("/Auth");
       return;
     }
 
@@ -362,7 +379,11 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
               disabled={isProcessing}
             >
               <Text style={styles.checkoutScreenCtaText}>
-                {isProcessing ? "Processing..." : "Place Order"}
+                {isProcessing
+                  ? "Processing..."
+                  : needsAccount
+                    ? "Sign in to order"
+                    : "Place Order"}
               </Text>
             </Pressable>
           </KeyboardAwareScrollView>

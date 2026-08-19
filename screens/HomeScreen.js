@@ -163,7 +163,9 @@ export default function HomeScreen({ navigation: navigationProp }) {
   }, [firebaseUid]);
 
   useEffect(() => {
-    if (!restaurants.length) {
+    // Guests never see the like control, so fetching a count per restaurant
+    // would be one wasted request per card.
+    if (!firebaseUid || !restaurants.length) {
       setLikedRestaurantCounts({});
       return;
     }
@@ -202,7 +204,11 @@ export default function HomeScreen({ navigation: navigationProp }) {
     return () => {
       isActive = false;
     };
-  }, [restaurants]);
+  }, [firebaseUid, restaurants]);
+
+  // Declared before renderHeaderLocation: its dependency array is evaluated
+  // during render, so onHeaderContentLayout must already be initialised.
+  const { headerHeight, onHeaderContentLayout } = useMeasuredHeaderHeight();
 
   const renderHeaderLocation = useCallback(
     () => (
@@ -223,8 +229,6 @@ export default function HomeScreen({ navigation: navigationProp }) {
     ),
     [deliveryLocation, onHeaderContentLayout],
   );
-
-  const { headerHeight, onHeaderContentLayout } = useMeasuredHeaderHeight();
 
   useRootCartHeader(navigation, "", {
     headerHeight,
@@ -592,6 +596,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
         liked={Boolean(likedRestaurantIds[String(item.id)])}
         likeCount={Number(likedRestaurantCounts[String(item.id)]) || 0}
         onToggleLike={handleToggleLike}
+        showLike={Boolean(firebaseUid)}
       />
     ),
     [

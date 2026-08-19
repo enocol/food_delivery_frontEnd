@@ -12,7 +12,9 @@ import {
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
+import { clearPostAuthRedirect } from "../utils/postAuthRedirect";
 import useRootCartHeader from "../components/useRootCartHeader";
 import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
@@ -246,6 +248,7 @@ function keyExtractor(item, index) {
 
 export default function OrdersScreen({ navigation }) {
   const { firebaseUid, getAuthToken } = useAuth();
+  const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -329,6 +332,16 @@ export default function OrdersScreen({ navigation }) {
 
   const loadOrders = useCallback(
     async ({ refresh = false } = {}) => {
+      // Guests have no orders to fetch, and getAuthToken would fail. The
+      // signed-out state renders instead.
+      if (!firebaseUid) {
+        setOrders([]);
+        setError("");
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
       if (refresh) {
         setRefreshing(true);
       } else {
@@ -449,6 +462,27 @@ export default function OrdersScreen({ navigation }) {
             </View>
           ))}
         </ScrollView>
+      );
+    }
+
+    if (!firebaseUid) {
+      return (
+        <View style={styles.centered}>
+          <Text style={styles.emptyTitle}>Sign in to see your orders</Text>
+          <Text style={styles.emptySub}>
+            Your order history and live delivery updates show up here once you
+            have an account.
+          </Text>
+          <Pressable
+            style={styles.orderRetryButton}
+            onPress={() => {
+              clearPostAuthRedirect();
+              router.navigate("/Auth");
+            }}
+          >
+            <Text style={styles.orderRetryButtonText}>Sign in</Text>
+          </Pressable>
+        </View>
       );
     }
 

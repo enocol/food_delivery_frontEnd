@@ -16,6 +16,9 @@ const RestaurantCard = React.memo(function RestaurantCard({
   liked = false,
   likeCount = 0,
   onToggleLike,
+  // Liking needs an account, so the control is hidden entirely for guests
+  // rather than shown and then rejected on tap.
+  showLike = true,
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -104,11 +107,13 @@ const RestaurantCard = React.memo(function RestaurantCard({
               <Text style={styles.metaText}>No min. order</Text>
             </View>
           </View>
-          <LikeButton
-            liked={liked}
-            likeCount={likeCount}
-            onPress={() => onToggleLike?.(item.id)}
-          />
+          {showLike ? (
+            <LikeButton
+              liked={liked}
+              likeCount={likeCount}
+              onPress={() => onToggleLike?.(item.id)}
+            />
+          ) : null}
         </View>
       </View>
     </TouchableOpacity>

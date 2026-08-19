@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Platform, Vibration } from "react-native";
 import { useAuth } from "./AuthContext";
@@ -125,6 +126,67 @@ function toItemMap(cartPayload) {
   }, {});
 }
 
+// While signed out the cart lives entirely on the device. It is replayed into
+// the server cart on sign-in (see mergeGuestCart) and discarded once accepted.
+const GUEST_CART_KEY = "mboloeats.guestCart";
+
+async function readGuestCart() {
+  try {
+    const stored = await AsyncStorage.getItem(GUEST_CART_KEY);
+    if (!stored) {
+      return {};
+    }
+    const parsed = JSON.parse(stored);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    // A corrupt or unreadable cart should not block browsing.
+    return {};
+  }
+}
+
+async function writeGuestCart(items) {
+  try {
+    await AsyncStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
+  } catch {
+    // Still usable for this session even if it will not survive a restart.
+  }
+}
+
+// The same shape the server path falls back to when a response carries no
+// items, extracted so the guest path cannot drift away from it.
+function addItemLocally(current, item, restaurant, quantity) {
+  const key = String(item.id);
+  const existing = current[key];
+
+  if (existing) {
+    return {
+      ...current,
+      [key]: { ...existing, qty: existing.qty + quantity },
+    };
+  }
+
+  return {
+    ...current,
+    [key]: {
+      ...item,
+      id: key,
+      image: normalizeImageForState(item.image),
+      qty: quantity,
+      restaurantId: restaurant?.id,
+      restaurantName: restaurant?.name,
+    },
+  };
+}
+
+function setQtyLocally(current, key, nextQty) {
+  if (nextQty <= 0) {
+    const updated = { ...current };
+    delete updated[key];
+    return updated;
+  }
+  return { ...current, [key]: { ...current[key], qty: nextQty } };
+}
+
 export function CartProvider({ children }) {
   const { user, firebaseUid, getAuthToken } = useAuth();
   const [cartId, setCartId] = useState(null);
@@ -137,9 +199,84 @@ export function CartProvider({ children }) {
     setCartItems({});
   }, []);
 
+  const isGuest = !user;
+
+  // Replays a stored guest cart into the server cart one item at a time. Items
+  // that land are dropped from storage and only failures are written back, so a
+  // partial failure retries cleanly instead of double-adding on the next sign-in.
+  const mergeGuestCart = useCallback(
+    async (token) => {
+      const pending = await readGuestCart();
+      const entries = Object.values(pending);
+      if (!entries.length) {
+        return;
+      }
+
+      let activeCartId;
+      try {
+        const payload = await ensureActiveCart(token, firebaseUid);
+        activeCartId =
+          payload?.userId || payload?.cartId || payload?.id || firebaseUid;
+      } catch (error) {
+        // Leave storage untouched so the merge is retried on the next load.
+        if (__DEV__) {
+          console.warn(
+            "[CartContext] guest cart merge deferred:",
+            error.message,
+          );
+        }
+        return;
+      }
+
+      const failed = {};
+      for (const entry of entries) {
+        try {
+          await addItemToCart(
+            token,
+            activeCartId,
+            {
+              menuItemId: String(entry.id),
+              quantity: Number(entry.qty) || 1,
+              firebase_uid: firebaseUid,
+            },
+            firebaseUid,
+          );
+        } catch (error) {
+          failed[String(entry.id)] = entry;
+          if (__DEV__) {
+            console.warn(
+              `[CartContext] guest item ${entry.id} failed to merge:`,
+              error.message,
+            );
+          }
+        }
+      }
+
+      if (Object.keys(failed).length) {
+        await writeGuestCart(failed);
+        return;
+      }
+
+      try {
+        await AsyncStorage.removeItem(GUEST_CART_KEY);
+      } catch {
+        // Worst case it merges again next sign-in; quantities would double, but
+        // an unreadable storage layer is already the larger problem.
+      }
+    },
+    [firebaseUid],
+  );
+
   const loadCartFromServer = useCallback(async () => {
     if (!user) {
-      resetLocalCart();
+      // Signed out: the cart is whatever this device has stored.
+      setCartLoading(true);
+      try {
+        setCartId(null);
+        setCartItems(await readGuestCart());
+      } finally {
+        setCartLoading(false);
+      }
       return;
     }
 
@@ -150,6 +287,9 @@ export function CartProvider({ children }) {
         resetLocalCart();
         return;
       }
+
+      // Before reading the server cart, fold in anything added while signed out.
+      await mergeGuestCart(token);
 
       const payload = await fetchActiveCart(token, firebaseUid);
       if (!payload) {
@@ -184,11 +324,21 @@ export function CartProvider({ children }) {
     } finally {
       setCartLoading(false);
     }
-  }, [firebaseUid, getAuthToken, resetLocalCart, user]);
+  }, [firebaseUid, getAuthToken, mergeGuestCart, resetLocalCart, user]);
 
   useEffect(() => {
     loadCartFromServer();
   }, [loadCartFromServer]);
+
+  // Persist the guest cart on every change so it survives an app restart.
+  // Skipped while loading, otherwise the empty initial state would overwrite
+  // the stored cart before the read that replaces it has landed.
+  useEffect(() => {
+    if (!isGuest || cartLoading) {
+      return;
+    }
+    void writeGuestCart(cartItems);
+  }, [cartItems, cartLoading, isGuest]);
 
   const ensureCart = useCallback(async () => {
     const token = await getAuthToken();
@@ -225,8 +375,17 @@ export function CartProvider({ children }) {
 
   const addToCart = useCallback(
     async (item, restaurant, quantity = 1) => {
-      const { token, activeCartId } = await ensureCart();
       const nextQuantity = Math.max(1, Number(quantity) || 1);
+
+      if (isGuest) {
+        setCartItems((current) =>
+          addItemLocally(current, item, restaurant, nextQuantity),
+        );
+        void triggerAddToCartFeedback();
+        return;
+      }
+
+      const { token, activeCartId } = await ensureCart();
 
       let payload;
       try {
@@ -274,7 +433,7 @@ export function CartProvider({ children }) {
       });
       void triggerAddToCartFeedback();
     },
-    [ensureCart, firebaseUid],
+    [ensureCart, firebaseUid, isGuest],
   );
 
   const increaseQty = useCallback(
@@ -285,8 +444,15 @@ export function CartProvider({ children }) {
         return;
       }
 
-      const { token, activeCartId } = await ensureCart();
       const nextQty = existing.qty + 1;
+
+      if (isGuest) {
+        setCartItems((current) => setQtyLocally(current, key, nextQty));
+        void triggerIncreaseQtyFeedback();
+        return;
+      }
+
+      const { token, activeCartId } = await ensureCart();
       let payload;
       try {
         payload = await updateCartItemQty(
@@ -312,7 +478,7 @@ export function CartProvider({ children }) {
       }));
       void triggerIncreaseQtyFeedback();
     },
-    [cartItems, ensureCart, firebaseUid],
+    [cartItems, ensureCart, firebaseUid, isGuest],
   );
 
   const decreaseQty = useCallback(
@@ -323,8 +489,15 @@ export function CartProvider({ children }) {
         return;
       }
 
-      const { token, activeCartId } = await ensureCart();
       const nextQty = existing.qty - 1;
+
+      if (isGuest) {
+        setCartItems((current) => setQtyLocally(current, key, nextQty));
+        void triggerDecreaseQtyFeedback();
+        return;
+      }
+
+      const { token, activeCartId } = await ensureCart();
 
       if (nextQty <= 0) {
         let payload;
@@ -373,10 +546,16 @@ export function CartProvider({ children }) {
       }));
       void triggerDecreaseQtyFeedback();
     },
-    [cartItems, ensureCart, firebaseUid],
+    [cartItems, ensureCart, firebaseUid, isGuest],
   );
 
   const clearCart = useCallback(async () => {
+    if (isGuest) {
+      setCartItems({});
+      setCartSheetOpen(false);
+      return;
+    }
+
     const token = await getAuthToken();
     if (token && cartId) {
       const payload = await clearRemoteCart(token, cartId, firebaseUid);
@@ -388,7 +567,7 @@ export function CartProvider({ children }) {
     }
     setCartItems({});
     setCartSheetOpen(false);
-  }, [cartId, firebaseUid, getAuthToken]);
+  }, [cartId, firebaseUid, getAuthToken, isGuest]);
 
   const openCartSheet = useCallback(() => {
     setCartSheetOpen(true);
@@ -420,6 +599,9 @@ export function CartProvider({ children }) {
       cartTotal,
       cartLoading,
       isCartSheetOpen,
+      // Phase 3 (the checkout gate) and any "sign in to save your cart"
+      // affordance both need to know this.
+      isGuest,
       addToCart,
       increaseQty,
       decreaseQty,
@@ -439,6 +621,7 @@ export function CartProvider({ children }) {
       closeCartSheet,
       decreaseQty,
       isCartSheetOpen,
+      isGuest,
       increaseQty,
       loadCartFromServer,
       openCartSheet,
