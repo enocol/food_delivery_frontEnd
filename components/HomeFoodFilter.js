@@ -83,7 +83,8 @@ export default function HomeFoodFilter({ selectedFood, setSelectedFood }) {
 
 const styles = StyleSheet.create({
   foodFilterWrap: {
-    paddingTop: 10,
+    // First thing under the header, so it carries the gap between the two.
+    paddingTop: 16,
     paddingBottom: 14,
   },
   foodFilterScrollContent: {
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   foodFilterChipText: {
-    fontFamily: "Nunito_700Bold",
+    fontFamily: "PlusJakartaSans_700Bold",
     fontSize: 16,
     lineHeight: 20,
     color: "#a79f97",

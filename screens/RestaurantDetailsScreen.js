@@ -26,6 +26,10 @@ import { formatXaf } from "../utils/formatXaf";
 import sharedStyles from "../components/styles";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import FloatingBasketButton from "../components/FloatingBasketButton";
+import {
+  useCompactScreen,
+  useTransparentHeaderOffset,
+} from "../utils/responsive";
 import * as colors from "../utils/colors";
 import { fetchRestaurantMenu } from "../apis/restaurantApi";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
@@ -38,7 +42,12 @@ export default function RestaurantDetailsScreen({ route }) {
     ? rawRestaurantId[0]
     : rawRestaurantId;
   const insets = useSafeAreaInsets();
-  const heroTopInset = Math.max(insets.top, 0);
+  const isCompactScreen = useCompactScreen();
+  const heroBaseHeight = isCompactScreen ? 260 : 380;
+  // The hero starts below the transparent header's back-button row rather than
+  // behind it, and scrolls up underneath it from there. `0` extra so the image
+  // sits flush against the header instead of leaving a gap.
+  const headerOffset = useTransparentHeaderOffset(0);
   const modalTopInset =
     Platform.OS === "android"
       ? Math.max(insets.top, StatusBar.currentHeight || 0)
@@ -47,14 +56,20 @@ export default function RestaurantDetailsScreen({ route }) {
   const [restaurant, setRestaurant] = useState(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  // Reveal the sticky title just as the hero's bottom edge reaches the header.
+  // Derived rather than hardcoded so it tracks the header offset and the
+  // shorter hero used on compact screens.
+  const stickyRevealStart = headerOffset + heroBaseHeight - 70;
+  const stickyRevealEnd = headerOffset + heroBaseHeight - 10;
+
   const stickyHeaderOpacity = scrollY.interpolate({
-    inputRange: [310, 370],
+    inputRange: [stickyRevealStart, stickyRevealEnd],
     outputRange: [0, 1],
     extrapolate: "clamp",
   });
 
   const stickyHeaderTranslateY = scrollY.interpolate({
-    inputRange: [310, 370],
+    inputRange: [stickyRevealStart, stickyRevealEnd],
     outputRange: [-20, 0],
     extrapolate: "clamp",
   });
@@ -69,12 +84,14 @@ export default function RestaurantDetailsScreen({ route }) {
 
   useFocusEffect(
     React.useCallback(() => {
-      StatusBar.setBarStyle("light-content");
+      // The strip behind the status bar is the white page background now that
+      // the hero starts below the header, so light icons would be invisible.
+      StatusBar.setBarStyle("dark-content");
       StatusBar.setHidden(false);
 
       if (Platform.OS === "android") {
-        StatusBar.setBackgroundColor("rgba(0,0,0,0.4)");
-        StatusBar.setTranslucent(false);
+        StatusBar.setBackgroundColor("transparent");
+        StatusBar.setTranslucent(true);
       }
 
       return () => {
@@ -163,10 +180,15 @@ export default function RestaurantDetailsScreen({ route }) {
       <SafeAreaView style={styles.screen}>
         <ScrollView
           style={styles.screen}
-          contentContainerStyle={styles.detailsLoadingContainer}
+          contentContainerStyle={[
+            styles.detailsLoadingContainer,
+            { paddingTop: headerOffset },
+          ]}
           showsVerticalScrollIndicator={false}
         >
-          <SkeletonBlock style={styles.detailsLoadingHero} />
+          <SkeletonBlock
+            style={[styles.detailsLoadingHero, { height: heroBaseHeight }]}
+          />
           <SkeletonBlock style={styles.detailsLoadingTitle} />
           <SkeletonBlock style={styles.detailsLoadingMeta} />
 
@@ -197,9 +219,9 @@ export default function RestaurantDetailsScreen({ route }) {
   return (
     <>
       <StatusBar
-        barStyle="light-content"
+        barStyle="dark-content"
         translucent
-        backgroundColor="rgba(0,0,0,0.4)"
+        backgroundColor="transparent"
       />
       <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
         {/* Sticky restaurant name bar */}
@@ -222,7 +244,10 @@ export default function RestaurantDetailsScreen({ route }) {
 
         <Animated.ScrollView
           style={styles.screen}
-          contentContainerStyle={styles.detailsContainer}
+          contentContainerStyle={[
+            styles.detailsContainer,
+            { paddingTop: headerOffset },
+          ]}
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -231,13 +256,7 @@ export default function RestaurantDetailsScreen({ route }) {
           scrollEventThrottle={16}
         >
           <View
-            style={[
-              styles.detailsHeroImageWrap,
-              {
-                height: 380 + heroTopInset,
-                marginTop: -heroTopInset,
-              },
-            ]}
+            style={[styles.detailsHeroImageWrap, { height: heroBaseHeight }]}
           >
             <Image
               source={toImageSource(restaurant.image)}
@@ -547,7 +566,7 @@ const styles = {
       backdropFilter: "blur(8px)",
     },
     detailsStickyTitle: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 17,
       color: colors.textBody,
       textAlign: "center",
@@ -569,15 +588,14 @@ const styles = {
       justifyContent: "center",
     },
     detailsTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 26,
-      fontWeight: "900",
       color: colors.textHeading,
       marginTop: 14,
       paddingHorizontal: 14,
     },
     detailsMeta: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 14,
       color: colors.white,
       paddingHorizontal: 14,
@@ -624,22 +642,20 @@ const styles = {
       paddingHorizontal: 10,
     },
     menuName: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 15,
-      fontWeight: "800",
       color: colors.textMenuName,
     },
     menuDescription: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 12,
       color: colors.textMenuMeta,
       marginTop: 4,
     },
     menuPrice: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 14,
       color: colors.success,
-      fontWeight: "700",
       marginTop: 6,
     },
     itemSheetScreen: {
@@ -698,20 +714,18 @@ const styles = {
       marginBottom: 14,
     },
     itemSheetName: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 20,
-      fontWeight: "800",
       color: colors.textBody,
       flex: 1,
     },
     itemSheetPrice: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 18,
-      fontWeight: "700",
       color: colors.success,
     },
     itemSheetDescription: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 14,
       color: colors.textMenuMeta,
       lineHeight: 20,
@@ -748,9 +762,8 @@ const styles = {
       opacity: 0.45,
     },
     itemSheetQtyValue: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 18,
-      fontWeight: "800",
       color: colors.textBody,
       minWidth: 18,
       textAlign: "center",
@@ -768,9 +781,8 @@ const styles = {
       opacity: 0.6,
     },
     itemSheetAddButtonText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 16,
-      fontWeight: "800",
       color: colors.white,
     },
   }),

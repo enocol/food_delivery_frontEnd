@@ -11,13 +11,13 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useWindowDimensions,
   View,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
+import { useCompactScreen } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,8 +28,7 @@ export default function ForgotPasswordScreen({ onGoToSignIn, navigation }) {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [submittedEmail, setSubmittedEmail] = useState("");
-  const { height: windowHeight } = useWindowDimensions();
-  const isCompactScreen = windowHeight < 750;
+  const isCompactScreen = useCompactScreen();
   const heroImageHeight = isCompactScreen ? 150 : 190;
 
   const handleGoToSignIn = () => {
@@ -223,13 +222,12 @@ const styles = {
       paddingTop: 12,
     },
     authTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 28,
-      fontWeight: "900",
       color: colors.textHeadingWarm,
     },
     authSubtitle: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       marginTop: 6,
       fontSize: 14,
       color: colors.textMuted,
@@ -251,14 +249,14 @@ const styles = {
       paddingHorizontal: 12,
       paddingVertical: 11,
       fontSize: 18,
-      height: 60,
+      minHeight: 60,
     },
     authInputError: {
       borderColor: colors.danger,
     },
     authFieldErrorText: {
       marginTop: -2,
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 12,
       color: colors.danger,
     },
@@ -271,10 +269,9 @@ const styles = {
       justifyContent: "center",
     },
     authPrimaryButtonText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.white,
       fontSize: 18,
-      fontWeight: "800",
     },
     authSecondaryButton: {
       borderWidth: 1,
@@ -285,10 +282,9 @@ const styles = {
       backgroundColor: colors.white,
     },
     authSecondaryButtonText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.textDark,
       fontSize: 14,
-      fontWeight: "800",
     },
   }),
 };

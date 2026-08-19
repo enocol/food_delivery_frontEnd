@@ -8,6 +8,7 @@ import NotificationCard from "../components/NotificationCard";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
 import { useNotifications } from "../context/NotificationsContext";
+import { useTransparentHeaderOffset } from "../utils/responsive";
 import * as colors from "../utils/colors";
 
 export default function NotificationsScreen({ navigation: navigationProp }) {
@@ -27,6 +28,8 @@ export default function NotificationsScreen({ navigation: navigationProp }) {
   //     headerBackgroundColor: "#ff5a1f",
   //   });
 
+  const headerOffset = useTransparentHeaderOffset();
+
   const renderItem = useCallback(
     ({ item }) => (
       <NotificationCard
@@ -39,10 +42,10 @@ export default function NotificationsScreen({ navigation: navigationProp }) {
   );
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <LinearGradient
         colors={colors.gradients.warmCream}
-        style={styles.gradientBackground}
+        style={[styles.gradientBackground, { paddingTop: headerOffset }]}
       >
         {notifications.length ? (
           <>
@@ -113,22 +116,19 @@ const styles = {
     },
     gradientBackground: {
       flex: 1,
-      marginTop: -20,
       paddingHorizontal: 16,
-      paddingTop: 24,
     },
     actionsRow: {
       gap: 12,
       marginBottom: 16,
     },
     heading: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 28,
-      fontWeight: "900",
       color: colors.textHeading,
     },
     subheading: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 14,
       color: colors.textMuted,
       marginTop: 4,
@@ -149,9 +149,8 @@ const styles = {
       paddingVertical: 10,
     },
     secondaryActionText: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 13,
-      fontWeight: "700",
       color: colors.primaryDark,
     },
     emptyState: {
@@ -172,13 +171,12 @@ const styles = {
       marginBottom: 16,
     },
     emptyTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 22,
-      fontWeight: "900",
       color: colors.textHeading,
     },
     emptySub: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 14,
       color: colors.textMuted,
       marginTop: 8,

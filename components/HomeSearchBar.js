@@ -191,7 +191,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.bgWarm,
     borderRadius: 10,
-    height: 50,
+    minHeight: 50,
+    paddingVertical: 6,
     width: "100%",
     paddingHorizontal: 10,
   },
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   fakePlaceholderStatic: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     color: colors.textSubMuted,
     flexShrink: 0,
     includeFontPadding: false,
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   },
   // This is the animated placeholder word that will fade in and out
   fakePlaceholderWord: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     color: colors.textSubMuted,
     height: PLACEHOLDER_WORD_HEIGHT,
     lineHeight: PLACEHOLDER_WORD_HEIGHT,
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   homeSearchInput: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     flex: 1,
     color: colors.textWarmDark,
     backgroundColor: "transparent",

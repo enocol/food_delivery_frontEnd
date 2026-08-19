@@ -9,36 +9,37 @@ Customers can browse restaurants, build a cart, place orders, and receive live o
 
 ```mermaid
 flowchart TD
-    subgraph BOOT["App Bootstrap  ·  App.js"]
+    subgraph BOOT["App Bootstrap  ·  app/_layout.js"]
         A1[SafeAreaProvider]
         A2[AuthProvider]
-        A3[AppContent]
-        A4[CartProvider]
-        A5["AuthenticatedApp\n─ socket listener\n─ order notification modal\n─ CartBottomSheet"]
-        A1 --> A2 --> A3
-        A3 -->|no user| AUTHSCR
-        A3 -->|authenticated| A4 --> A5
+        A2b[NotificationsProvider]
+        A3[CartProvider]
+        A4["RootNavigator\n─ auth redirects\n─ notification listeners\n─ CartBottomSheet"]
+        A5["AnimatedSplash\noverlay ~3s while the app boots behind it"]
+        A1 --> A2 --> A2b --> A3 --> A4
+        A1 -.->|renders above| A5
     end
 
-    AUTHSCR["AuthScreen\nPhone number → OTP → sign in"]
+    AUTHSCR["AuthScreen\nEmail / password · OTP · Register · ForgotPassword"]
 
-    subgraph NAV["Navigation"]
-        N1[StackNavigator]
-        N2[TabNavigator]
+    subgraph NAV["Routing  ·  expo-router (file-based, app/)"]
+        N1["app/_layout.js\nroot Stack"]
+        N2["app/MainTabs/_layout.js\nTabs + custom TabBar"]
         N3[HomeScreen]
-        N4[SearchScreen]
         N5[OrdersScreen]
         N6[ProfileScreen]
         N7[CheckoutScreen]
         N8[RestaurantDetailsScreen]
-        A5 --> N1 --> N2
-        N2 --> N3 & N4 & N5 & N6
-        N1 --> N7 & N8
+        N9[NotificationsScreen]
+        A4 --> N1 --> N2
+        N2 --> N3 & N5 & N6
+        N1 --> N7 & N8 & N9 & AUTHSCR
     end
 
     subgraph CTX["Global State  ·  React Context"]
-        C1["AuthContext\nuser · firebaseUid · authLoading\nsendPhoneCode · verifyPhoneCode\nsignOutUser · getAuthToken"]
+        C1["AuthContext\nuser · firebaseUid · authLoading\nsign in · register · signOutUser\nsocket + push registration lifecycle"]
         C2["CartContext\ncartId · cartItems · cartCount · cartTotal\naddToCart · increaseQty · decreaseQty\nclearCart · openCartSheet"]
+        C3["NotificationsContext\nstored notifications · unreadCount\nsaveExpoNotification"]
     end
 
     subgraph APIS["REST API Layer"]
@@ -46,6 +47,7 @@ flowchart TD
         R2["cartApi\nGET · POST · PUT · DELETE /carts"]
         R3["orderApi\nPOST /orders\nGET /orders/user/:uid"]
         R4["userApi  ·  likesApi\nfakePaymentApi"]
+        R5["pushTokenApi\nPOST /push-tokens"]
     end
 
     subgraph RT["Real-time  ·  Socket.io"]
@@ -55,10 +57,11 @@ flowchart TD
     subgraph UTILS["Utilities"]
         U1["cartFeedback.js\nplayCartTickSound()\nplayOrderStatusSound()"]
         U2["locationService.js\ngetCurrentLocation()\ngetLocationAddress()"]
-        U3["colors.js  ·  formatXaf.js\nimageSource.js  ·  firebase.js"]
+        U3["colors.js  ·  formatXaf.js\nimageSource.js  ·  firebase.js\nresponsive.js"]
+        U4["pushRegistration.js\nretries token registration\nwith backoff · appReady.js gate"]
     end
 
-    subgraph BACKEND["Backend  ·  192.168.0.152:5000"]
+    subgraph BACKEND["Backend  ·  EXPO_PUBLIC_API_BASE_URL"]
         B1["REST API  /api\nExpress routes"]
         B2["Socket.io Server\nauth middleware verifies JWT\nsocket.join customer:uid\nemit order_status_updated"]
         DB[(Neon PostgreSQL)]
@@ -67,15 +70,22 @@ flowchart TD
     end
 
     subgraph EXT["External Services"]
-        FB["Firebase Auth\nPhone OTP · SMS verification\ngetIdToken  →  JWT"]
+        FB["Firebase Auth\nEmail/password · OTP\ngetIdToken  →  JWT"]
+        EXPO["Expo Push Service\ngetExpoPushTokenAsync()"]
     end
 
     %% ── Context consumption ──────────────────────────────
-    AUTHSCR & N3 & N4 & N5 & N6 & N7 & N8 -->|useAuth| C1
-    N3 & N4 & N5 & N6 & N7 & N8 & A5 -->|useCart| C2
+    AUTHSCR & N3 & N5 & N6 & N7 & N8 -->|useAuth| C1
+    N3 & N5 & N6 & N7 & N8 & A4 -->|useCart| C2
+    N9 & A4 -->|useNotifications| C3
 
     %% ── Auth ↔ Firebase ─────────────────────────────────
-    C1 <-->|"signInWithPhoneNumber\nonAuthStateChanged · signOut"| FB
+    C1 <-->|"signInWithEmailAndPassword\nonAuthStateChanged · signOut"| FB
+
+    %% ── Push registration ───────────────────────────────
+    C1 -->|"onAuthStateChanged\n→ startPushRegistration()"| U4
+    U4 -->|"permission + token"| EXPO
+    U4 -->|"retry until accepted"| R5
 
     %% ── Auth → Socket lifecycle ─────────────────────────
     C1 -->|"onAuthStateChanged\n→ connectSocket(token)"| SK
@@ -84,16 +94,13 @@ flowchart TD
     %% ── Socket ↔ Backend ────────────────────────────────
     SK <-->|"WebSocket  auth:{token}"| B2
 
-    %% ── App-level socket listener ───────────────────────
-    A5 -->|getSocket| SK
-    A5 -->|"order_status_updated\n→ slide-up modal"| U1
-
     %% ── OrdersScreen socket listener ────────────────────
     N5 -->|getSocket| SK
     N5 -.->|"order_status_updated\n→ patch order in list"| N5
+    N5 -->|"status change\n→ sound + haptic"| U1
 
     %% ── Screen → API calls ──────────────────────────────
-    N3 & N4 -->|fetchRestaurants| R1
+    N3 -->|fetchRestaurants| R1
     N8 -->|fetchRestaurantMenu| R1
     N8 & N3 -->|likesApi| R4
     N7 -->|createOrder| R3
@@ -116,71 +123,86 @@ flowchart TD
     classDef backend fill:#fdf4ff,stroke:#7c3aed,color:#0c2340
     classDef ext fill:#fff1f2,stroke:#dc2626,color:#0c2340
 
-    class N3,N4,N5,N6,N7,N8,AUTHSCR screen
-    class C1,C2 context
-    class R1,R2,R3,R4 api
-    class SK,U1,U2,U3 util
+    class N3,N5,N6,N7,N8,N9,AUTHSCR screen
+    class C1,C2,C3 context
+    class R1,R2,R3,R4,R5 api
+    class SK,U1,U2,U3,U4 util
     class B1,B2,DB backend
-    class FB ext
+    class FB,EXPO ext
 ```
 
 ---
 
 ## Tech Stack
 
-| Layer      | Technology                                    |
-| ---------- | --------------------------------------------- |
-| Framework  | React Native + Expo ~54                       |
-| Language   | JavaScript (ES modules)                       |
-| Navigation | React Navigation — Native Stack + Bottom Tabs |
-| Auth       | Firebase Auth — Phone OTP                     |
-| Real-time  | Socket.io client                              |
-| Database   | Neon PostgreSQL (via backend)                 |
-| Fonts      | Nunito · Inter (Expo Google Fonts)            |
-| Audio      | expo-audio                                    |
-| Haptics    | expo-haptics                                  |
-| Location   | expo-location                                 |
+| Layer      | Technology                                        |
+| ---------- | ------------------------------------------------- |
+| Framework  | React Native 0.81 + Expo ~54 (New Architecture)   |
+| Language   | JavaScript (ES modules)                           |
+| Routing    | expo-router — file-based, `app/`                  |
+| Auth       | Firebase Auth — email/password + OTP              |
+| Real-time  | Socket.io client                                  |
+| Push       | expo-notifications + Expo push service            |
+| Database   | Neon PostgreSQL (via backend)                     |
+| Fonts      | Plus Jakarta Sans (Expo Google Fonts)             |
+| Animation  | react-native-reanimated 4                         |
+| Audio      | expo-audio                                        |
+| Haptics    | expo-haptics                                      |
+| Location   | expo-location                                     |
+
+> Routing note: `package.json` sets `"main": "expo-router/entry"`, so the app boots
+> from [`app/_layout.js`](app/_layout.js). React Navigation is still present as a
+> transitive dependency of expo-router — the tab and stack navigators come from it —
+> but there are no hand-written navigator files.
 
 ---
 
 ## Project Structure
 
+Route files under `app/` are thin re-exports of the matching component in
+`screens/` — e.g. `app/Auth.js` is `export { default } from "../screens/AuthScreen"`.
+
 ```
-App.js                          # Root — providers, authenticated shell, notification modal
-├── context/
-│   ├── AuthContext.js          # Firebase auth state + socket lifecycle
-│   └── CartContext.js          # Cart state + cart API calls
-├── navigation/
-│   ├── StackNavigator.js       # Root stack
-│   └── TabNavigator.js         # Bottom tab bar
-├── screens/
-│   ├── AuthScreen.js           # Phone OTP login
-│   ├── HomeScreen.js           # Restaurant feed
-│   ├── SearchScreen.js         # Search + cuisine filter
-│   ├── RestaurantDetailsScreen.js  # Menu + add to cart
-│   ├── CheckoutScreen.js       # Payment + order placement
-│   ├── OrdersScreen.js         # Order history + live status updates
-│   └── ProfileScreen.js        # Account settings
-├── apis/
-│   ├── restaurantApi.js
-│   ├── cartApi.js
-│   ├── orderApi.js
-│   ├── userApi.js
-│   ├── likesApi.js
-│   └── fakePaymentApi.js
-├── components/
-│   ├── RestaurantCard.js
-│   ├── CartBottomSheet.js
-│   ├── CartHeaderButton.js
-│   ├── LikeButton.js
-│   └── AnimatedTabBarButton.js
-└── utils/
-    ├── socket.js               # Socket.io singleton
-    ├── cartFeedback.js         # Audio + haptics
-    ├── firebase.js             # Firebase config
-    ├── locationService.js
-    ├── colors.js
-    └── formatXaf.js
+app/                            # expo-router routes (the entry point)
+├── _layout.js                  # Root — providers, Stack, splash, notification listeners
+├── index.js                    # Redirects to /MainTabs/HomeTab or /Auth
+├── Auth.js  Register.js  ForgotPassword.js
+├── RestaurantDetails.js  Checkout.js  Notifications.js
+└── MainTabs/
+    ├── _layout.js              # Tabs + custom TabBar
+    └── HomeTab.js  OrdersTab.js  ProfileTab.js
+context/
+├── AuthContext.js              # Firebase auth + socket + push registration lifecycle
+├── CartContext.js              # Cart state + cart API calls
+└── NotificationsContext.js     # Stored notifications + unread count
+screens/
+├── AuthScreen.js  RegisterScreen.js  ForgotPasswordScreen.js
+├── HomeScreen.js               # Restaurant feed + food filter + search
+├── RestaurantDetailsScreen.js  # Menu + add to cart
+├── CheckoutScreen.js           # MoMo / Orange Money / cash + order placement
+├── OrdersScreen.js             # Order history + live status updates
+├── ProfileScreen.js            # Account settings
+└── NotificationsScreen.js      # Push + order notification history
+apis/
+├── restaurantApi.js  cartApi.js  orderApi.js
+└── userApi.js  likesApi.js  fakePaymentApi.js  pushTokenApi.js
+components/
+├── AnimatedSplash.js           # ~3s branded splash overlay
+├── TabBar.js  TabBarButton.js  # Custom animated tab bar
+├── RestaurantCard.js  CartBottomSheet.js  CartHeaderButton.js
+├── HomeFoodFilter.js  HomeSearchBar.js  HomeGreetingBanner.js
+├── NotificationCard.js  NotificationHeaderButton.js
+├── LikeButton.js  FloatingBasketButton.js  LoadingPlaceholder.js
+└── styles.js  useRootCartHeader.js
+utils/
+├── socket.js                   # Socket.io singleton
+├── pushNotifications.js        # Permission + Expo token
+├── pushRegistration.js         # Retry-with-backoff token registration
+├── appReady.js                 # Gate that holds OS prompts until the splash clears
+├── responsive.js               # Header heights, safe-area offsets, breakpoints
+├── cartFeedback.js             # Audio + haptics
+├── firebase.js  locationService.js
+└── colors.js  formatXaf.js  imageSource.js  formatRestaurantName.js
 ```
 
 ---
@@ -190,12 +212,12 @@ App.js                          # Root — providers, authenticated shell, notif
 When a restaurant accepts or cancels an order:
 
 1. Backend emits `order_status_updated` to the customer's socket room (`customer:<firebaseUid>`)
-2. `AuthenticatedApp` (root level) receives the event on any screen and shows a slide-up notification modal with sound and haptic feedback
-3. `OrdersScreen` independently patches the order's status in the list in-place — no reload needed
+2. `OrdersScreen` patches the order's status in the list in-place — no reload needed — and plays a sound plus haptic feedback
+3. Independently, a push notification is delivered via Expo and stored by `NotificationsContext`, surfacing on `NotificationsScreen` and in the header badge
 
 ```
 Restaurant dashboard action
   → backend: io.to("customer:<uid>").emit("order_status_updated", { orderId, status, updatedAt })
-  → AuthenticatedApp: modal slides up  +  hint-notification.wav  +  haptic
-  → OrdersScreen: order card status updates live
+  → OrdersScreen: order card status updates live  +  hint-notification.wav  +  haptic
+  → expo push  →  NotificationsContext  →  unread badge + Notifications screen
 ```

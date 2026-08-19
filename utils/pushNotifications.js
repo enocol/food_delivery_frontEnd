@@ -6,6 +6,11 @@ import * as Notifications from "expo-notifications";
 
 const DEVICE_ID_STORAGE_KEY = "mboloeats.pushDeviceId";
 
+// The caller retries transient failures but must not loop on a refusal, so
+// the two are reported separately rather than both collapsing to null.
+export const PUSH_PERMISSION_DENIED = "permission_denied";
+export const PUSH_TRANSIENT_ERROR = "transient_error";
+
 async function getOrCreateDeviceId() {
   const existing = await AsyncStorage.getItem(DEVICE_ID_STORAGE_KEY);
   if (existing) {
@@ -42,14 +47,16 @@ export async function registerForPushNotificationsAsync() {
       if (__DEV__) {
         console.warn("[push] Notification permission was not granted");
       }
-      return null;
+      return { ok: false, reason: PUSH_PERMISSION_DENIED };
     }
 
+    // Reaching Expo's token service needs the network, so this is one of the
+    // steps that legitimately fails offline and is worth retrying.
     const tokenResponse = await Notifications.getExpoPushTokenAsync();
     const token = tokenResponse?.data || null;
 
     if (!token) {
-      return null;
+      return { ok: false, reason: PUSH_TRANSIENT_ERROR };
     }
 
     const deviceId = await getOrCreateDeviceId();
@@ -60,17 +67,20 @@ export async function registerForPushNotificationsAsync() {
     const locale = Intl.DateTimeFormat().resolvedOptions().locale || null;
 
     return {
-      fcm_token: token,
-      platform: Platform.OS,
-      device_id: deviceId,
-      app_version: appVersion,
-      locale,
-      is_active: true,
+      ok: true,
+      payload: {
+        fcm_token: token,
+        platform: Platform.OS,
+        device_id: deviceId,
+        app_version: appVersion,
+        locale,
+        is_active: true,
+      },
     };
   } catch (error) {
     if (__DEV__) {
       console.error("[push] Failed to register for push notifications:", error);
     }
-    return null;
+    return { ok: false, reason: PUSH_TRANSIENT_ERROR, error };
   }
 }

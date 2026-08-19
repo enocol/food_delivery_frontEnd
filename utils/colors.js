@@ -67,7 +67,7 @@ export const bgPaymentOption = "#f0f9ff"; // payment phone-input background
 export const bgGreenTint = "#e0f2fe"; // alias of successTint
 export const shadow = "#0c2340"; // drop-shadow color
 export const handle = "#bae6fd"; // bottom-sheet drag handle
-export const splash = "#0284c7"; // loading / splash screen background
+export const splash = "#ffffff"; // loading / splash screen background
 
 // ─── Borders ──────────────────────────────────────────────────────────────────
 export const border = "#bae6fd"; // default sky-blue border

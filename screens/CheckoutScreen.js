@@ -20,6 +20,10 @@ import { requestMobileMoneyPayment } from "../apis/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
 import { getCurrentLocation } from "../utils/locationService";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  useTransparentHeaderOffset,
+  CARD_MAX_WIDTH,
+} from "../utils/responsive";
 
 const PAYMENT_METHODS = [
   { id: "mtn-momo", label: "MTN MoMo" },
@@ -39,6 +43,7 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const headerOffset = useTransparentHeaderOffset();
 
   const itemCount = Object.values(cartItems).reduce(
     (sum, item) => sum + item.qty,
@@ -256,7 +261,10 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={["left", "right", "bottom"]}
+    >
       <View style={styles.checkoutContainer}>
         <LinearGradient
           colors={colors.gradients.greenLight}
@@ -266,7 +274,10 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
             enableOnAndroid
             keyboardShouldPersistTaps="handled"
             extraScrollHeight={24}
-            contentContainerStyle={styles.checkoutScreenContent}
+            contentContainerStyle={[
+              styles.checkoutScreenContent,
+              { paddingTop: headerOffset },
+            ]}
           >
             <View style={styles.paymentPickerCard}>
               <Text style={styles.paymentPickerTitle}>Order summary</Text>
@@ -366,20 +377,19 @@ const styles = {
   ...StyleSheet.create({
     safeArea: {
       flex: 1,
-      marginTop: 25,
-      justifyContent: "center",
       marginHorizontal: 12,
       borderRadius: 18,
       padding: 14,
     },
     checkoutContainer: {
-      flex: 0.8,
-      justifyContent: "center",
+      flex: 1,
       backgroundColor: colors.white,
+      width: "100%",
+      maxWidth: CARD_MAX_WIDTH,
+      alignSelf: "center",
     },
     checkoutScreenContent: {
       paddingHorizontal: 14,
-      paddingTop: 16,
       paddingBottom: 28,
     },
     checkoutMetaText: {
@@ -401,15 +411,14 @@ const styles = {
       justifyContent: "space-between",
     },
     checkoutLabel: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       color: colors.successText,
       fontSize: 12,
     },
     checkoutTotal: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.white,
       fontSize: 20,
-      fontWeight: "900",
     },
     checkoutButton: {
       backgroundColor: colors.amberLight,
@@ -418,9 +427,8 @@ const styles = {
       paddingHorizontal: 16,
     },
     checkoutText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.textAmberButton,
-      fontWeight: "800",
     },
     checkoutScreenCta: {
       marginHorizontal: 8,
@@ -434,10 +442,9 @@ const styles = {
       opacity: 0.6,
     },
     checkoutScreenCtaText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.white,
       fontSize: 15,
-      fontWeight: "800",
     },
     checkoutStatusText: {
       marginHorizontal: 10,

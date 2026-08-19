@@ -1,3 +1,6 @@
+# EAS Build upload rules. When this file exists EAS uses it INSTEAD of
+# .gitignore, so it mirrors .gitignore with one deliberate exception below.
+
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -31,7 +34,8 @@ yarn-error.*
 *.pem
 
 # local env files
-.env
+# .env is deliberately NOT ignored here: EAS needs it at build time
+# to inline EXPO_PUBLIC_* vars. It stays out of git via .gitignore.
 
 # typescript
 *.tsbuildinfo

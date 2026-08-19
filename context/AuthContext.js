@@ -16,9 +16,11 @@ import {
 } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { syncUserWithNeon } from "../apis/userApi";
-import { registerPushToken } from "../apis/pushTokenApi";
 import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
-import { registerForPushNotificationsAsync } from "../utils/pushNotifications";
+import {
+  startPushRegistration,
+  stopPushRegistration,
+} from "../utils/pushRegistration";
 import { AppState } from "react-native";
 
 const AuthContext = createContext(null);
@@ -95,40 +97,17 @@ export function AuthProvider({ children }) {
           await ensureCustomerAccountSynced(nextUser);
           connectSocket(() => nextUser.getIdToken());
 
-          // Request permissions and register the push token on login/start.
-          registerForPushNotificationsAsync().then(async (pushPayload) => {
-            const isNewSignup = newSignupUidRef.current === nextUser.uid;
-
-            if (!pushPayload) {
-              if (__DEV__ && isNewSignup) {
-                console.log("[push] registration result for new user-----:", {
-                  firebase_uid: nextUser.uid,
-                  registered: false,
-                  reason: "permission_not_granted_or_no_token",
-                });
-              }
-              if (isNewSignup) {
-                newSignupUidRef.current = null;
-              }
-              return;
-            }
-
-            const payload = {
-              firebase_uid: nextUser.uid,
-              ...pushPayload,
-            };
-
-            const registered = await registerPushToken(nextUser, payload);
-
-            if (isNewSignup) {
-              newSignupUidRef.current = null;
-            }
-          });
+          // Fire-and-forget: it waits for the splash to hand off, then retries
+          // on its own until the token is accepted. See utils/pushRegistration.
+          const isNewSignup = newSignupUidRef.current === nextUser.uid;
+          newSignupUidRef.current = null;
+          startPushRegistration({ isNewSignup });
         } catch {
           // Token fetch failed — socket stays disconnected until next auth event.
         }
       } else {
         disconnectSocket();
+        stopPushRegistration();
       }
     });
 

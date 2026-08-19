@@ -24,9 +24,8 @@ const styles = {
       // transform: [{ scale: 0.96 }],
     },
     likeCountText: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 14,
-      fontWeight: "700",
       color: colors.textDark,
     },
   }),

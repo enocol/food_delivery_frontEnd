@@ -20,6 +20,7 @@ import {
   getLocationAddress,
 } from "../utils/locationService";
 import useRootCartHeader from "../components/useRootCartHeader";
+import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 
@@ -45,15 +46,16 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
             {locationLabel}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={colors.white} />
+          <Ionicons name="chevron-down" size={25} color={colors.white} />
         </View>
       </Pressable>
     ),
     [locationLabel],
   );
 
+  const headerHeight = useRootHeaderHeight();
   useRootCartHeader(navigation, "Profile", {
-    headerHeight: 130,
+    headerHeight,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
@@ -112,11 +114,13 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
+  // No top edge below: the scroll content's paddingTop already includes the
+  // top inset via headerHeight, so SafeAreaView must not add it again.
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <LinearGradient
         colors={colors.gradients.warmCream}
-        style={styles.gradientBackground}
+        style={styles.screenBody}
       >
         <Modal
           visible={isLocationModalVisible}
@@ -148,17 +152,15 @@ export default function ProfileScreen({ navigation }) {
                   {locationLabel}
                 </Text>
               </View>
-              {locationCoords ? (
-                <Text style={styles.homeLocationModalCoords}>
-                  {locationCoords}
-                </Text>
-              ) : null}
             </Pressable>
           </Pressable>
         </Modal>
 
         <ScrollView
-          contentContainerStyle={styles.profileWrap}
+          contentContainerStyle={[
+            styles.profileWrap,
+            { paddingTop: headerHeight + 20 },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.profileCard}>
@@ -178,33 +180,6 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.profileSignOutText}>Sign out</Text>
             </Pressable>
           </View>
-
-          <View style={styles.infoCard}>
-            <Text style={styles.infoCardTitle}>Account summary</Text>
-            <Text style={styles.infoLine}>
-              Current cart total: {formatXaf(cartTotal)}
-            </Text>
-            <Text style={styles.infoLine}>
-              Current Delivery Address: {locationLabel}
-            </Text>
-            {locationCoords ? (
-              <Text style={styles.infoLine}>Coordinates: {locationCoords}</Text>
-            ) : null}
-            <Pressable
-              style={[
-                styles.profileLocationButton,
-                locationLoading && styles.profileLocationButtonDisabled,
-              ]}
-              onPress={loadCurrentLocation}
-              disabled={locationLoading}
-            >
-              <Text style={styles.profileLocationButtonText}>
-                {locationLoading
-                  ? "Refreshing location..."
-                  : "Refresh location"}
-              </Text>
-            </Pressable>
-          </View>
         </ScrollView>
       </LinearGradient>
     </SafeAreaView>
@@ -214,6 +189,13 @@ export default function ProfileScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
+    // Replaces the shared `gradientBackground`, whose marginTop: -40 was a
+    // hardcoded cancel for top safe-area padding this screen no longer adds.
+    // That constant only matched iOS notch insets and pulled the body up under
+    // the header on Android, where the inset is ~23dp.
+    screenBody: {
+      flex: 1,
+    },
     homeHeaderLocationContainer: {
       paddingLeft: 16,
       maxWidth: Platform.OS === "ios" ? "80%" : "60%",
@@ -223,9 +205,8 @@ const styles = {
       marginTop: 10,
     },
     homeHeaderLocationLabel: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 15,
-      fontWeight: "700",
       color: colors.white,
       marginBottom: 2,
     },
@@ -235,10 +216,9 @@ const styles = {
       gap: 4,
     },
     homeHeaderLocationText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       flexShrink: 1,
       fontSize: 14,
-      fontWeight: "800",
       color: colors.white,
     },
     homeLocationModalBackdrop: {
@@ -274,9 +254,8 @@ const styles = {
       borderColor: colors.black,
     },
     homeLocationModalTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 18,
-      fontWeight: "900",
       color: colors.textDark,
     },
     homeLocationModalRow: {
@@ -285,7 +264,7 @@ const styles = {
       gap: 8,
     },
     homeLocationModalText: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       flex: 1,
       fontSize: 15,
       lineHeight: 22,
@@ -293,21 +272,23 @@ const styles = {
     },
     homeLocationModalCoords: {
       marginTop: 10,
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 13,
       color: colors.textMuted,
     },
     profileWrap: {
-      paddingVertical: 100,
+      paddingBottom: 40,
       gap: 14,
+      alignItems: "center",
     },
     profileCard: {
-      backgroundColor: colors.white,
+      // backgroundColor: colors.white,
       borderRadius: 18,
       padding: 20,
       alignItems: "center",
-      borderWidth: 1,
       borderColor: colors.border,
+      width: "100%",
+      maxWidth: CARD_MAX_WIDTH,
     },
     avatarCircle: {
       width: 72,
@@ -320,19 +301,17 @@ const styles = {
       marginTop: 20,
     },
     avatarText: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.white,
       fontSize: 22,
-      fontWeight: "900",
     },
     profileName: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 22,
-      fontWeight: "900",
       color: colors.textHeadingWarm,
     },
     profileMeta: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       marginTop: 4,
       fontSize: 14,
       color: colors.textMuted,
@@ -348,10 +327,9 @@ const styles = {
       opacity: 0.6,
     },
     profileSignOutText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.white,
       fontSize: 14,
-      fontWeight: "800",
     },
     infoCard: {
       backgroundColor: colors.white,
@@ -359,19 +337,26 @@ const styles = {
       padding: 16,
       borderWidth: 1,
       borderColor: colors.border,
+      width: "100%",
+      maxWidth: CARD_MAX_WIDTH,
     },
     infoCardTitle: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 16,
-      fontWeight: "800",
       color: colors.textHeadingWarm,
       marginBottom: 10,
     },
     infoLine: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 14,
       color: colors.textMid,
       marginBottom: 8,
+    },
+
+    infoLineLabel: {
+      fontFamily: "PlusJakartaSans_600SemiBold",
+      fontSize: 16,
+      color: colors.textHeadingWarm,
     },
     profileLocationButton: {
       marginTop: 6,

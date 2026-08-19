@@ -163,15 +163,13 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
   },
   badgeText: {
-    fontFamily: "Nunito_800ExtraBold",
+    fontFamily: "PlusJakartaSans_800ExtraBold",
     fontSize: 11,
-    fontWeight: "800",
     color: colors.white,
   },
   buttonText: {
-    fontFamily: "Nunito_800ExtraBold",
+    fontFamily: "PlusJakartaSans_800ExtraBold",
     fontSize: 15,
-    fontWeight: "800",
     color: colors.white,
   },
 });

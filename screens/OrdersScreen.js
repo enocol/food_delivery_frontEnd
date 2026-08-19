@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
+import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import * as colors from "../utils/colors";
@@ -307,19 +308,24 @@ export default function OrdersScreen({ navigation }) {
           <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
             {deliveryLocation}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={colors.white} />
+          <Ionicons name="chevron-down" size={25} color={colors.white} />
         </View>
       </Pressable>
     ),
     [deliveryLocation],
   );
 
+  const headerHeight = useRootHeaderHeight();
   useRootCartHeader(navigation, "Orders", {
-    headerHeight: 130,
+    headerHeight,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
   });
+  // headerTransparent (set on OrdersTab) floats the header over the body,
+  // so it doesn't auto-reserve space the way HomeTab's solid header does -
+  // the body has to push itself down by the same headerHeight manually.
+  const contentTopOffset = headerHeight + 16;
 
   const loadOrders = useCallback(
     async ({ refresh = false } = {}) => {
@@ -420,7 +426,10 @@ export default function OrdersScreen({ navigation }) {
       return (
         <ScrollView
           style={styles.screen}
-          contentContainerStyle={styles.ordersLoadingContent}
+          contentContainerStyle={[
+            styles.ordersLoadingContent,
+            { paddingTop: contentTopOffset },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <SkeletonBlock style={styles.ordersLoadingHeading} />
@@ -475,7 +484,10 @@ export default function OrdersScreen({ navigation }) {
         keyExtractor={keyExtractor}
         renderItem={renderOrder}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.ordersListContent}
+        contentContainerStyle={[
+          styles.ordersListContent,
+          { paddingTop: contentTopOffset },
+        ]}
         refreshing={refreshing}
         onRefresh={handleRefresh}
         ListHeaderComponent={
@@ -489,11 +501,13 @@ export default function OrdersScreen({ navigation }) {
     );
   };
 
+  // No top edge below: contentTopOffset already includes the top inset via
+  // headerHeight, so letting SafeAreaView add it again double-counts it.
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <LinearGradient
         colors={colors.gradients.warmCream}
-        style={styles.gradientBackground}
+        style={styles.screenBody}
       >
         <Modal
           visible={isLocationModalVisible}
@@ -537,6 +551,13 @@ export default function OrdersScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
+    // Replaces the shared `gradientBackground`, whose marginTop: -40 was a
+    // hardcoded cancel for top safe-area padding this screen no longer adds.
+    // That constant only matched iOS notch insets and pulled the body up under
+    // the header on Android, where the inset is ~23dp.
+    screenBody: {
+      flex: 1,
+    },
     homeHeaderLocationContainer: {
       paddingLeft: 16,
       maxWidth: Platform.OS === "ios" ? "80%" : "60%",
@@ -546,9 +567,8 @@ const styles = {
       marginTop: 10,
     },
     homeHeaderLocationLabel: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 15,
-      fontWeight: "700",
       color: colors.white,
       marginBottom: 2,
     },
@@ -558,10 +578,9 @@ const styles = {
       gap: 4,
     },
     homeHeaderLocationText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       flexShrink: 1,
       fontSize: 14,
-      fontWeight: "800",
       color: colors.white,
     },
     homeLocationModalBackdrop: {
@@ -597,9 +616,8 @@ const styles = {
       borderColor: colors.black,
     },
     homeLocationModalTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 18,
-      fontWeight: "900",
       color: colors.textDark,
     },
     homeLocationModalRow: {
@@ -608,22 +626,18 @@ const styles = {
       gap: 8,
     },
     homeLocationModalText: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       flex: 1,
       fontSize: 15,
       lineHeight: 22,
       color: colors.textMid,
     },
     ordersListContent: {
-      marginTop: 20,
-      paddingTop: 40,
       padding: 16,
       paddingBottom: 120,
       gap: 10,
     },
     ordersLoadingContent: {
-      marginTop: 20,
-      paddingTop: 40,
       paddingHorizontal: 16,
       paddingBottom: 120,
       gap: 12,
@@ -631,7 +645,6 @@ const styles = {
     ordersLoadingHeading: {
       width: "54%",
       height: 28,
-      marginTop: 60,
       marginBottom: 8,
     },
     ordersLoadingCard: {
@@ -677,20 +690,20 @@ const styles = {
       height: 16,
     },
     ordersHeading: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 28,
-      fontWeight: "900",
       color: colors.textHeading,
       marginBottom: 16,
-      paddingTop: 100,
+      width: "100%",
+      maxWidth: CARD_MAX_WIDTH,
+      alignSelf: "center",
     },
     orderRestaurantGroup: {
       marginTop: 10,
     },
     orderRestaurantText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 13,
-      fontWeight: "800",
       color: colors.textDark,
       marginBottom: 4,
     },
@@ -702,13 +715,13 @@ const styles = {
       marginBottom: 2,
     },
     orderItemName: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 13,
       color: colors.textMid,
       flex: 1,
     },
     orderItemQty: {
-      fontFamily: "Inter_500Medium",
+      fontFamily: "PlusJakartaSans_500Medium",
       fontSize: 13,
       color: colors.textMid,
       marginLeft: 8,
@@ -732,6 +745,9 @@ const styles = {
       overflow: "hidden",
       borderWidth: 1,
       borderColor: colors.border,
+      width: "100%",
+      maxWidth: CARD_MAX_WIDTH,
+      alignSelf: "center",
     },
     paymentStrip: {
       flexDirection: "row",
@@ -747,7 +763,7 @@ const styles = {
       borderRadius: 4,
     },
     paymentStripText: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 11,
       letterSpacing: 0.3,
       textTransform: "uppercase",
@@ -768,7 +784,7 @@ const styles = {
       textTransform: "capitalize",
     },
     orderMetaText: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       marginTop: 6,
       fontSize: 13,
       color: colors.textMuted,
@@ -780,10 +796,9 @@ const styles = {
       color: colors.textMid,
     },
     orderTotalText: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       marginTop: 8,
       fontSize: 15,
-      fontWeight: "900",
       color: colors.textDark,
     },
     orderRetryButton: {

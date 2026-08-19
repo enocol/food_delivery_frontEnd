@@ -1,24 +1,21 @@
 import "react-native-reanimated";
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Image, View } from "react-native";
 import * as Notifications from "expo-notifications";
-import { Ionicons } from "@expo/vector-icons";
+import * as SplashScreen from "expo-splash-screen";
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
   useFonts,
-} from "@expo-google-fonts/inter";
-import {
-  Nunito_400Regular,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-  Nunito_800ExtraBold,
-  Nunito_900Black,
-} from "@expo-google-fonts/nunito";
+} from "@expo-google-fonts/plus-jakarta-sans";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import AnimatedSplash from "../components/AnimatedSplash";
 import CartBottomSheet from "../components/CartBottomSheet";
+import HeaderBackButton from "../components/HeaderBackButton";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { CartProvider, useCart } from "../context/CartContext";
 import {
@@ -26,9 +23,15 @@ import {
   useNotifications,
 } from "../context/NotificationsContext";
 import { auth } from "../utils/firebase";
+import { markAppReady } from "../utils/appReady";
 import * as colors from "../utils/colors";
 
 auth.languageCode = "en";
+
+// Hold the OS splash until <AnimatedSplash /> has laid out, so there is never
+// a blank frame between the two.
+SplashScreen.preventAutoHideAsync().catch(() => {});
+SplashScreen.setOptions({ duration: 250, fade: true });
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -145,18 +148,13 @@ function RootNavigator() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="Auth" options={{ headerShown: false }} />
         <Stack.Screen name="Register" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="ForgotPassword"
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="ForgotPassword" options={{ headerShown: false }} />
         <Stack.Screen name="MainTabs" options={{ headerShown: false }} />
         <Stack.Screen
           name="Notifications"
           options={{
             title: "Notifications",
             headerShown: true,
-            headerBackButtonDisplayMode: "minimal",
-
             headerStyle: {
               backgroundColor: "#ff5a1f",
             },
@@ -166,17 +164,8 @@ function RootNavigator() {
               fontSize: 20,
               fontWeight: "bold",
             },
-            // headerRight: () => (
-            //   <View
-            //     style={{
-            //       marginRight: 16,
-            //       alignItems: "center",
-            //       justifyContent: "center",
-            //     }}
-            //   >
-            //     {/* <Ionicons name="notifications" size={24} color={colors.white} /> */}
-            //   </View>
-            // ),
+            headerBackVisible: false,
+            headerLeft: () => <HeaderBackButton color={colors.black} />,
           }}
         />
         <Stack.Screen
@@ -184,10 +173,8 @@ function RootNavigator() {
           options={{
             title: "",
             headerTransparent: true,
-            headerBackVisible: true,
-            headerBackTitle: "",
-            headerBackButtonDisplayMode: "minimal",
-            headerTintColor: colors.black,
+            headerBackVisible: false,
+            headerLeft: () => <HeaderBackButton color={colors.black} />,
           }}
         />
         <Stack.Screen
@@ -195,11 +182,9 @@ function RootNavigator() {
           options={{
             title: "",
             headerShown: true,
-            headerBackButtonDisplayMode: "minimal",
-            headerBackTitleVisible: false,
-            headerBackVisible: true,
             headerTransparent: true,
-            headerTintColor: colors.black,
+            headerBackVisible: false,
+            headerLeft: () => <HeaderBackButton color={colors.black} />,
           }}
         />
       </Stack>
@@ -222,18 +207,32 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
-    Nunito_400Regular,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
-    Nunito_800ExtraBold,
-    Nunito_900Black,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
+  const [splashDone, setSplashDone] = useState(false);
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
   });
 
-  if (!fontsLoaded) {
+  // Handing off on layout (rather than on mount) guarantees the animated
+  // splash is already on screen before the OS one goes away.
+  const handleSplashLayout = useCallback(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  const handleSplashFinish = useCallback(() => {
+    // Releases anything holding back OS-level prompts until a real screen is
+    // on display — see utils/appReady.js.
+    markAppReady();
+    setSplashDone(true);
+  }, []);
+
+  // Fonts are bundled locally, so this is a frame or two at most — the OS
+  // splash is still covering the screen for it. On a font error we carry on
+  // with system fonts rather than holding the OS splash open forever.
+  if (!fontsLoaded && !fontError) {
     return <View style={{ flex: 1, backgroundColor: colors.splash }} />;
   }
 
@@ -246,6 +245,14 @@ export default function RootLayout() {
           </CartProvider>
         </NotificationsProvider>
       </AuthProvider>
+      {/* Rendered last so it sits above the app, which boots (auth, cart,
+          socket) behind it while the branding plays. */}
+      {splashDone ? null : (
+        <AnimatedSplash
+          onLayout={handleSplashLayout}
+          onFinish={handleSplashFinish}
+        />
+      )}
     </SafeAreaProvider>
   );
 }

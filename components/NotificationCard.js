@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import sharedStyles from "./styles";
 import * as colors from "../utils/colors";
+import { CARD_MAX_WIDTH } from "../utils/responsive";
 
 function formatNotificationDate(value) {
   if (!value) {
@@ -84,6 +85,9 @@ const styles = {
       shadowRadius: 12,
       elevation: 3,
       gap: 12,
+      width: "100%",
+      maxWidth: CARD_MAX_WIDTH,
+      alignSelf: "center",
     },
     notificationCardUnread: {
       borderColor: colors.primary,
@@ -107,20 +111,19 @@ const styles = {
     },
     notificationTitle: {
       flex: 1,
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 17,
-      fontWeight: "800",
       color: colors.textHeading,
     },
     notificationDate: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 12,
       color: colors.textMuted,
       textAlign: "right",
       maxWidth: 120,
     },
     notificationBody: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 14,
       lineHeight: 20,
       color: colors.textBody,
@@ -133,7 +136,7 @@ const styles = {
       paddingVertical: 6,
     },
     notificationMetaText: {
-      fontFamily: "Inter_500Medium",
+      fontFamily: "PlusJakartaSans_500Medium",
       fontSize: 12,
       color: colors.primaryDark,
     },
@@ -149,9 +152,8 @@ const styles = {
       paddingVertical: 10,
     },
     secondaryActionText: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 13,
-      fontWeight: "700",
       color: colors.primaryDark,
     },
     deleteActionButton: {
@@ -161,9 +163,8 @@ const styles = {
       paddingVertical: 10,
     },
     deleteActionText: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 13,
-      fontWeight: "700",
       color: colors.dangerText,
     },
   }),

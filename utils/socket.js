@@ -1,16 +1,20 @@
 import { io } from "socket.io-client";
 
-// Derive the socket server URL from the same env var used by REST calls.
-// EXPO_PUBLIC_API_BASE_URL is e.g. "http://192.168.0.152:5000/api"
-// socket.io treats the path segment ("/api") as a namespace, which is correct.
-// const SOCKET_URL = (
-//   process.env.EXPO_PUBLIC_API_BASE_URL || "http://192.168.0.152:5000/api"
-// )
-
-const SOCKET_URL = "http://192.168.0.152:5000"
-
+// Derive the socket server URL from the same env var the REST calls use, so
+// pointing at a new backend only means editing .env.
+//
+// EXPO_PUBLIC_API_BASE_URL carries an "/api" suffix for REST, but socket.io
+// reads a trailing path segment as a NAMESPACE rather than a path. Passing the
+// URL verbatim would try to join namespace "/api", which this server does not
+// serve — verified against the deployment: /socket.io/ handshakes, while
+// /api/socket.io/ returns 404. So strip it and connect to the origin.
+const SOCKET_URL = (
+  process.env.EXPO_PUBLIC_API_BASE_URL || "http://192.168.0.152:5000/api"
+)
   .replace(/["']/g, "") // strip any accidental quotes from .env
-  .replace(/\/+$/, ""); // strip trailing slashes
+  .trim() // .env has whitespace around the "="
+  .replace(/\/+$/, "") // strip trailing slashes
+  .replace(/\/api$/, ""); // REST-only path segment, not a socket namespace
 
 /** @type {import("socket.io-client").Socket | null} */
 let socket = null;

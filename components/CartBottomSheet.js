@@ -71,9 +71,8 @@ const styles = {
       gap: 12,
     },
     cartTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 24,
-      fontWeight: "900",
       color: colors.textHeading,
     },
     clearText: {
@@ -106,13 +105,12 @@ const styles = {
       paddingTop: 6,
     },
     cartSectionTitle: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 16,
-      fontWeight: "800",
       color: colors.textHeading,
     },
     cartSectionMeta: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 12,
       color: colors.textCartRestaurant,
     },
@@ -164,22 +162,20 @@ const styles = {
       marginLeft: 10,
     },
     cartItemName: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 14,
-      fontWeight: "800",
       color: colors.textItemName,
     },
     cartItemRestaurant: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 12,
       color: colors.textCartRestaurant,
       marginTop: 2,
     },
     cartItemPrice: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 13,
       color: colors.success,
-      fontWeight: "700",
       marginTop: 4,
     },
     qtyControl: {
@@ -209,20 +205,19 @@ const styles = {
       color: colors.successDeeper,
     },
     checkoutLabel: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       color: colors.textHeading,
       fontSize: 12,
       textTransform: "uppercase",
       letterSpacing: 0.6,
     },
     checkoutTotal: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.successDark,
       fontSize: 20,
-      fontWeight: "900",
     },
     checkoutSummaryHint: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 12,
       color: colors.textCartRestaurant,
       marginTop: 4,
@@ -255,13 +250,12 @@ const styles = {
       elevation: 4,
     },
     checkoutText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.white,
       fontSize: 15,
-      fontWeight: "800",
     },
     checkoutMetaText: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       color: colors.white,
       fontSize: 11,
       marginTop: 2,
@@ -275,10 +269,9 @@ const styles = {
       paddingHorizontal: 40,
     },
     orderNowText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       color: colors.white,
       fontSize: 16,
-      fontWeight: "800",
     },
   }),
 };

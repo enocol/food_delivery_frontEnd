@@ -10,16 +10,26 @@ const API_BASE_URL =
 
 const PUSH_TOKENS_ENDPOINT = `${API_BASE_URL.replace(/\/+$/, "")}/push-tokens`;
 
+// Retryable statuses: the server is unreachable, overloaded, or asking us to
+// back off. Any other 4xx means this payload will be rejected just as hard
+// next time, so retrying it only burns battery.
+function isRetryableStatus(status) {
+  return status >= 500 || status === 408 || status === 429;
+}
+
+// Returns { ok, retryable } so the caller can decide whether another attempt
+// could plausibly succeed.
 export async function registerPushToken(firebaseUser, payload) {
   if (!firebaseUser || !payload?.fcm_token) {
-    return false;
+    return { ok: false, retryable: false };
   }
 
   let idToken;
   try {
     idToken = await firebaseUser.getIdToken();
   } catch {
-    return false;
+    // Minting an ID token can hit the network, so this is worth another go.
+    return { ok: false, retryable: true };
   }
 
   const requestBody = {
@@ -59,12 +69,20 @@ export async function registerPushToken(firebaseUser, payload) {
     }
 
     if (!response.ok) {
-      await response.text();
-      return false;
+      const body = await response.text();
+      if (__DEV__) {
+        console.warn(
+          `[push] backend rejected token (${response.status}):`,
+          body,
+        );
+      }
+      return { ok: false, retryable: isRetryableStatus(response.status) };
     }
 
-    return true;
+    return { ok: true };
   } catch (networkError) {
-    return false;
+    // fetch only rejects on a genuine network failure, which is exactly the
+    // case we want to keep retrying.
+    return { ok: false, retryable: true };
   }
 }

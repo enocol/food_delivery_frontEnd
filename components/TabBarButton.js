@@ -81,8 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabLabel: {
-    fontFamily: "Nunito_800ExtraBold",
+    fontFamily: "PlusJakartaSans_800ExtraBold",
     fontSize: 10,
-    fontWeight: "800",
   },
 });

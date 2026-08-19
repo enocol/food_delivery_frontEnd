@@ -14,7 +14,6 @@ import {
   Easing,
   FlatList,
   Modal,
-  PixelRatio,
   Pressable,
   StyleSheet,
   Text,
@@ -28,6 +27,7 @@ import {
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
+import { useMeasuredHeaderHeight } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import * as colors from "../utils/colors";
@@ -46,7 +46,7 @@ import { FILTER_ALIASES, FOOD_FILTERS } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
 import HomeFoodFilter from "../components/HomeFoodFilter";
-import HomeGreetingBanner from "../components/HomeGreetingBanner";
+// import HomeGreetingBanner from "../components/HomeGreetingBanner";
 import FloatingBasketButton from "../components/FloatingBasketButton";
 
 function getFilterTerms(food) {
@@ -72,7 +72,6 @@ function menuItemMatchesFilter(menuItem, terms) {
 }
 
 const SCROLL_DELTA_DEADZONE = 2;
-const HOME_HEADER_CONTENT_HEIGHT = 86;
 
 function restaurantMatchesQuery(restaurant, query) {
   const text = `${restaurant?.name || ""} ${restaurant?.cuisine || ""}`
@@ -209,6 +208,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
     () => (
       <Pressable
         onPress={() => setIsLocationModalVisible(true)}
+        onLayout={onHeaderContentLayout}
         style={styles.homeHeaderLocationWrap}
       >
         <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
@@ -221,18 +221,13 @@ export default function HomeScreen({ navigation: navigationProp }) {
         </View>
       </Pressable>
     ),
-    [deliveryLocation],
+    [deliveryLocation, onHeaderContentLayout],
   );
 
-  // 130 was tuned for a ~44px top inset (iPhone notch) at the default font
-  // scale. Devices with a taller/shorter status bar - or Android phones that
-  // ship with a larger default font scale, common on lower-resolution
-  // handsets - need the header height recalculated per device, otherwise
-  // the headerLeft content overflows past its declared height and covers
-  // the greeting banner below it.
-  const headerFontScale = Math.max(1, PixelRatio.getFontScale());
+  const { headerHeight, onHeaderContentLayout } = useMeasuredHeaderHeight();
+
   useRootCartHeader(navigation, "", {
-    headerHeight: insets.top + HOME_HEADER_CONTENT_HEIGHT * headerFontScale,
+    headerHeight,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: styles.homeHeaderLocationContainer,
@@ -620,9 +615,11 @@ export default function HomeScreen({ navigation: navigationProp }) {
     emptyStateIconBorderColor = colors.borderEmptyDanger;
   }
 
+  // No top edge below: the header already occupies the top inset, so letting
+  // SafeAreaView add it again would double-count it.
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.gradientBackground}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
+      <View style={styles.homeBody}>
         <Modal
           visible={isClosedModalVisible}
           transparent
@@ -779,7 +776,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
           </Pressable>
         </Modal>
 
-        <HomeGreetingBanner customerName={customerName} />
+        {/* <HomeGreetingBanner customerName={customerName} /> */}
 
         <HomeFoodFilter
           selectedFood={selectedFood}
@@ -931,9 +928,8 @@ const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
     heroTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 30,
-      fontWeight: "900",
       color: colors.textWarmDark,
       paddingHorizontal: 10,
     },
@@ -1040,9 +1036,8 @@ const styles = {
       borderColor: colors.orange,
     },
     filterChipText: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 13,
-      fontWeight: "700",
       color: colors.textDark,
     },
     filterChipTextActive: {
@@ -1061,30 +1056,36 @@ const styles = {
       paddingVertical: 12,
     },
     aiSuggestionTitle: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 15,
-      fontWeight: "800",
       color: colors.textDark,
     },
     aiSuggestionSubtext: {
       marginTop: 4,
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 13,
       color: colors.textMid,
       lineHeight: 19,
+    },
+    // Replaces the shared `gradientBackground`, whose marginTop: -40 was a
+    // hardcoded cancel for the top safe-area padding this screen no longer
+    // applies. That constant only matched iOS notch insets and pulled the body
+    // up under the header on Android, where the inset is ~23dp.
+    homeBody: {
+      flex: 1,
     },
     homeHeaderLocationContainer: {
       paddingLeft: 16,
       maxWidth: Platform.OS === "ios" ? "80%" : "60%",
     },
     homeHeaderLocationWrap: {
+      // No marginTop: the header now reserves equal clearance above and below
+      // this block, and a margin here would skew it back down off centre.
       justifyContent: "center",
-      marginTop: 10,
     },
     homeHeaderLocationLabel: {
-      fontFamily: "Nunito_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       fontSize: 15,
-      fontWeight: "700",
       color: colors.white,
       marginBottom: 2,
     },
@@ -1094,10 +1095,9 @@ const styles = {
       gap: 4,
     },
     homeHeaderLocationText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       flexShrink: 1,
       fontSize: 14,
-      fontWeight: "800",
       color: colors.white,
     },
     closedModalBackdrop: {
@@ -1118,14 +1118,13 @@ const styles = {
       alignItems: "center",
     },
     closedModalTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 18,
-      fontWeight: "900",
       color: colors.textDark,
       marginBottom: 10,
     },
     closedModalMessage: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       fontSize: 15,
       lineHeight: 22,
       color: colors.textMid,
@@ -1139,9 +1138,8 @@ const styles = {
       paddingVertical: 12,
     },
     closedModalButtonText: {
-      fontFamily: "Nunito_800ExtraBold",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 15,
-      fontWeight: "800",
       color: "#fff",
     },
     homeLocationModalBackdrop: {
@@ -1177,9 +1175,8 @@ const styles = {
       borderColor: colors.black,
     },
     homeLocationModalTitle: {
-      fontFamily: "Nunito_900Black",
+      fontFamily: "PlusJakartaSans_800ExtraBold",
       fontSize: 18,
-      fontWeight: "900",
       color: colors.textDark,
     },
     homeLocationModalRow: {
@@ -1188,7 +1185,7 @@ const styles = {
       gap: 8,
     },
     homeLocationModalText: {
-      fontFamily: "Inter_400Regular",
+      fontFamily: "PlusJakartaSans_400Regular",
       flex: 1,
       fontSize: 15,
       lineHeight: 22,

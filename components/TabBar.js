@@ -4,12 +4,16 @@ import Animated, {
   withSpring,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // import sharedStyles from "./styles";
 import * as colors from "../utils/colors";
 import TabBarButton from "./TabBarButton";
+
+// Caps the floating pill's width so it doesn't stretch nearly edge-to-edge
+// on tablets - a no-op on phones, which never reach this width.
+const TAB_BAR_MAX_WIDTH = 480;
 
 function getIconName(routeName, focused) {
   if (routeName === "HomeTab") {
@@ -41,6 +45,8 @@ export default function TabBar({ state, descriptors, navigation }) {
     : Math.max(60, buttonWidth * 0.74);
   const pillOffsetX = Math.max(0, (buttonWidth - pillWidth) / 2);
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const tabBarWidth = Math.min(windowWidth - 40, TAB_BAR_MAX_WIDTH);
 
   const onTabbarLayout = (event) => {
     const { width, height } = event.nativeEvent.layout;
@@ -86,7 +92,10 @@ export default function TabBar({ state, descriptors, navigation }) {
   return (
     <View
       onLayout={onTabbarLayout}
-      style={[styles.tabBar, { bottom: 16 + insets.bottom }]}
+      style={[
+        styles.tabBar,
+        { bottom: 16 + insets.bottom, width: tabBarWidth },
+      ]}
     >
       <Animated.View
         pointerEvents="none"
@@ -156,8 +165,7 @@ const styles = {
   ...StyleSheet.create({
     tabBar: {
       position: "absolute",
-      left: 20,
-      right: 20,
+      alignSelf: "center",
       paddingHorizontal: 12,
       paddingVertical: 12,
       borderRadius: 32,

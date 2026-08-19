@@ -8,6 +8,7 @@ import { formatRestaurantName } from "../utils/formatRestaurantName";
 import { formatXaf } from "../utils/formatXaf";
 import LikeButton from "./LikeButton";
 import { SkeletonBlock } from "./LoadingPlaceholder";
+import { CARD_MAX_WIDTH } from "../utils/responsive";
 
 const RestaurantCard = React.memo(function RestaurantCard({
   item,
@@ -126,6 +127,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 2,
     width: "100%",
+    maxWidth: CARD_MAX_WIDTH,
+    alignSelf: "center",
     overflow: "hidden",
     marginVertical: 20,
   },
@@ -153,8 +156,7 @@ const styles = StyleSheet.create({
   closedBadgeText: {
     color: colors.white,
     fontSize: 12,
-    fontFamily: "Nunito_700Bold",
-    fontWeight: "700",
+    fontFamily: "PlusJakartaSans_700Bold",
   },
   restaurantContent: {
     paddingHorizontal: 16,
@@ -163,9 +165,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   restaurantName: {
-    fontFamily: "Nunito_900Black",
+    fontFamily: "PlusJakartaSans_800ExtraBold",
     fontSize: 20,
-    fontWeight: "900",
     color: colors.textRestaurant,
   },
   metaRow: {
@@ -193,26 +194,25 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     marginLeft: 6,
-    fontFamily: "Nunito_700Bold",
+    fontFamily: "PlusJakartaSans_700Bold",
     fontSize: 16,
     color: colors.textDark,
-    fontWeight: "700",
   },
   ratingCountText: {
     marginLeft: 6,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 16,
     color: colors.textMuted,
   },
   dot: {
     marginHorizontal: 10,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 16,
     color: colors.border,
     lineHeight: 18,
   },
   metaText: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 16,
     color: colors.textIconMuted,
   },

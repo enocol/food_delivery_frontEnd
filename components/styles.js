@@ -18,13 +18,12 @@ const styles = StyleSheet.create({
     marginTop: -40,
   },
   emptyTitle: {
-    fontFamily: "Nunito_900Black",
+    fontFamily: "PlusJakartaSans_800ExtraBold",
     fontSize: 20,
-    fontWeight: "900",
     color: colors.textHeading,
   },
   emptySub: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 14,
     color: colors.textSubMuted,
     marginTop: 6,
@@ -38,11 +37,15 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
-    height: "100%",
+    // A percentage height resolves against a FlatList/ScrollView content
+    // container, which sizes to its content rather than the viewport -
+    // that's an unreliable footgun. A fixed minHeight renders consistently
+    // regardless of the parent's flex context.
+    minHeight: 260,
     marginTop: 30,
   },
   metaText: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 13,
     color: colors.textIconMuted,
     marginTop: 3,
