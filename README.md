@@ -221,3 +221,76 @@ Restaurant dashboard action
   → OrdersScreen: order card status updates live  +  hint-notification.wav  +  haptic
   → expo push  →  NotificationsContext  →  unread badge + Notifications screen
 ```
+
+---
+
+## Restaurant Images
+
+The hero on `RestaurantCard` **takes each image's own proportions**. On load the
+card reads the image's intrinsic size and sets the frame to match
+(`handleHeroLoad` in
+[`components/RestaurantCard.js`](components/RestaurantCard.js)), so every picture
+**spans the full card width** and is **never cropped**, with no bands either.
+
+Any fixed frame has to give up one of those two — it either crops to fill or
+leaves white space on whichever axis does not match — which is why the frame
+follows the image instead.
+
+The trade-off is that **card heights vary**: a wide photo produces a short hero,
+a tall one a deep hero. Keeping your images to a consistent shape is what keeps
+the list looking even.
+
+| | |
+| ---------------- | --------------------------------------------------- |
+| Shape            | pick one and stick to it — **4:3** is a good default |
+| Target size      | **1200 × 900 px** (4:3)                              |
+| Minimum          | 1000 px on the long edge                             |
+| Do not exceed    | ~1440 px on the long edge                            |
+| Accepted range   | 0.7 – 2.5 aspect; outside that the frame clamps      |
+| Format           | JPEG, quality 75–80 (PNG only if transparency needed)|
+| Weight           | ≤ 150 KB                                             |
+
+**Why those numbers.** The card is capped at `CARD_MAX_WIDTH` (640dp) and sits
+inside the list padding, so it renders around 1020px wide on a typical phone and
+about 1440px at most on a tablet or high-density device. Anything larger is
+bandwidth spent on pixels nobody sees — and the home screen downloads *every*
+card image, so twenty restaurants at 150KB is already ~3MB per load on mobile
+data.
+
+On a 315dp-wide card: a 4:3 image gives a 236dp hero, 16:9 gives 177dp, a square
+logo gives 315dp, and a 3:4 portrait gives 420dp. All span the full width and
+show in full — they just make the cards different heights, so mixing shapes makes
+the list look ragged.
+
+Beyond the 0.7–2.5 range the frame clamps and the image is banded rather than
+allowed to produce an absurdly tall or wide card.
+
+### Logos
+
+Logos are safe — a mark is never sliced in half, and a square logo spans the full
+card width. It will simply make that card taller than one showing a wide photo.
+
+If an even list matters more, place logos on a canvas matching your chosen
+standard shape (4:3, say) with a brand-colour or white background before
+uploading, so every card comes out the same height.
+
+Prefer a photograph of the food or the premises wherever one exists.
+
+### Composition
+
+Nothing is cropped, so there is no unsafe edge for subject matter. Do keep text
+clear of the top-right corner, where the "Currently Closed" badge sits.
+
+Consistency of *shape* matters more than the shape you pick.
+
+### Enforcing it
+
+Upload discipline is not reliable on its own. A **server-side normalise on
+upload** — resize onto a consistent canvas, strip oversized originals — keeps
+card rendering predictable regardless of what a restaurant sends, and caps the
+bandwidth cost.
+
+> Current seed data hotlinks third-party URLs — Unsplash, WordPress blogs, a
+> YouTube thumbnail. At least one carries a `w=200` parameter, so it is a 200px
+> image being upscaled roughly 5× on the card and will look badly blurred. These
+> should be re-hosted and normalised.

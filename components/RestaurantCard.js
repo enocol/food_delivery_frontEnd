@@ -10,6 +10,19 @@ import LikeButton from "./LikeButton";
 import { SkeletonBlock } from "./LoadingPlaceholder";
 import { CARD_MAX_WIDTH } from "../utils/responsive";
 
+// The hero takes each image's own proportions once it loads, so the picture
+// spans the full card width AND is never cropped. Any fixed frame has to give
+// up one of those two: it either crops to fill (cover) or leaves bands on
+// whichever axis does not match (contain).
+//
+// FALLBACK is the shape used until the image reports its size - close to the
+// square-ish images in use, so the card barely moves when it resolves.
+// The clamps only catch freak uploads; within them the frame matches the image
+// exactly, so nothing is cropped and nothing is banded.
+const FALLBACK_ASPECT = 1.05;
+const MIN_ASPECT = 0.7;
+const MAX_ASPECT = 2.5;
+
 const RestaurantCard = React.memo(function RestaurantCard({
   item,
   onPress,
@@ -21,10 +34,23 @@ const RestaurantCard = React.memo(function RestaurantCard({
   showLike = true,
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [heroAspect, setHeroAspect] = useState(FALLBACK_ASPECT);
 
   useEffect(() => {
     setImageLoaded(false);
+    setHeroAspect(FALLBACK_ASPECT);
   }, [item.image]);
+
+  const handleHeroLoad = (event) => {
+    // Remote sources report their intrinsic size here on both platforms, and
+    // toImageSource resolves local requires to a uri, so every source shape the
+    // card is given arrives this way.
+    const { width, height } = event?.nativeEvent?.source || {};
+    if (width > 0 && height > 0) {
+      setHeroAspect(Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, width / height)));
+    }
+    setImageLoaded(true);
+  };
 
   const ratingValue = Number(item.rating) || 0;
   const ratingCount = Number(item.ratingCount) || 0;
@@ -47,9 +73,12 @@ const RestaurantCard = React.memo(function RestaurantCard({
       <View style={styles.imageWrapper}>
         <Image
           source={toImageSource(item.image)}
-          style={styles.heroImage}
+          style={[styles.heroImage]}
+          // Once the frame matches the image, contain and cover render the
+          // same. contain is the safe choice for the clamped extremes: it keeps
+          // a freak image whole rather than slicing its edges off.
           resizeMode="cover"
-          onLoad={() => setImageLoaded(true)}
+          onLoad={handleHeroLoad}
           onError={() => setImageLoaded(true)}
         />
         {!imageLoaded ? (
@@ -61,10 +90,21 @@ const RestaurantCard = React.memo(function RestaurantCard({
           </View>
         )}
       </View>
+
       <View style={styles.restaurantContent}>
-        <Text style={styles.restaurantName} numberOfLines={1}>
-          {formatRestaurantName(item.name)}
-        </Text>
+        {/* Name and heart share a row, the way the reference card sets them. */}
+        <View style={styles.titleRow}>
+          <Text style={styles.restaurantName} numberOfLines={1}>
+            {formatRestaurantName(item.name)}
+          </Text>
+          {showLike ? (
+            <LikeButton
+              liked={liked}
+              likeCount={likeCount}
+              onPress={() => onToggleLike?.(item.id)}
+            />
+          ) : null}
+        </View>
 
         <View style={styles.metaRow}>
           <Ionicons name="star" size={18} color={colors.amberLight} />
@@ -78,42 +118,35 @@ const RestaurantCard = React.memo(function RestaurantCard({
           </Text>
         </View>
 
-        <View style={styles.bottomMetaRow}>
-          <View style={styles.bottomMetaContent}>
-            <View style={styles.metaGroup}>
-              <Ionicons
-                name="time-outline"
-                size={20}
-                color={colors.textIconMuted}
-              />
-              <Text style={styles.metaText}>{etaText}</Text>
-            </View>
-            <Text style={styles.dot}>·</Text>
-            <View style={styles.metaGroup}>
-              <Ionicons
-                name="bicycle-outline"
-                size={20}
-                color={colors.textIconMuted}
-              />
-              <Text style={styles.metaText}>{deliveryText}</Text>
-            </View>
-            <Text style={styles.dot}>·</Text>
-            <View style={styles.metaGroup}>
-              <Ionicons
-                name="bag-handle-outline"
-                size={20}
-                color={colors.textIconMuted}
-              />
-              <Text style={styles.metaText}>No min. order</Text>
-            </View>
-          </View>
-          {showLike ? (
-            <LikeButton
-              liked={liked}
-              likeCount={likeCount}
-              onPress={() => onToggleLike?.(item.id)}
+        {/* The reference fits these three on one line; this copy is longer in
+            French/XAF, so the row still wraps rather than truncating. */}
+        <View style={styles.metaRowWrap}>
+          <View style={styles.metaGroup}>
+            <Ionicons
+              name="time-outline"
+              size={17}
+              color={colors.textIconMuted}
             />
-          ) : null}
+            <Text style={styles.metaText}>{etaText}</Text>
+          </View>
+          <Text style={styles.dot}>·</Text>
+          <View style={styles.metaGroup}>
+            <Ionicons
+              name="bicycle-outline"
+              size={17}
+              color={colors.textIconMuted}
+            />
+            <Text style={styles.metaText}>{deliveryText}</Text>
+          </View>
+          <Text style={styles.dot}>·</Text>
+          <View style={styles.metaGroup}>
+            <Ionicons
+              name="bag-handle-outline"
+              size={17}
+              color={colors.textIconMuted}
+            />
+            <Text style={styles.metaText}>No min. order</Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -122,14 +155,14 @@ const RestaurantCard = React.memo(function RestaurantCard({
 
 const styles = StyleSheet.create({
   restaurantCard: {
-    borderRadius: 20,
+    borderRadius: 16,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.borderMid,
     shadowColor: colors.shadow,
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 2,
     width: "100%",
     maxWidth: CARD_MAX_WIDTH,
@@ -139,6 +172,9 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     position: "relative",
+    // The band colour beside or above a contained image, the backdrop for
+    // transparent logo PNGs, and what shows while the image loads.
+    backgroundColor: colors.white,
   },
   heroImagePlaceholder: {
     ...StyleSheet.absoluteFillObject,
@@ -147,7 +183,8 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: "100%",
-    height: 300,
+    // Height comes from the aspectRatio applied inline - see handleHeroLoad.
+    height: 265,
   },
   closedBadge: {
     position: "absolute",
@@ -167,11 +204,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 16,
-    gap: 10,
+    gap: 8,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
   restaurantName: {
+    flex: 1,
     fontFamily: "PlusJakartaSans_800ExtraBold",
-    fontSize: 20,
+    fontSize: 22,
+    letterSpacing: -0.3,
     color: colors.textRestaurant,
   },
   metaRow: {
@@ -179,23 +224,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "nowrap",
   },
-  bottomMetaRow: {
+  metaRowWrap: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  bottomMetaContent: {
-    flex: 1,
-    flexDirection: "row",
+    alignItems: "center",
     flexWrap: "wrap",
     rowGap: 6,
-    alignItems: "center",
   },
   metaGroup: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
   },
   ratingText: {
     marginLeft: 6,
@@ -204,21 +242,21 @@ const styles = StyleSheet.create({
     color: colors.textDark,
   },
   ratingCountText: {
-    marginLeft: 6,
+    marginLeft: 5,
     fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 16,
     color: colors.textMuted,
   },
   dot: {
-    marginHorizontal: 10,
+    marginHorizontal: 8,
     fontFamily: "PlusJakartaSans_400Regular",
-    fontSize: 16,
-    color: colors.border,
+    fontSize: 15,
+    color: colors.textMuted,
     lineHeight: 18,
   },
   metaText: {
     fontFamily: "PlusJakartaSans_400Regular",
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textIconMuted,
   },
   cuisineText: {

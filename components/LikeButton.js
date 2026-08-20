@@ -7,21 +7,22 @@ import * as colors from "../utils/colors";
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
+    // The reference card sets the heart bare against the white content area
+    // rather than inside a tinted pill, so the container is now just a tap
+    // target. Sized to stay above the accessibility minimum.
     likeButton: {
-      // minWidth: 34,
+      minWidth: 34,
       height: 34,
-      borderRadius: 17,
-      // borderColor: colors.borderLike,
-      backgroundColor: colors.bgLike,
       alignItems: "center",
       justifyContent: "center",
-      flexDirection: "row",
-      paddingHorizontal: 10,
-      gap: 6,
     },
     likeButtonPressed: {
-      opacity: 0.85,
-      // transform: [{ scale: 0.96 }],
+      opacity: 0.6,
+    },
+    likeButtonInner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
     },
     likeCountText: {
       fontFamily: "PlusJakartaSans_700Bold",
@@ -49,10 +50,10 @@ export default function LikeButton({ liked = false, likeCount = 0, onPress }) {
       accessibilityLabel={liked ? "Unlike restaurant" : "Like restaurant"}
       accessibilityState={{ selected: liked }}
     >
-      <View style={styles.likeButton}>
+      <View style={styles.likeButtonInner}>
         <Ionicons
           name={hasLikes ? "heart" : "heart-outline"}
-          size={20}
+          size={22}
           color={hasLikes ? colors.like : colors.textIconMuted}
         />
         {hasLikes ? (

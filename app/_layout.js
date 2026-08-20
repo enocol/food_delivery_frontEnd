@@ -165,7 +165,8 @@ function RootNavigator() {
               fontWeight: "bold",
             },
             headerBackVisible: false,
-            headerLeft: () => <HeaderBackButton color={colors.black} />,
+            // White to match the title on this screen's orange header.
+            headerLeft: () => <HeaderBackButton color={colors.white} />,
           }}
         />
         <Stack.Screen
