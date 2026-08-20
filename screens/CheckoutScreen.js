@@ -37,9 +37,10 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const routeNavigation = useNavigation();
   const navigation = navigationProp ?? routeNavigation;
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { firebaseUid, userPhone, getAuthToken } = useAuth();
+  const { firebaseUid, userPhone, getAuthToken, emailVerified } = useAuth();
   const router = useRouter();
   const needsAccount = !firebaseUid;
+  const needsVerification = Boolean(firebaseUid) && !emailVerified;
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState("mtn-momo");
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
@@ -141,11 +142,17 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
     // real number is what motivates finishing. Checked before phone validation
     // so a guest is not told their number is wrong first.
     //
-    // When email verification ships, its check belongs right here too:
-    //   if (!emailVerified) { router.navigate("/VerifyEmail"); return; }
     if (needsAccount) {
       setPostAuthRedirect("/Checkout");
       router.navigate("/Auth");
+      return;
+    }
+
+    // Signed in but the address is unproven. The backend rejects these too, by
+    // reading the email_verified claim off the ID token - this is the friendly
+    // half of that rule, not the enforcement.
+    if (needsVerification) {
+      router.navigate("/VerifyEmail");
       return;
     }
 
@@ -383,7 +390,9 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
                   ? "Processing..."
                   : needsAccount
                     ? "Sign in to order"
-                    : "Place Order"}
+                    : needsVerification
+                      ? "Verify email to order"
+                      : "Place Order"}
               </Text>
             </Pressable>
           </KeyboardAwareScrollView>

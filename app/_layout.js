@@ -46,7 +46,7 @@ Notifications.setNotificationHandler({
 function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
-  const { user, authLoading } = useAuth();
+  const { user, authLoading, emailVerified } = useAuth();
   const previousUserRef = useRef(user);
   const { closeCartSheet, isCartSheetOpen } = useCart();
   const { saveExpoNotification } = useNotifications();
@@ -63,16 +63,27 @@ function RootNavigator() {
     // Guests browse freely — the account requirement is enforced at checkout,
     // not at the door. So the only redirect left is moving someone who has just
     // signed in off the auth screens.
-    if (
-      isAuthenticated &&
-      (!rootSegment ||
-        rootSegment === "Auth" ||
-        rootSegment === "Register" ||
-        rootSegment === "ForgotPassword")
-    ) {
-      // Someone who was interrupted mid-checkout goes back there rather than
-      // to the home tab.
-      router.replace(consumePostAuthRedirect() || "/MainTabs/HomeTab");
+    // Distinguishes "just came through an auth screen" from "cold start with a
+    // restored session", where segments[0] is briefly empty. Only the first
+    // should trigger the verification prompt - otherwise an unverified user is
+    // dumped on the verify screen every launch and can never browse.
+    const cameFromAuthScreen =
+      rootSegment === "Auth" ||
+      rootSegment === "Register" ||
+      rootSegment === "ForgotPassword";
+
+    if (isAuthenticated && (!rootSegment || cameFromAuthScreen)) {
+      if (!emailVerified && cameFromAuthScreen) {
+        // Ask right after signing up, while the address is still fresh and the
+        // user is in setup mode - rather than later, when they are reaching for
+        // payment. Any queued destination is deliberately left in place so the
+        // verify screen can send them on once they are through.
+        router.replace("/VerifyEmail");
+      } else {
+        // Someone who was interrupted mid-checkout goes back there rather than
+        // to the home tab.
+        router.replace(consumePostAuthRedirect() || "/MainTabs/HomeTab");
+      }
     }
 
     // Signing out drops you back into browsing as a guest, not onto a login wall.
@@ -81,7 +92,7 @@ function RootNavigator() {
     }
 
     previousUserRef.current = user;
-  }, [authLoading, router, segments, user]);
+  }, [authLoading, emailVerified, router, segments, user]);
 
   useEffect(() => {
     if (!user) {
@@ -173,6 +184,16 @@ function RootNavigator() {
           name="RestaurantDetails"
           options={{
             title: "",
+            headerTransparent: true,
+            headerBackVisible: false,
+            headerLeft: () => <HeaderBackButton color={colors.black} />,
+          }}
+        />
+        <Stack.Screen
+          name="VerifyEmail"
+          options={{
+            title: "",
+            headerShown: true,
             headerTransparent: true,
             headerBackVisible: false,
             headerLeft: () => <HeaderBackButton color={colors.black} />,

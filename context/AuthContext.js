@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -10,6 +11,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
+  sendEmailVerification,
   sendPasswordResetEmail,
   updateProfile,
   signOut,
@@ -66,6 +68,10 @@ function formatAuthError(error) {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  // Mirrors user.emailVerified, but as state so screens re-render when it
+  // flips. The flag on the user object is read from the cached ID token and
+  // does not update on its own when the user clicks the link in their inbox.
+  const [emailVerified, setEmailVerified] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [authActionLoading, setAuthActionLoading] = useState(false);
   const newSignupUidRef = useRef(null);
@@ -87,6 +93,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
       setUser(nextUser);
+      setEmailVerified(Boolean(nextUser?.emailVerified));
       setAuthLoading(false);
 
       if (nextUser) {
@@ -94,14 +101,22 @@ export function AuthProvider({ children }) {
           if (pendingSignupProfileRef.current) {
             await pendingSignupProfileRef.current;
           }
+
+          // A restored session carries whatever the last token said, which is
+          // stale if the user verified elsewhere or while the app was closed.
+          try {
+            await nextUser.reload();
+            setEmailVerified(Boolean(auth.currentUser?.emailVerified));
+          } catch {
+            // Offline: keep the cached value and re-check on next foreground.
+          }
+
           await ensureCustomerAccountSynced(nextUser);
           connectSocket(() => nextUser.getIdToken());
 
-          // Fire-and-forget: it waits for the splash to hand off, then retries
-          // on its own until the token is accepted. See utils/pushRegistration.
-          const isNewSignup = newSignupUidRef.current === nextUser.uid;
           newSignupUidRef.current = null;
-          startPushRegistration({ isNewSignup });
+          // Push registration is deliberately NOT started here — it waits for
+          // the account to be verified. See the effect below.
         } catch {
           // Token fetch failed — socket stays disconnected until next auth event.
         }
@@ -113,6 +128,70 @@ export function AuthProvider({ children }) {
 
     return unsubscribe;
   }, []);
+
+  // Firebase never re-fires onAuthStateChanged when an email is verified, so
+  // the only way to notice is to reload the user and look again. Called at
+  // startup, whenever the app is foregrounded, and from the verify screen.
+  const refreshVerification = useCallback(async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return false;
+    }
+
+    try {
+      await currentUser.reload();
+    } catch {
+      // Offline — keep whatever we already believed.
+      return emailVerified;
+    }
+
+    const nowVerified = Boolean(auth.currentUser?.emailVerified);
+
+    if (nowVerified && !emailVerified) {
+      // Just verified. The ID token is a snapshot, so the backend would keep
+      // seeing email_verified: false for up to an hour unless we force a fresh
+      // one — the same reason the display name is refreshed after signup.
+      try {
+        await auth.currentUser.getIdToken(true);
+        await ensureCustomerAccountSynced(auth.currentUser);
+      } catch {
+        // The forced refresh is best effort; the next request picks it up.
+      }
+    }
+
+    setEmailVerified(nowVerified);
+    return nowVerified;
+  }, [emailVerified]);
+
+  const resendVerificationEmail = useCallback(async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error("You need to be signed in to resend the email.");
+    }
+
+    try {
+      await sendEmailVerification(currentUser);
+    } catch (error) {
+      if (error?.code === "auth/too-many-requests") {
+        throw new Error(
+          "Too many requests. Wait a few minutes before trying again.",
+        );
+      }
+      throw new Error(formatAuthError(error));
+    }
+  }, []);
+
+  // Push registration waits for a verified account. Notification permission is
+  // a one-shot resource — on Android 13+ two dismissals is a permanent denial —
+  // so it is spent at the point the user has proven the address, not on the
+  // signup screen. Keyed on both facts because verifying does not re-fire the
+  // auth listener.
+  useEffect(() => {
+    if (!user || !emailVerified) {
+      return;
+    }
+    startPushRegistration();
+  }, [user, emailVerified]);
 
   // Reconnect when the app returns to the foreground in case the socket
   // dropped while the app was backgrounded (network change, OS suspension).
@@ -127,10 +206,14 @@ export function AuthProvider({ children }) {
       if (s && !s.connected) {
         s.connect();
       }
+
+      // The user may have just come back from their mail app having clicked
+      // the link. Nothing else would tell us.
+      void refreshVerification();
     });
 
     return () => subscription.remove();
-  }, []);
+  }, [refreshVerification]);
 
   const signInWithEmailPassword = async (email, password) => {
     setAuthActionLoading(true);
@@ -215,6 +298,19 @@ export function AuthProvider({ children }) {
       // to run (see pendingSignupProfileRef) picks up this refreshed token.
       await result.user.getIdToken(true);
 
+      try {
+        await sendEmailVerification(result.user);
+      } catch (verificationError) {
+        // The account exists at this point, so a failed send must not fail the
+        // signup. The verify screen offers a resend.
+        if (__DEV__) {
+          console.warn(
+            "[AuthContext] verification email failed to send",
+            verificationError?.code || verificationError?.message,
+          );
+        }
+      }
+
       return result;
     } catch (error) {
       if (error.code) {
@@ -289,6 +385,7 @@ export function AuthProvider({ children }) {
       firebaseUid: user?.uid || null,
       userPhone: user?.phoneNumber || null,
       userEmail: user?.email || null,
+      emailVerified,
       authLoading,
       authActionLoading,
       signInWithEmailPassword,
@@ -296,8 +393,17 @@ export function AuthProvider({ children }) {
       resetPassword,
       signOutUser,
       getAuthToken,
+      refreshVerification,
+      resendVerificationEmail,
     }),
-    [user, authLoading, authActionLoading],
+    [
+      user,
+      emailVerified,
+      authLoading,
+      authActionLoading,
+      refreshVerification,
+      resendVerificationEmail,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
