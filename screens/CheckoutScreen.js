@@ -37,7 +37,8 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const routeNavigation = useNavigation();
   const navigation = navigationProp ?? routeNavigation;
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { firebaseUid, userPhone, getAuthToken, emailVerified } = useAuth();
+  const { firebaseUid, userPhone, getAuthToken, emailVerified, refreshVerification } =
+    useAuth();
   const router = useRouter();
   const needsAccount = !firebaseUid;
   const needsVerification = Boolean(firebaseUid) && !emailVerified;
@@ -274,6 +275,19 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
       if (__DEV__) {
         console.error("Order creation error:", error);
       }
+
+      // The backend enforces the same rule by reading the email_verified claim
+      // off the ID token. Reaching here means our local flag was stale - the
+      // token had not refreshed yet, or verification happened on another
+      // device. Re-read the real state and send them to verify rather than
+      // showing a raw error they cannot act on.
+      if (error?.response?.code === "EMAIL_NOT_VERIFIED") {
+        await refreshVerification();
+        setStatusMessage("");
+        router.navigate("/VerifyEmail");
+        return;
+      }
+
       Alert.alert(
         "Checkout error",
         error.message || "Something went wrong while processing your order.",
