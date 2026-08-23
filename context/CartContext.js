@@ -152,6 +152,13 @@ async function writeGuestCart(items) {
   }
 }
 
+// An order can only contain items from one restaurant, so the cart's
+// restaurant is whatever restaurant the first item in it belongs to.
+function getCartRestaurantId(items) {
+  const first = Object.values(items)[0];
+  return first ? first.restaurantId : null;
+}
+
 // The same shape the server path falls back to when a response carries no
 // items, extracted so the guest path cannot drift away from it.
 function addItemLocally(current, item, restaurant, quantity) {
@@ -213,10 +220,14 @@ export function CartProvider({ children }) {
       }
 
       let activeCartId;
+      let serverPayload;
       try {
-        const payload = await ensureActiveCart(token, firebaseUid);
+        serverPayload = await ensureActiveCart(token, firebaseUid);
         activeCartId =
-          payload?.userId || payload?.cartId || payload?.id || firebaseUid;
+          serverPayload?.userId ||
+          serverPayload?.cartId ||
+          serverPayload?.id ||
+          firebaseUid;
       } catch (error) {
         // Leave storage untouched so the merge is retried on the next load.
         if (__DEV__) {
@@ -226,6 +237,29 @@ export function CartProvider({ children }) {
           );
         }
         return;
+      }
+
+      // The guest cart is only ever one restaurant (addToCart enforces this),
+      // so it can only merge into a server cart from that same restaurant.
+      // Otherwise the guest's more recent additions replace the server cart.
+      const guestRestaurantId = entries[0]?.restaurantId ?? null;
+      const serverRestaurantId = getCartRestaurantId(toItemMap(serverPayload));
+      if (
+        serverRestaurantId != null &&
+        guestRestaurantId != null &&
+        String(serverRestaurantId) !== String(guestRestaurantId)
+      ) {
+        try {
+          await clearRemoteCart(token, activeCartId, firebaseUid);
+        } catch (error) {
+          if (__DEV__) {
+            console.warn(
+              "[CartContext] failed to clear server cart before guest cart merge:",
+              error.message,
+            );
+          }
+          return;
+        }
       }
 
       const failed = {};
@@ -376,16 +410,40 @@ export function CartProvider({ children }) {
   const addToCart = useCallback(
     async (item, restaurant, quantity = 1) => {
       const nextQuantity = Math.max(1, Number(quantity) || 1);
+      const nextRestaurantId = restaurant?.id ?? null;
 
       if (isGuest) {
-        setCartItems((current) =>
-          addItemLocally(current, item, restaurant, nextQuantity),
-        );
+        setCartItems((current) => {
+          const currentRestaurantId = getCartRestaurantId(current);
+          // Adding from a different restaurant starts a fresh cart instead
+          // of merging - an order can only contain one restaurant's items.
+          const isDifferentRestaurant =
+            currentRestaurantId != null &&
+            nextRestaurantId != null &&
+            String(currentRestaurantId) !== String(nextRestaurantId);
+          const base = isDifferentRestaurant ? {} : current;
+          return addItemLocally(base, item, restaurant, nextQuantity);
+        });
         void triggerAddToCartFeedback();
         return;
       }
 
       const { token, activeCartId } = await ensureCart();
+
+      const currentRestaurantId = getCartRestaurantId(cartItems);
+      const isDifferentRestaurant =
+        currentRestaurantId != null &&
+        nextRestaurantId != null &&
+        String(currentRestaurantId) !== String(nextRestaurantId);
+
+      if (isDifferentRestaurant) {
+        try {
+          await clearRemoteCart(token, activeCartId, firebaseUid);
+        } catch (error) {
+          throw mapCartSchemaError(error);
+        }
+        setCartItems({});
+      }
 
       let payload;
       try {
@@ -410,17 +468,18 @@ export function CartProvider({ children }) {
       }
 
       setCartItems((current) => {
+        const base = isDifferentRestaurant ? {} : current;
         const key = String(item.id);
-        const existing = current[key];
+        const existing = base[key];
         if (existing) {
           return {
-            ...current,
+            ...base,
             [key]: { ...existing, qty: existing.qty + nextQuantity },
           };
         }
 
         return {
-          ...current,
+          ...base,
           [key]: {
             ...item,
             id: key,
@@ -433,7 +492,7 @@ export function CartProvider({ children }) {
       });
       void triggerAddToCartFeedback();
     },
-    [ensureCart, firebaseUid, isGuest],
+    [cartItems, ensureCart, firebaseUid, isGuest],
   );
 
   const increaseQty = useCallback(
