@@ -11,6 +11,8 @@ const ORDERS_ENDPOINT = `${API_BASE_URL.replace(/\/+$/, "")}/orders`;
 
 const ORDERS_BY_USER_ENDPOINT = `${ORDERS_ENDPOINT}/user`;
 
+const ORDER_QUOTE_ENDPOINT = `${ORDERS_ENDPOINT}/quote`;
+
 const ORDER_DEBUG_ENABLED =
   __DEV__ && process.env.EXPO_PUBLIC_DEBUG_ORDER_API === "true";
 
@@ -121,6 +123,15 @@ export async function createOrder(token, firebaseUid, orderPayload) {
     body: orderPayload,
   });
   return unwrapOrder(response);
+}
+
+export async function fetchOrderQuote(token, firebaseUid, deliveryAddress) {
+  return requestJson(ORDER_QUOTE_ENDPOINT, {
+    method: "POST",
+    token,
+    firebaseUid,
+    body: { deliveryAddress },
+  });
 }
 
 export async function fetchCustomerOrders(token, firebaseUid) {

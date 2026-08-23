@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -16,7 +16,7 @@ import sharedStyles from "../components/styles";
 import * as colors from "../utils/colors";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { createOrder } from "../apis/orderApi";
+import { createOrder, fetchOrderQuote } from "../apis/orderApi";
 import { requestMobileMoneyPayment } from "../apis/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
 import { getCurrentLocation } from "../utils/locationService";
@@ -49,12 +49,65 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
   const headerOffset = useTransparentHeaderOffset();
 
   const itemCount = Object.values(cartItems).reduce(
     (sum, item) => sum + item.qty,
     0,
   );
+
+  // Fetches the priced order summary (restaurant, per-item price, delivery
+  // fee, total) as soon as the customer lands on checkout. The endpoint reads
+  // the cart server-side from the auth token, but still requires a delivery
+  // address to price the delivery fee - so location is resolved here first
+  // and reused by placeOrder below instead of being requested twice.
+  useEffect(() => {
+    if (itemCount === 0 || needsAccount) {
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      setQuoteLoading(true);
+      setQuoteError("");
+      try {
+        const location = await getCurrentLocation();
+        const deliveryAddress = {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        };
+        if (cancelled) {
+          return;
+        }
+        setUserLocation(deliveryAddress);
+
+        const token = await getAuthToken();
+        const data = await fetchOrderQuote(token, firebaseUid, deliveryAddress);
+        if (!cancelled) {
+          setQuote(data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setQuoteError(
+            error.message || "Could not load your order summary.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setQuoteLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatCameroonPhoneInput = (rawValue) => {
     const digits = rawValue.replace(/\D/g, "");
@@ -319,10 +372,50 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
           >
             <View style={styles.paymentPickerCard}>
               <Text style={styles.paymentPickerTitle}>Order summary</Text>
-              <Text style={styles.checkoutMetaText}>Items: {itemCount}</Text>
-              <Text style={styles.checkoutMetaText}>
-                Total to pay: {formatXaf(cartTotal)}
-              </Text>
+              {quoteLoading ? (
+                <Text style={styles.checkoutMetaText}>
+                  Loading order summary...
+                </Text>
+              ) : quoteError ? (
+                <Text style={styles.paymentPhoneError}>{quoteError}</Text>
+              ) : quote ? (
+                <>
+                  <Text style={styles.quoteRestaurantName}>
+                    {quote.restaurant?.name}
+                  </Text>
+                  {quote.items.map((item) => (
+                    <View style={styles.quoteItemRow} key={item.menuItemId}>
+                      <Text style={styles.quoteItemName}>
+                        {item.quantity}x {item.name}
+                      </Text>
+                      <Text style={styles.quoteItemPrice}>
+                        {formatXaf(item.unitPrice)}
+                      </Text>
+                    </View>
+                  ))}
+
+                  <View style={styles.quoteDivider} />
+
+                  <View style={styles.quoteSummaryRow}>
+                    <Text style={styles.checkoutMetaText}>Subtotal</Text>
+                    <Text style={styles.checkoutMetaText}>
+                      {formatXaf(quote.subtotal)}
+                    </Text>
+                  </View>
+                  <View style={styles.quoteSummaryRow}>
+                    <Text style={styles.checkoutMetaText}>Delivery fee</Text>
+                    <Text style={styles.checkoutMetaText}>
+                      {formatXaf(quote.deliveryFee)}
+                    </Text>
+                  </View>
+                  <View style={styles.quoteSummaryRow}>
+                    <Text style={styles.quoteTotalLabel}>Total</Text>
+                    <Text style={styles.quoteTotalValue}>
+                      {formatXaf(quote.total)}
+                    </Text>
+                  </View>
+                </>
+              ) : null}
             </View>
 
             <View style={styles.paymentPickerCard}>
@@ -441,6 +534,51 @@ const styles = {
       color: colors.textGreenBody,
       marginTop: 6,
       fontWeight: "700",
+    },
+    quoteRestaurantName: {
+      fontSize: 15,
+      fontWeight: "800",
+      color: colors.textHeading,
+      marginTop: 4,
+      marginBottom: 8,
+    },
+    quoteItemRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 4,
+    },
+    quoteItemName: {
+      flex: 1,
+      fontSize: 14,
+      color: colors.textGreenBody,
+      marginRight: 8,
+    },
+    quoteItemPrice: {
+      fontSize: 14,
+      color: colors.textGreenBody,
+      fontWeight: "700",
+    },
+    quoteDivider: {
+      height: 1,
+      backgroundColor: colors.borderLight,
+      marginVertical: 10,
+    },
+    quoteSummaryRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 6,
+    },
+    quoteTotalLabel: {
+      fontSize: 15,
+      fontWeight: "800",
+      color: colors.textHeading,
+    },
+    quoteTotalValue: {
+      fontSize: 15,
+      fontWeight: "800",
+      color: colors.success,
     },
     checkoutBar: {
       position: "absolute",
