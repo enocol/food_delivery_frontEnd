@@ -48,6 +48,8 @@ import HomeSearchBar from "../components/HomeSearchBar";
 import HomeFoodFilter from "../components/HomeFoodFilter";
 // import HomeGreetingBanner from "../components/HomeGreetingBanner";
 import FloatingBasketButton from "../components/FloatingBasketButton";
+import NetworkStatusBanner from "../components/NetworkStatusBanner";
+import useNetworkStatus from "../utils/useNetworkStatus";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -103,6 +105,8 @@ export default function HomeScreen({ navigation: navigationProp }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [error, setError] = useState("");
+  const [networkStatusMessage, setNetworkStatusMessage] = useState("");
+  const { checkConnection } = useNetworkStatus();
   const [deliveryLocation, setDeliveryLocation] = useState(
     "Fetching location...",
   );
@@ -121,6 +125,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
   const restaurantsCacheRef = useRef([]);
   const menuCacheRef = useRef(new Map());
   const lastRefreshNonceRef = useRef(-1);
+  const consecutiveFailureCountRef = useRef(0);
 
   // Seed liked state from the server whenever a user is authenticated.
   useEffect(() => {
@@ -290,11 +295,9 @@ export default function HomeScreen({ navigation: navigationProp }) {
 
   useEffect(() => {
     let isActive = true;
+    let retryTimeoutId;
 
     const loadRestaurants = async () => {
-      setIsLoading(true);
-      setError("");
-
       try {
         const activeFilter =
           selectedFood && selectedFood !== "All" ? selectedFood : null;
@@ -376,27 +379,47 @@ export default function HomeScreen({ navigation: navigationProp }) {
         }
 
         setRestaurants(data);
-      } catch (loadError) {
+        setError("");
+        setNetworkStatusMessage("");
+        consecutiveFailureCountRef.current = 0;
+        setIsLoading(false);
+        setIsRefreshing(false);
+      } catch {
         if (!isActive) {
           return;
         }
 
-        setRestaurants([]);
-        setError(loadError.message || "Failed to load restaurants");
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-          setIsRefreshing(false);
+        consecutiveFailureCountRef.current += 1;
+
+        // After a run of failures, tell connected-vs-offline apart so the
+        // banner points at the right problem instead of guessing from the
+        // fetch error alone.
+        if (consecutiveFailureCountRef.current % 5 === 0) {
+          checkConnection().then((message) => {
+            if (isActive) {
+              setNetworkStatusMessage(message);
+            }
+          });
         }
+
+        // Keep the shimmer showing and retry in the background instead of
+        // surfacing a network/timeout error — restaurants should only ever
+        // replace the shimmer once the server actually responds.
+        retryTimeoutId = setTimeout(loadRestaurants, 3000);
       }
     };
 
+    setIsLoading(true);
+    setError("");
+    setNetworkStatusMessage("");
+    consecutiveFailureCountRef.current = 0;
     loadRestaurants();
 
     return () => {
       isActive = false;
+      clearTimeout(retryTimeoutId);
     };
-  }, [selectedFood, debouncedSearchQuery, refreshNonce]);
+  }, [selectedFood, debouncedSearchQuery, refreshNonce, checkConnection]);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -782,6 +805,8 @@ export default function HomeScreen({ navigation: navigationProp }) {
         </Modal>
 
         {/* <HomeGreetingBanner customerName={customerName} /> */}
+
+        <NetworkStatusBanner message={networkStatusMessage} />
 
         <HomeFoodFilter
           selectedFood={selectedFood}
