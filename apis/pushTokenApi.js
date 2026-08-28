@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { httpFetch } from "../utils/httpClient";
 
 const DEFAULT_API_BASE_URL =
   Platform.OS === "ios"
@@ -47,7 +48,7 @@ export async function registerPushToken(firebaseUser, payload) {
   }
 
   try {
-    let response = await fetch(PUSH_TOKENS_ENDPOINT, {
+    let response = await httpFetch(PUSH_TOKENS_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,7 +59,7 @@ export async function registerPushToken(firebaseUser, payload) {
 
     if (response.status === 401) {
       const refreshedToken = await firebaseUser.getIdToken(true);
-      response = await fetch(PUSH_TOKENS_ENDPOINT, {
+      response = await httpFetch(PUSH_TOKENS_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

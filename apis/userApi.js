@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { httpFetch } from "../utils/httpClient";
 
 const DEFAULT_API_BASE_URL =
   Platform.OS === "ios"
@@ -35,7 +36,7 @@ export async function syncUserWithNeon(firebaseUser) {
   }
 
   try {
-    let response = await fetch(`${USERS_ENDPOINT}/sync`, {
+    let response = await httpFetch(`${USERS_ENDPOINT}/sync`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -46,7 +47,7 @@ export async function syncUserWithNeon(firebaseUser) {
     if (response.status === 401) {
       // Token can be briefly stale right after auth state changes.
       const refreshedToken = await firebaseUser.getIdToken(true);
-      response = await fetch(`${USERS_ENDPOINT}/sync`, {
+      response = await httpFetch(`${USERS_ENDPOINT}/sync`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

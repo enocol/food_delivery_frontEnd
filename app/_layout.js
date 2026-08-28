@@ -16,8 +16,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import AnimatedSplash from "../components/AnimatedSplash";
 import CartBottomSheet from "../components/CartBottomSheet";
 import HeaderBackButton from "../components/HeaderBackButton";
+import NetworkStatusBanner from "../components/NetworkStatusBanner";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { CartProvider, useCart } from "../context/CartContext";
+import { NetworkStatusProvider } from "../context/NetworkStatusContext";
 import {
   NotificationsProvider,
   useNotifications,
@@ -223,6 +225,8 @@ function RootNavigator() {
           router.navigate("/MainTabs/HomeTab");
         }}
       />
+      {/* Sibling of the navigator so it floats above whatever screen is up. */}
+      <NetworkStatusBanner />
     </>
   );
 }
@@ -259,13 +263,15 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <NotificationsProvider>
-          <CartProvider>
-            <RootNavigator />
-          </CartProvider>
-        </NotificationsProvider>
-      </AuthProvider>
+      <NetworkStatusProvider>
+        <AuthProvider>
+          <NotificationsProvider>
+            <CartProvider>
+              <RootNavigator />
+            </CartProvider>
+          </NotificationsProvider>
+        </AuthProvider>
+      </NetworkStatusProvider>
       {/* Rendered last so it sits above the app, which boots (auth, cart,
           socket) behind it while the branding plays. */}
       {splashDone ? null : (

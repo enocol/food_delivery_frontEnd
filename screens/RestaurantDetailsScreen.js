@@ -26,7 +26,6 @@ import { formatXaf } from "../utils/formatXaf";
 import sharedStyles from "../components/styles";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import FloatingBasketButton from "../components/FloatingBasketButton";
-import NetworkStatusBanner from "../components/NetworkStatusBanner";
 import {
   useCompactScreen,
   useTransparentHeaderOffset,
@@ -34,7 +33,6 @@ import {
 import * as colors from "../utils/colors";
 import { fetchRestaurantMenu } from "../apis/restaurantApi";
 import { formatRestaurantName } from "../utils/formatRestaurantName";
-import useNetworkStatus from "../utils/useNetworkStatus";
 
 export default function RestaurantDetailsScreen({ route }) {
   const localParams = useLocalSearchParams();
@@ -77,9 +75,6 @@ export default function RestaurantDetailsScreen({ route }) {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [networkStatusMessage, setNetworkStatusMessage] = useState("");
-  const { checkConnection } = useNetworkStatus();
-  const consecutiveFailureCountRef = useRef(0);
   const [addingItemId, setAddingItemId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedItemQty, setSelectedItemQty] = useState(1);
@@ -142,30 +137,17 @@ export default function RestaurantDetailsScreen({ route }) {
 
         setRestaurant(data.restaurant);
         setError("");
-        setNetworkStatusMessage("");
-        consecutiveFailureCountRef.current = 0;
         setLoading(false);
       } catch {
         if (!isActive) {
           return;
         }
 
-        consecutiveFailureCountRef.current += 1;
-
-        // After a run of failures, tell connected-vs-offline apart so the
-        // banner points at the right problem instead of guessing from the
-        // fetch error alone.
-        if (consecutiveFailureCountRef.current % 5 === 0) {
-          checkConnection().then((message) => {
-            if (isActive) {
-              setNetworkStatusMessage(message);
-            }
-          });
-        }
-
         // Keep the shimmer showing and retry in the background instead of
         // surfacing a network/timeout error — the menu should only ever
-        // replace the shimmer once the server actually responds.
+        // replace the shimmer once the server actually responds. The
+        // connectivity banner is handled globally by NetworkStatusProvider,
+        // which sees these failures through the shared fetch wrapper.
         retryTimeoutId = setTimeout(loadRestaurant, 3000);
       }
     };
@@ -173,8 +155,6 @@ export default function RestaurantDetailsScreen({ route }) {
     if (restaurantId) {
       setLoading(true);
       setError("");
-      setNetworkStatusMessage("");
-      consecutiveFailureCountRef.current = 0;
       loadRestaurant();
     } else {
       setRestaurant(null);
@@ -186,7 +166,7 @@ export default function RestaurantDetailsScreen({ route }) {
       isActive = false;
       clearTimeout(retryTimeoutId);
     };
-  }, [restaurantId, checkConnection]);
+  }, [restaurantId]);
 
   useEffect(() => {
     setHeroImageLoaded(false);
@@ -226,10 +206,6 @@ export default function RestaurantDetailsScreen({ route }) {
             </View>
           ))}
         </ScrollView>
-        <NetworkStatusBanner
-          message={networkStatusMessage}
-          topOffset={insets.top}
-        />
       </SafeAreaView>
     );
   }

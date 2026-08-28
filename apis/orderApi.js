@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { httpFetch } from "../utils/httpClient";
 
 const DEFAULT_API_BASE_URL =
   Platform.OS === "ios"
@@ -60,7 +61,7 @@ async function requestJson(
     options.body = JSON.stringify(body);
   }
 
-  const response = await fetch(path, options);
+  const response = await httpFetch(path, options);
   const data = await response.json();
 
   logOrderApi(`${method} ${path} -> ${response.status}`, {

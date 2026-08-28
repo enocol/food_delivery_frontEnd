@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { httpFetch } from "../utils/httpClient";
 
 // const DEFAULT_API_BASE_URL =
 //   Platform.OS === "ios"
@@ -14,7 +15,7 @@ const LIKES_ENDPOINT = `${API_BASE_URL.replace(/\/+$/, "")}/likes`;
  * Returns the user's likes. Supports legacy arrays and wrapped payloads.
  */
 export async function fetchLikes(firebaseUid) {
-  const response = await fetch(
+  const response = await httpFetch(
     `${LIKES_ENDPOINT}/${encodeURIComponent(firebaseUid)}`,
   );
 
@@ -39,7 +40,7 @@ export async function fetchLikes(firebaseUid) {
  * Response: { restaurantId, likesCount }
  */
 export async function fetchRestaurantLikeCount(restaurantId) {
-  const response = await fetch(
+  const response = await httpFetch(
     `${LIKES_ENDPOINT}/restaurant/${encodeURIComponent(restaurantId)}/count`,
   );
 
@@ -59,7 +60,7 @@ export async function fetchRestaurantLikeCount(restaurantId) {
  * Body: { user_id, restaurant_id }
  */
 export async function likeRestaurant(firebaseUid, restaurantId) {
-  const response = await fetch(LIKES_ENDPOINT, {
+  const response = await httpFetch(LIKES_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -82,7 +83,7 @@ export async function likeRestaurant(firebaseUid, restaurantId) {
  * DELETE /api/likes/:firebase_uid/:restaurant_id
  */
 export async function unlikeRestaurant(firebaseUid, restaurantId) {
-  const response = await fetch(
+  const response = await httpFetch(
     `${LIKES_ENDPOINT}/${encodeURIComponent(firebaseUid)}/${encodeURIComponent(restaurantId)}`,
     { method: "DELETE" },
   );

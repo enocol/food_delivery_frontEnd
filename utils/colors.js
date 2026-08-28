@@ -40,7 +40,8 @@ export const successTint = "#e0f2fe"; // qty-button / blue tint surface
 // ─── Danger / Error ───────────────────────────────────────────────────────────
 export const danger = "#dc2626"; // error empty-state icon
 export const dangerText = "#b42318"; // inline error messages
-export const dangerLight = "#f87171"; // NetworkStatusBanner background
+export const dangerLight = "#f87171"; // legacy inline error tint
+export const dangerScrim = "rgba(220, 38, 38, 0.94)"; // NetworkStatusBanner card
 export const like = "#e11d48"; // heart / like active state
 
 // ─── Amber & Orange ───────────────────────────────────────────────────────────

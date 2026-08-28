@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { httpFetch } from "../utils/httpClient";
 
 const DEFAULT_API_BASE_URL = "http://192.168.0.152:5000/api";
 
@@ -66,7 +67,7 @@ function mapMenuItem(item, fallbackImage) {
 }
 
 async function requestJson(url) {
-  const response = await fetch(url);
+  const response = await httpFetch(url);
 
   if (!response.ok) {
     let message = "Request failed";

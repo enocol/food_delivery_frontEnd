@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { httpFetch } from "../utils/httpClient";
 
 const DEFAULT_API_BASE_URL =
   Platform.OS === "ios"
@@ -74,7 +75,7 @@ async function requestJson(
   let response;
   for (let attempt = 0; attempt <= retryCount; attempt += 1) {
     try {
-      response = await fetch(path, {
+      response = await httpFetch(path, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
