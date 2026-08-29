@@ -19,6 +19,7 @@ import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import { useCompactScreen } from "../utils/responsive";
 import sharedStyles from "../components/styles";
+import PasswordInput from "../components/PasswordInput";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -171,7 +172,7 @@ export default function AuthScreen({
                   <Text style={styles.authFieldErrorText}>{emailError}</Text>
                 ) : null}
 
-                <TextInput
+                <PasswordInput
                   value={password}
                   onChangeText={(value) => {
                     setPassword(value);
@@ -180,15 +181,7 @@ export default function AuthScreen({
                     }
                   }}
                   placeholder="Password"
-                  placeholderTextColor={colors.textDark}
-                  secureTextEntry
-                  autoCorrect={false}
-                  textContentType="password"
-                  autoComplete="password"
-                  style={[
-                    styles.authInput,
-                    passwordError ? styles.authInputError : null,
-                  ]}
+                  hasError={Boolean(passwordError)}
                 />
                 {passwordError ? (
                   <Text style={styles.authFieldErrorText}>{passwordError}</Text>
