@@ -837,7 +837,7 @@ const styles = {
     },
     orderRetryButton: {
       marginTop: 12,
-      backgroundColor: colors.textDark,
+      backgroundColor: "#ff5a1f",
       borderRadius: 12,
       paddingVertical: 10,
       paddingHorizontal: 14,
