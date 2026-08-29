@@ -569,7 +569,7 @@ const styles = {
       backdropFilter: "blur(8px)",
     },
     detailsStickyTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 17,
       color: colors.textBody,
       textAlign: "center",
@@ -591,14 +591,14 @@ const styles = {
       justifyContent: "center",
     },
     detailsTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 26,
       color: colors.textHeading,
       marginTop: 14,
       paddingHorizontal: 14,
     },
     detailsMeta: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 14,
       color: colors.white,
       paddingHorizontal: 14,
@@ -645,18 +645,18 @@ const styles = {
       paddingHorizontal: 10,
     },
     menuName: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 15,
       color: colors.textMenuName,
     },
     menuDescription: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 12,
       color: colors.textMenuMeta,
       marginTop: 4,
     },
     menuPrice: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 14,
       color: colors.success,
       marginTop: 6,
@@ -717,18 +717,18 @@ const styles = {
       marginBottom: 14,
     },
     itemSheetName: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 20,
       color: colors.textBody,
       flex: 1,
     },
     itemSheetPrice: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 18,
       color: colors.success,
     },
     itemSheetDescription: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 14,
       color: colors.textMenuMeta,
       lineHeight: 20,
@@ -765,7 +765,7 @@ const styles = {
       opacity: 0.45,
     },
     itemSheetQtyValue: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 18,
       color: colors.textBody,
       minWidth: 18,
@@ -784,7 +784,7 @@ const styles = {
       opacity: 0.6,
     },
     itemSheetAddButtonText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 16,
       color: colors.white,
     },

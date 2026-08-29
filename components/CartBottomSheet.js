@@ -71,7 +71,7 @@ const styles = {
       gap: 12,
     },
     cartTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 24,
       color: colors.textHeading,
     },
@@ -105,12 +105,12 @@ const styles = {
       paddingTop: 6,
     },
     cartSectionTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 16,
       color: colors.textHeading,
     },
     cartSectionMeta: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 12,
       color: colors.textCartRestaurant,
     },
@@ -162,18 +162,18 @@ const styles = {
       marginLeft: 10,
     },
     cartItemName: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 14,
       color: colors.textItemName,
     },
     cartItemRestaurant: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 12,
       color: colors.textCartRestaurant,
       marginTop: 2,
     },
     cartItemPrice: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 13,
       color: colors.success,
       marginTop: 4,
@@ -205,19 +205,19 @@ const styles = {
       color: colors.successDeeper,
     },
     checkoutLabel: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       color: colors.textHeading,
       fontSize: 12,
       textTransform: "uppercase",
       letterSpacing: 0.6,
     },
     checkoutTotal: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.successDark,
       fontSize: 20,
     },
     checkoutSummaryHint: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 12,
       color: colors.textCartRestaurant,
       marginTop: 4,
@@ -250,12 +250,12 @@ const styles = {
       elevation: 4,
     },
     checkoutText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
       fontSize: 15,
     },
     checkoutMetaText: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       color: colors.white,
       fontSize: 11,
       marginTop: 2,
@@ -269,7 +269,7 @@ const styles = {
       paddingHorizontal: 40,
     },
     orderNowText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
       fontSize: 16,
     },

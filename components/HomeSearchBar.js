@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   fakePlaceholderStatic: {
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     color: colors.textSubMuted,
     flexShrink: 0,
     includeFontPadding: false,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   // This is the animated placeholder word that will fade in and out
   fakePlaceholderWord: {
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     color: colors.textSubMuted,
     height: PLACEHOLDER_WORD_HEIGHT,
     lineHeight: PLACEHOLDER_WORD_HEIGHT,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   homeSearchInput: {
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     flex: 1,
     color: colors.textWarmDark,
     backgroundColor: "transparent",

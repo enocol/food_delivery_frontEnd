@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   foodFilterChipText: {
-    fontFamily: "PlusJakartaSans_700Bold",
+    fontFamily: "Poppins_700Bold",
     fontSize: 16,
     lineHeight: 20,
     color: "#a79f97",

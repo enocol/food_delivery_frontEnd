@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabLabel: {
-    fontFamily: "PlusJakartaSans_800ExtraBold",
+    fontFamily: "Poppins_800ExtraBold",
     fontSize: 10,
   },
 });

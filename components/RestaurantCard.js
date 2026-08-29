@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   closedBadgeText: {
     color: colors.white,
     fontSize: 12,
-    fontFamily: "PlusJakartaSans_700Bold",
+    fontFamily: "Poppins_700Bold",
   },
   restaurantContent: {
     paddingHorizontal: 16,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   restaurantName: {
     flex: 1,
-    fontFamily: "PlusJakartaSans_800ExtraBold",
+    fontFamily: "Poppins_800ExtraBold",
     fontSize: 22,
     letterSpacing: -0.3,
     color: colors.textRestaurant,
@@ -237,25 +237,25 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     marginLeft: 6,
-    fontFamily: "PlusJakartaSans_700Bold",
+    fontFamily: "Poppins_700Bold",
     fontSize: 16,
     color: colors.textDark,
   },
   ratingCountText: {
     marginLeft: 5,
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     fontSize: 16,
     color: colors.textMuted,
   },
   dot: {
     marginHorizontal: 8,
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     fontSize: 15,
     color: colors.textMuted,
     lineHeight: 18,
   },
   metaText: {
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     fontSize: 15,
     color: colors.textIconMuted,
   },

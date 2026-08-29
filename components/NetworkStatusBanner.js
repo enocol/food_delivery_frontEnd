@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
-    fontFamily: "PlusJakartaSans_700Bold",
+    fontFamily: "Poppins_700Bold",
     fontSize: 13,
     color: colors.white,
   },

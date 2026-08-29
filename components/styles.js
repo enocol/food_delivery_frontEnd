@@ -18,12 +18,12 @@ const styles = StyleSheet.create({
     marginTop: -40,
   },
   emptyTitle: {
-    fontFamily: "PlusJakartaSans_800ExtraBold",
+    fontFamily: "Poppins_800ExtraBold",
     fontSize: 20,
     color: colors.textHeading,
   },
   emptySub: {
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     fontSize: 14,
     color: colors.textSubMuted,
     marginTop: 6,
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   metaText: {
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     fontSize: 13,
     color: colors.textIconMuted,
     marginTop: 3,

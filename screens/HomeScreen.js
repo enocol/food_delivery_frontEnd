@@ -936,7 +936,7 @@ const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
     heroTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 30,
       color: colors.textWarmDark,
       paddingHorizontal: 10,
@@ -1044,7 +1044,7 @@ const styles = {
       borderColor: colors.orange,
     },
     filterChipText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 13,
       color: colors.textDark,
     },
@@ -1064,13 +1064,13 @@ const styles = {
       paddingVertical: 12,
     },
     aiSuggestionTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 15,
       color: colors.textDark,
     },
     aiSuggestionSubtext: {
       marginTop: 4,
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 13,
       color: colors.textMid,
       lineHeight: 19,
@@ -1092,7 +1092,7 @@ const styles = {
       justifyContent: "center",
     },
     homeHeaderLocationLabel: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 15,
       color: colors.white,
       marginBottom: 2,
@@ -1103,7 +1103,7 @@ const styles = {
       gap: 4,
     },
     homeHeaderLocationText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       flexShrink: 1,
       fontSize: 14,
       color: colors.white,
@@ -1126,13 +1126,13 @@ const styles = {
       alignItems: "center",
     },
     closedModalTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 18,
       color: colors.textDark,
       marginBottom: 10,
     },
     closedModalMessage: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 15,
       lineHeight: 22,
       color: colors.textMid,
@@ -1146,7 +1146,7 @@ const styles = {
       paddingVertical: 12,
     },
     closedModalButtonText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 15,
       color: "#fff",
     },
@@ -1183,7 +1183,7 @@ const styles = {
       borderColor: colors.black,
     },
     homeLocationModalTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 18,
       color: colors.textDark,
     },
@@ -1193,7 +1193,7 @@ const styles = {
       gap: 8,
     },
     homeLocationModalText: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       flex: 1,
       fontSize: 15,
       lineHeight: 22,

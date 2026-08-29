@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   greetingLine: {
-    fontFamily: "PlusJakartaSans_500Medium",
+    fontFamily: "Poppins_500Medium",
     fontSize: 13,
     lineHeight: 20,
     color: "#0f0e0d",

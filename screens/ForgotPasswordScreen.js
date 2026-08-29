@@ -222,12 +222,12 @@ const styles = {
       paddingTop: 12,
     },
     authTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 28,
       color: colors.textHeadingWarm,
     },
     authSubtitle: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       marginTop: 6,
       fontSize: 14,
       color: colors.textMuted,
@@ -256,7 +256,7 @@ const styles = {
     },
     authFieldErrorText: {
       marginTop: -2,
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 12,
       color: colors.danger,
     },
@@ -269,7 +269,7 @@ const styles = {
       justifyContent: "center",
     },
     authPrimaryButtonText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
       fontSize: 18,
     },
@@ -282,7 +282,7 @@ const styles = {
       backgroundColor: colors.white,
     },
     authSecondaryButtonText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.textDark,
       fontSize: 14,
     },

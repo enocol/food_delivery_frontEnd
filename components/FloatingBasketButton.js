@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
   },
   badgeText: {
-    fontFamily: "PlusJakartaSans_800ExtraBold",
+    fontFamily: "Poppins_800ExtraBold",
     fontSize: 11,
     color: colors.white,
   },
   buttonText: {
-    fontFamily: "PlusJakartaSans_800ExtraBold",
+    fontFamily: "Poppins_800ExtraBold",
     fontSize: 15,
     color: colors.white,
   },

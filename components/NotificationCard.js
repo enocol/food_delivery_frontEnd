@@ -111,19 +111,19 @@ const styles = {
     },
     notificationTitle: {
       flex: 1,
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 17,
       color: colors.textHeading,
     },
     notificationDate: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 12,
       color: colors.textMuted,
       textAlign: "right",
       maxWidth: 120,
     },
     notificationBody: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 14,
       lineHeight: 20,
       color: colors.textBody,
@@ -136,7 +136,7 @@ const styles = {
       paddingVertical: 6,
     },
     notificationMetaText: {
-      fontFamily: "PlusJakartaSans_500Medium",
+      fontFamily: "Poppins_500Medium",
       fontSize: 12,
       color: colors.primaryDark,
     },
@@ -152,7 +152,7 @@ const styles = {
       paddingVertical: 10,
     },
     secondaryActionText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 13,
       color: colors.primaryDark,
     },
@@ -163,7 +163,7 @@ const styles = {
       paddingVertical: 10,
     },
     deleteActionText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 13,
       color: colors.dangerText,
     },

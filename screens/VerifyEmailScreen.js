@@ -168,24 +168,24 @@ const styles = {
       justifyContent: "center",
     },
     title: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 22,
       color: colors.textHeading,
       textAlign: "center",
     },
     message: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 15,
       lineHeight: 22,
       color: colors.textMid,
       textAlign: "center",
     },
     email: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       color: colors.textHeading,
     },
     notice: {
-      fontFamily: "PlusJakartaSans_500Medium",
+      fontFamily: "Poppins_500Medium",
       fontSize: 14,
       lineHeight: 20,
       color: colors.primaryDeep,
@@ -200,7 +200,7 @@ const styles = {
       marginTop: 4,
     },
     primaryButtonText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 16,
       color: colors.textOnPrimary,
     },
@@ -212,7 +212,7 @@ const styles = {
       alignItems: "center",
     },
     secondaryButtonText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 16,
       color: colors.primaryDeep,
     },
@@ -220,7 +220,7 @@ const styles = {
       opacity: 0.6,
     },
     linkText: {
-      fontFamily: "PlusJakartaSans_500Medium",
+      fontFamily: "Poppins_500Medium",
       fontSize: 14,
       color: colors.textMuted,
       marginTop: 2,

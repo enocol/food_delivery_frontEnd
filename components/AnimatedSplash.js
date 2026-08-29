@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     right: 0,
     marginTop: 56,
     textAlign: "center",
-    fontFamily: "PlusJakartaSans_700Bold",
+    fontFamily: "Poppins_700Bold",
     fontSize: 16,
     letterSpacing: 0.2,
     color: colors.textHeading,
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   },
   caption: {
     marginTop: 14,
-    fontFamily: "PlusJakartaSans_400Regular",
+    fontFamily: "Poppins_400Regular",
     fontSize: 11,
     letterSpacing: 0.8,
     textTransform: "uppercase",

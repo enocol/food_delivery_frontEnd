@@ -25,7 +25,7 @@ const styles = {
       gap: 5,
     },
     likeCountText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 14,
       color: colors.textDark,
     },

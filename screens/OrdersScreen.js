@@ -601,7 +601,7 @@ const styles = {
       marginTop: 10,
     },
     homeHeaderLocationLabel: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 15,
       color: colors.white,
       marginBottom: 2,
@@ -612,7 +612,7 @@ const styles = {
       gap: 4,
     },
     homeHeaderLocationText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       flexShrink: 1,
       fontSize: 14,
       color: colors.white,
@@ -650,7 +650,7 @@ const styles = {
       borderColor: colors.black,
     },
     homeLocationModalTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 18,
       color: colors.textDark,
     },
@@ -660,7 +660,7 @@ const styles = {
       gap: 8,
     },
     homeLocationModalText: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       flex: 1,
       fontSize: 15,
       lineHeight: 22,
@@ -724,7 +724,7 @@ const styles = {
       height: 16,
     },
     ordersHeading: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 28,
       color: colors.textHeading,
       marginBottom: 16,
@@ -736,7 +736,7 @@ const styles = {
       marginTop: 10,
     },
     orderRestaurantText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 13,
       color: colors.textDark,
       marginBottom: 4,
@@ -749,13 +749,13 @@ const styles = {
       marginBottom: 2,
     },
     orderItemName: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 13,
       color: colors.textMid,
       flex: 1,
     },
     orderItemQty: {
-      fontFamily: "PlusJakartaSans_500Medium",
+      fontFamily: "Poppins_500Medium",
       fontSize: 13,
       color: colors.textMid,
       marginLeft: 8,
@@ -797,7 +797,7 @@ const styles = {
       borderRadius: 4,
     },
     paymentStripText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 11,
       letterSpacing: 0.3,
       textTransform: "uppercase",
@@ -818,7 +818,7 @@ const styles = {
       textTransform: "capitalize",
     },
     orderMetaText: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       marginTop: 6,
       fontSize: 13,
       color: colors.textMuted,
@@ -830,7 +830,7 @@ const styles = {
       color: colors.textMid,
     },
     orderTotalText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       marginTop: 8,
       fontSize: 15,
       color: colors.textDark,

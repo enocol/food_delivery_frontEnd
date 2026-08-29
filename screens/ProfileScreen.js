@@ -229,7 +229,7 @@ const styles = {
       marginTop: 10,
     },
     homeHeaderLocationLabel: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 15,
       color: colors.white,
       marginBottom: 2,
@@ -240,7 +240,7 @@ const styles = {
       gap: 4,
     },
     homeHeaderLocationText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       flexShrink: 1,
       fontSize: 14,
       color: colors.white,
@@ -278,7 +278,7 @@ const styles = {
       borderColor: colors.black,
     },
     homeLocationModalTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 18,
       color: colors.textDark,
     },
@@ -288,7 +288,7 @@ const styles = {
       gap: 8,
     },
     homeLocationModalText: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       flex: 1,
       fontSize: 15,
       lineHeight: 22,
@@ -296,7 +296,7 @@ const styles = {
     },
     homeLocationModalCoords: {
       marginTop: 10,
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 13,
       color: colors.textMuted,
     },
@@ -325,17 +325,17 @@ const styles = {
       marginTop: 20,
     },
     avatarText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
       fontSize: 22,
     },
     profileName: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 22,
       color: colors.textHeadingWarm,
     },
     profileMeta: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       marginTop: 4,
       fontSize: 14,
       color: colors.textMuted,
@@ -351,7 +351,7 @@ const styles = {
       opacity: 0.6,
     },
     profileSignOutText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
       fontSize: 14,
     },
@@ -365,20 +365,20 @@ const styles = {
       maxWidth: CARD_MAX_WIDTH,
     },
     infoCardTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 16,
       color: colors.textHeadingWarm,
       marginBottom: 10,
     },
     infoLine: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 14,
       color: colors.textMid,
       marginBottom: 8,
     },
 
     infoLineLabel: {
-      fontFamily: "PlusJakartaSans_600SemiBold",
+      fontFamily: "Poppins_600SemiBold",
       fontSize: 16,
       color: colors.textHeadingWarm,
     },

@@ -123,12 +123,12 @@ const styles = {
       marginBottom: 16,
     },
     heading: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 28,
       color: colors.textHeading,
     },
     subheading: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 14,
       color: colors.textMuted,
       marginTop: 4,
@@ -149,7 +149,7 @@ const styles = {
       paddingVertical: 10,
     },
     secondaryActionText: {
-      fontFamily: "PlusJakartaSans_700Bold",
+      fontFamily: "Poppins_700Bold",
       fontSize: 13,
       color: colors.primaryDark,
     },
@@ -171,12 +171,12 @@ const styles = {
       marginBottom: 16,
     },
     emptyTitle: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       fontSize: 22,
       color: colors.textHeading,
     },
     emptySub: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       fontSize: 14,
       color: colors.textMuted,
       marginTop: 8,

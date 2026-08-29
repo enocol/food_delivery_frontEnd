@@ -593,12 +593,12 @@ const styles = {
       justifyContent: "space-between",
     },
     checkoutLabel: {
-      fontFamily: "PlusJakartaSans_400Regular",
+      fontFamily: "Poppins_400Regular",
       color: colors.successText,
       fontSize: 12,
     },
     checkoutTotal: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
       fontSize: 20,
     },
@@ -609,7 +609,7 @@ const styles = {
       paddingHorizontal: 16,
     },
     checkoutText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.textAmberButton,
     },
     checkoutScreenCta: {
@@ -624,7 +624,7 @@ const styles = {
       opacity: 0.6,
     },
     checkoutScreenCtaText: {
-      fontFamily: "PlusJakartaSans_800ExtraBold",
+      fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
       fontSize: 15,
     },
