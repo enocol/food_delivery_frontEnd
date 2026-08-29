@@ -35,6 +35,13 @@ export default function AuthScreen({
   const isCompactScreen = useCompactScreen();
   const heroImageHeight = isCompactScreen ? 150 : 190;
 
+  // Sign in unlocks only once the email looks valid and a password has been
+  // typed. The full rule checks still run in handleSignIn on press.
+  const canSubmit =
+    EMAIL_REGEX.test(email.trim().toLowerCase()) &&
+    password.trim().length > 0;
+  const isSignInDisabled = authActionLoading || !canSubmit;
+
   const handleSignIn = async () => {
     setEmailError("");
     setPasswordError("");
@@ -198,9 +205,12 @@ export default function AuthScreen({
                 </Pressable>
 
                 <Pressable
-                  style={styles.authPrimaryButton}
+                  style={[
+                    styles.authPrimaryButton,
+                    isSignInDisabled ? styles.authPrimaryButtonDisabled : null,
+                  ]}
                   onPress={handleSignIn}
-                  disabled={authActionLoading}
+                  disabled={isSignInDisabled}
                 >
                   {authActionLoading ? (
                     <ActivityIndicator color={colors.white} />
@@ -318,6 +328,9 @@ const styles = {
       paddingVertical: 12,
       alignItems: "center",
       justifyContent: "center",
+    },
+    authPrimaryButtonDisabled: {
+      opacity: 0.5,
     },
     authPrimaryButtonText: {
       fontFamily: "Poppins_800ExtraBold",
