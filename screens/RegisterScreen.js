@@ -22,6 +22,63 @@ import { useRouter } from "expo-router";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_REGEX = /^(?:[A-Za-z]+(?:[ -][A-Za-z]+)*)$/;
+const PASSWORD_MISMATCH_MESSAGE = "Passwords do not match.";
+
+// Each returns "" when the value is valid, or the message to show under the
+// field. Shared by the live "is the form submittable" check and the on-submit
+// pass, so the rules can never drift apart.
+function getNameError(value) {
+  const name = value.trim();
+  if (!name) {
+    return "Please enter your name.";
+  }
+  if (name.length < 2 || name.length > 60) {
+    return "Name must be between 2 and 60 characters.";
+  }
+  if (!NAME_REGEX.test(name)) {
+    return "Name can only contain letters, spaces, and hyphens. Numbers are not allowed.";
+  }
+  return "";
+}
+
+function getEmailError(value) {
+  const email = value.trim().toLowerCase();
+  if (!email) {
+    return "Please enter your email address.";
+  }
+  if (!EMAIL_REGEX.test(email)) {
+    return "Enter a valid email address.";
+  }
+  return "";
+}
+
+function getPasswordError(value) {
+  const password = value.trim();
+  if (!password) {
+    return "Please enter your password.";
+  }
+  if (password.length < 6) {
+    return "Password must be at least 6 characters.";
+  }
+  if (password.length > 72) {
+    return "Password must not exceed 72 characters.";
+  }
+  if (/\s/.test(password)) {
+    return "Password cannot contain spaces.";
+  }
+  return "";
+}
+
+function getConfirmPasswordError(passwordValue, confirmValue) {
+  const confirmPassword = confirmValue.trim();
+  if (!confirmPassword) {
+    return "Please confirm your password.";
+  }
+  if (passwordValue.trim() !== confirmPassword) {
+    return PASSWORD_MISMATCH_MESSAGE;
+  }
+  return "";
+}
 
 export default function RegisterScreen({ onGoToSignIn, navigation }) {
   const router = useRouter();
@@ -29,73 +86,61 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nameError, setNameError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  // Errors surface once a field has been left (or once Create account is
+  // pressed), never while it is still being typed into for the first time.
+  const [touched, setTouched] = useState({});
   const isCompactScreen = useCompactScreen();
   const heroImageHeight = isCompactScreen ? 150 : 190;
 
+  const nameError = getNameError(name);
+  const emailError = getEmailError(email);
+  const passwordError = getPasswordError(password);
+  const confirmPasswordError = getConfirmPasswordError(password, confirmPassword);
+  const isFormValid =
+    !nameError && !emailError && !passwordError && !confirmPasswordError;
+
+  const markTouched = (field) => {
+    setTouched((previous) =>
+      previous[field] ? previous : { ...previous, [field]: true },
+    );
+  };
+
+  const visibleError = (field, error) =>
+    touched[field] && error ? error : "";
+
+  const visibleNameError = visibleError("name", nameError);
+  const visibleEmailError = visibleError("email", emailError);
+  const visiblePasswordError = visibleError("password", passwordError);
+  const visibleConfirmPasswordError = visibleError(
+    "confirmPassword",
+    confirmPasswordError,
+  );
+
+  // A mismatch is about both password fields, so outline both of them.
+  const passwordFieldHasError =
+    Boolean(visiblePasswordError) ||
+    visibleConfirmPasswordError === PASSWORD_MISMATCH_MESSAGE;
+
+  const isCreateAccountDisabled = authActionLoading || !isFormValid;
+
   const handleCreateAccount = async () => {
-    setNameError("");
-    setEmailError("");
-    setPasswordError("");
+    setTouched({
+      name: true,
+      email: true,
+      password: true,
+      confirmPassword: true,
+    });
 
-    const normalizedName = name.trim();
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedPassword = password.trim();
-
-    if (!normalizedName) {
-      setNameError("Please enter your name.");
-      return;
-    }
-
-    if (normalizedName.length < 2 || normalizedName.length > 60) {
-      setNameError("Name must be between 2 and 60 characters.");
-      return;
-    }
-
-    if (!NAME_REGEX.test(normalizedName)) {
-      setNameError(
-        "Name can only contain letters, spaces, and hyphens. Numbers are not allowed.",
-      );
-      return;
-    }
-
-    if (!normalizedEmail) {
-      setEmailError("Please enter your email address.");
-      return;
-    }
-
-    if (!EMAIL_REGEX.test(normalizedEmail)) {
-      setEmailError("Enter a valid email address.");
-      return;
-    }
-
-    if (!normalizedPassword) {
-      setPasswordError("Please enter your password.");
-      return;
-    }
-
-    if (normalizedPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters.");
-      return;
-    }
-
-    if (normalizedPassword.length > 72) {
-      setPasswordError("Password must not exceed 72 characters.");
-      return;
-    }
-
-    if (/\s/.test(normalizedPassword)) {
-      setPasswordError("Password cannot contain spaces.");
+    if (!isFormValid) {
       return;
     }
 
     try {
       await createAccountWithEmailPassword(
-        normalizedName,
-        normalizedEmail,
-        normalizedPassword,
+        name.trim(),
+        email.trim().toLowerCase(),
+        password.trim(),
       );
     } catch (error) {
       Alert.alert("Account creation failed", error.message);
@@ -151,17 +196,14 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
               <View style={styles.authCard}>
                 <Text style={styles.authTitle}>Create Account</Text>
                 <Text style={styles.authSubtitle}>
-                  Enter your name, email, and password to create a new account.
+                  Enter your name, email, and password, then confirm your
+                  password to create a new account.
                 </Text>
 
                 <TextInput
                   value={name}
-                  onChangeText={(value) => {
-                    setName(value);
-                    if (nameError) {
-                      setNameError("");
-                    }
-                  }}
+                  onChangeText={setName}
+                  onBlur={() => markTouched("name")}
                   placeholder="Full name"
                   placeholderTextColor={colors.textDark}
                   autoCapitalize="words"
@@ -170,21 +212,19 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
                   autoComplete="name"
                   style={[
                     styles.authInput,
-                    nameError ? styles.authInputError : null,
+                    visibleNameError ? styles.authInputError : null,
                   ]}
                 />
-                {nameError ? (
-                  <Text style={styles.authFieldErrorText}>{nameError}</Text>
+                {visibleNameError ? (
+                  <Text style={styles.authFieldErrorText}>
+                    {visibleNameError}
+                  </Text>
                 ) : null}
 
                 <TextInput
                   value={email}
-                  onChangeText={(value) => {
-                    setEmail(value);
-                    if (emailError) {
-                      setEmailError("");
-                    }
-                  }}
+                  onChangeText={setEmail}
+                  onBlur={() => markTouched("email")}
                   placeholder="Email address"
                   placeholderTextColor={colors.textDark}
                   keyboardType="email-address"
@@ -194,21 +234,19 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
                   autoComplete="email"
                   style={[
                     styles.authInput,
-                    emailError ? styles.authInputError : null,
+                    visibleEmailError ? styles.authInputError : null,
                   ]}
                 />
-                {emailError ? (
-                  <Text style={styles.authFieldErrorText}>{emailError}</Text>
+                {visibleEmailError ? (
+                  <Text style={styles.authFieldErrorText}>
+                    {visibleEmailError}
+                  </Text>
                 ) : null}
 
                 <TextInput
                   value={password}
-                  onChangeText={(value) => {
-                    setPassword(value);
-                    if (passwordError) {
-                      setPasswordError("");
-                    }
-                  }}
+                  onChangeText={setPassword}
+                  onBlur={() => markTouched("password")}
                   placeholder="Password"
                   placeholderTextColor={colors.textDark}
                   secureTextEntry
@@ -217,17 +255,45 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
                   autoComplete="new-password"
                   style={[
                     styles.authInput,
-                    passwordError ? styles.authInputError : null,
+                    passwordFieldHasError ? styles.authInputError : null,
                   ]}
                 />
-                {passwordError ? (
-                  <Text style={styles.authFieldErrorText}>{passwordError}</Text>
+                {visiblePasswordError ? (
+                  <Text style={styles.authFieldErrorText}>
+                    {visiblePasswordError}
+                  </Text>
+                ) : null}
+
+                <TextInput
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  onBlur={() => markTouched("confirmPassword")}
+                  placeholder="Confirm password"
+                  placeholderTextColor={colors.textDark}
+                  secureTextEntry
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  autoComplete="new-password"
+                  style={[
+                    styles.authInput,
+                    passwordFieldHasError ? styles.authInputError : null,
+                  ]}
+                />
+                {visibleConfirmPasswordError ? (
+                  <Text style={styles.authFieldErrorText}>
+                    {visibleConfirmPasswordError}
+                  </Text>
                 ) : null}
 
                 <Pressable
-                  style={styles.authPrimaryButton}
+                  style={[
+                    styles.authPrimaryButton,
+                    isCreateAccountDisabled
+                      ? styles.authPrimaryButtonDisabled
+                      : null,
+                  ]}
                   onPress={handleCreateAccount}
-                  disabled={authActionLoading}
+                  disabled={isCreateAccountDisabled}
                 >
                   {authActionLoading ? (
                     <ActivityIndicator color={colors.white} />
@@ -336,6 +402,9 @@ const styles = {
       paddingVertical: 12,
       alignItems: "center",
       justifyContent: "center",
+    },
+    authPrimaryButtonDisabled: {
+      opacity: 0.5,
     },
     authPrimaryButtonText: {
       fontFamily: "Poppins_800ExtraBold",
