@@ -14,6 +14,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import { useCompactScreen } from "../utils/responsive";
@@ -78,6 +79,45 @@ function getConfirmPasswordError(passwordValue, confirmValue) {
     return PASSWORD_MISMATCH_MESSAGE;
   }
   return "";
+}
+
+// Password input with a trailing eye button that toggles the entry between
+// masked and plain text. Each instance owns its own reveal state.
+function PasswordInput({ value, onChangeText, onBlur, placeholder, hasError }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <View
+      style={[styles.authInputRow, hasError ? styles.authInputError : null]}
+    >
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        placeholderTextColor={colors.textDark}
+        secureTextEntry={!isVisible}
+        autoCapitalize="none"
+        autoCorrect={false}
+        textContentType="newPassword"
+        autoComplete="new-password"
+        style={styles.authInputField}
+      />
+      <Pressable
+        onPress={() => setIsVisible((previous) => !previous)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        style={styles.authInputIconButton}
+        accessibilityRole="button"
+        accessibilityLabel={isVisible ? "Hide password" : "Show password"}
+      >
+        <Ionicons
+          name={isVisible ? "eye-off-outline" : "eye-outline"}
+          size={22}
+          color={colors.textMuted}
+        />
+      </Pressable>
+    </View>
+  );
 }
 
 export default function RegisterScreen({ onGoToSignIn, navigation }) {
@@ -243,20 +283,12 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
                   </Text>
                 ) : null}
 
-                <TextInput
+                <PasswordInput
                   value={password}
                   onChangeText={setPassword}
                   onBlur={() => markTouched("password")}
                   placeholder="Password"
-                  placeholderTextColor={colors.textDark}
-                  secureTextEntry
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                  autoComplete="new-password"
-                  style={[
-                    styles.authInput,
-                    passwordFieldHasError ? styles.authInputError : null,
-                  ]}
+                  hasError={passwordFieldHasError}
                 />
                 {visiblePasswordError ? (
                   <Text style={styles.authFieldErrorText}>
@@ -264,20 +296,12 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
                   </Text>
                 ) : null}
 
-                <TextInput
+                <PasswordInput
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   onBlur={() => markTouched("confirmPassword")}
                   placeholder="Confirm password"
-                  placeholderTextColor={colors.textDark}
-                  secureTextEntry
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                  autoComplete="new-password"
-                  style={[
-                    styles.authInput,
-                    passwordFieldHasError ? styles.authInputError : null,
-                  ]}
+                  hasError={passwordFieldHasError}
                 />
                 {visibleConfirmPasswordError ? (
                   <Text style={styles.authFieldErrorText}>
@@ -385,6 +409,29 @@ const styles = {
       paddingVertical: 11,
       fontSize: 18,
       minHeight: 60,
+    },
+    authInputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.white,
+      borderWidth: 1,
+      borderColor: colors.borderInput,
+      paddingLeft: 12,
+      paddingRight: 4,
+      minHeight: 60,
+    },
+    authInputField: {
+      flex: 1,
+      color: colors.textDark,
+      paddingVertical: 11,
+      paddingHorizontal: 0,
+      fontSize: 18,
+    },
+    authInputIconButton: {
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      alignItems: "center",
+      justifyContent: "center",
     },
     authInputError: {
       borderColor: colors.danger,
