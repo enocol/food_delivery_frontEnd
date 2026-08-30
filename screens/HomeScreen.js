@@ -37,11 +37,6 @@ import {
   likeRestaurant,
   unlikeRestaurant,
 } from "../apis/likesApi";
-import {
-  getCurrentLocation,
-  getLocationAddress,
-} from "../utils/locationService";
-import { whenAppReady } from "../utils/appReady";
 import { FILTER_ALIASES, FOOD_FILTERS } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
@@ -52,6 +47,7 @@ import ScreenGradient from "../components/ScreenGradient";
 import HeaderDeliveryLocation, {
   headerDeliveryLocationContainerStyle,
 } from "../components/HeaderDeliveryLocation";
+import { useDeliveryLocation } from "../context/LocationContext";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -107,9 +103,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [error, setError] = useState("");
-  const [deliveryLocation, setDeliveryLocation] = useState(
-    "Fetching location...",
-  );
+  const { deliveryLocation } = useDeliveryLocation();
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const [isClosedModalVisible, setIsClosedModalVisible] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
@@ -241,55 +235,6 @@ export default function HomeScreen({ navigation: navigationProp }) {
       clearTimeout(timeoutId);
     };
   }, [searchQuery]);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadDeliveryLocation = async () => {
-      // Hold the location permission prompt until the splash has handed off,
-      // so it never opens over the branding animation. Once the splash is
-      // done this resolves immediately, so a later remount never waits.
-      await whenAppReady();
-      if (!isActive) {
-        return;
-      }
-
-      try {
-        const coords = await getCurrentLocation();
-        const address = await getLocationAddress(
-          coords.latitude,
-          coords.longitude,
-        );
-
-        if (!isActive) {
-          return;
-        }
-
-        const locationText = [
-          address?.name,
-          address?.street,
-          address?.city,
-          address?.region,
-        ]
-          .filter(Boolean)
-          .join(", ");
-
-        setDeliveryLocation(locationText || "Current location");
-      } catch (locationError) {
-        if (!isActive) {
-          return;
-        }
-
-        setDeliveryLocation("Location unavailable");
-      }
-    };
-
-    loadDeliveryLocation();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   useEffect(() => {
     let isActive = true;

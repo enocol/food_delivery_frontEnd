@@ -25,10 +25,7 @@ import * as colors from "../utils/colors";
 import { formatXaf } from "../utils/formatXaf";
 import { fetchCustomerOrders } from "../apis/orderApi";
 import { getSocket } from "../utils/socket";
-import {
-  getCurrentLocation,
-  getLocationAddress,
-} from "../utils/locationService";
+import { useDeliveryLocation } from "../context/LocationContext";
 
 function toDateLabel(dateValue) {
   if (!dateValue) {
@@ -255,51 +252,8 @@ export default function OrdersScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [deliveryLocation, setDeliveryLocation] = useState(
-    "Fetching location...",
-  );
+  const { deliveryLocation } = useDeliveryLocation();
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadDeliveryLocation = async () => {
-      try {
-        const coords = await getCurrentLocation();
-        const address = await getLocationAddress(
-          coords.latitude,
-          coords.longitude,
-        );
-
-        if (!isActive) {
-          return;
-        }
-
-        const locationText = [
-          address?.name,
-          address?.street,
-          address?.city,
-          address?.region,
-        ]
-          .filter(Boolean)
-          .join(", ");
-
-        setDeliveryLocation(locationText || "Current location");
-      } catch (locationError) {
-        if (!isActive) {
-          return;
-        }
-
-        setDeliveryLocation("Location unavailable");
-      }
-    };
-
-    loadDeliveryLocation();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   const renderHeaderLocation = useCallback(
     () => (

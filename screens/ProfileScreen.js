@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
@@ -15,10 +15,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { clearPostAuthRedirect } from "../utils/postAuthRedirect";
 import { formatXaf } from "../utils/formatXaf";
-import {
-  getCurrentLocation,
-  getLocationAddress,
-} from "../utils/locationService";
+import { useDeliveryLocation } from "../context/LocationContext";
 import useRootCartHeader from "../components/useRootCartHeader";
 import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
@@ -32,23 +29,19 @@ export default function ProfileScreen({ navigation }) {
   const { cartTotal } = useCart();
   const { user, signOutUser, authActionLoading } = useAuth();
   const router = useRouter();
-  const [locationLabel, setLocationLabel] = useState(
-    "Fetching your location...",
-  );
-  const [locationCoords, setLocationCoords] = useState("");
-  const [locationLoading, setLocationLoading] = useState(false);
+  const { deliveryLocation } = useDeliveryLocation();
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
   const renderHeaderLocation = useCallback(
     () => (
       <HeaderDeliveryLocation
-        label={locationLabel}
+        label={deliveryLocation}
         onPress={() => setIsLocationModalVisible(true)}
         // Transparent-header tab: nudge the block down to sit on the header.
         style={styles.headerLocationOffset}
       />
     ),
-    [locationLabel],
+    [deliveryLocation],
   );
 
   const headerHeight = useRootHeaderHeight();
@@ -58,42 +51,6 @@ export default function ProfileScreen({ navigation }) {
     headerLeft: renderHeaderLocation,
     headerLeftContainerStyle: headerDeliveryLocationContainerStyle,
   });
-
-  const loadCurrentLocation = useCallback(async () => {
-    try {
-      setLocationLoading(true);
-      const coords = await getCurrentLocation();
-      const address = await getLocationAddress(
-        coords.latitude,
-        coords.longitude,
-      );
-
-      const addressParts = [
-        address?.name,
-        address?.street,
-        address?.city,
-        address?.region,
-      ]
-        .filter(Boolean)
-        .join(", ");
-
-      setLocationLabel(addressParts || "Current location available");
-      setLocationCoords(
-        `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`,
-      );
-    } catch (error) {
-      setLocationLabel(
-        "Location unavailable. Please enable location permission.",
-      );
-      setLocationCoords("");
-    } finally {
-      setLocationLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCurrentLocation();
-  }, [loadCurrentLocation]);
 
   const isSignedIn = Boolean(user);
   const profileName = isSignedIn
@@ -149,7 +106,7 @@ export default function ProfileScreen({ navigation }) {
               <View style={styles.homeLocationModalRow}>
                 <Ionicons name="location" size={18} color={colors.orange} />
                 <Text style={styles.homeLocationModalText}>
-                  {locationLabel}
+                  {deliveryLocation}
                 </Text>
               </View>
             </Pressable>

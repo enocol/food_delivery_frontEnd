@@ -19,6 +19,7 @@ import HeaderBackButton from "../components/HeaderBackButton";
 import NetworkStatusBanner from "../components/NetworkStatusBanner";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { CartProvider, useCart } from "../context/CartContext";
+import { LocationProvider } from "../context/LocationContext";
 import { NetworkStatusProvider } from "../context/NetworkStatusContext";
 import {
   NotificationsProvider,
@@ -277,7 +278,9 @@ export default function RootLayout() {
         <AuthProvider>
           <NotificationsProvider>
             <CartProvider>
-              <RootNavigator />
+              <LocationProvider>
+                <RootNavigator />
+              </LocationProvider>
             </CartProvider>
           </NotificationsProvider>
         </AuthProvider>
