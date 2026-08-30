@@ -42,6 +42,7 @@ import {
   getCurrentLocation,
   getLocationAddress,
 } from "../utils/locationService";
+import { whenAppReady } from "../utils/appReady";
 import { FILTER_ALIASES, FOOD_FILTERS } from "../data/foodFilters";
 import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
@@ -251,6 +252,14 @@ export default function HomeScreen({ navigation: navigationProp }) {
     let isActive = true;
 
     const loadDeliveryLocation = async () => {
+      // Hold the location permission prompt until the splash has handed off,
+      // so it never opens over the branding animation. Once the splash is
+      // done this resolves immediately, so a later remount never waits.
+      await whenAppReady();
+      if (!isActive) {
+        return;
+      }
+
       try {
         const coords = await getCurrentLocation();
         const address = await getLocationAddress(
