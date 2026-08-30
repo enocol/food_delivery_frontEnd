@@ -192,7 +192,7 @@ function RootNavigator() {
               fontWeight: "bold",
             },
             // White to match the title on this screen's orange header.
-            ...platformBackButton(colors.white),
+            ...platformBackButton(colors.black),
           }}
         />
         <Stack.Screen
