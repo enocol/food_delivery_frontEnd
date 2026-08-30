@@ -1,6 +1,6 @@
 import "react-native-reanimated";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Image, View } from "react-native";
+import { Image, Platform, View } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import {
@@ -44,6 +44,20 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+// Header back control by platform: iOS keeps the custom arrow (so it matches
+// across screens and sits where the layouts expect); Android uses its own
+// native header back button, tinted to match the header.
+function platformBackButton(color) {
+  if (Platform.OS === "ios") {
+    return {
+      headerBackVisible: false,
+      headerLeft: () => <HeaderBackButton color={color} />,
+    };
+  }
+
+  return { headerTintColor: color };
+}
 
 function RootNavigator() {
   const router = useRouter();
@@ -177,9 +191,8 @@ function RootNavigator() {
               fontSize: 20,
               fontWeight: "bold",
             },
-            headerBackVisible: false,
             // White to match the title on this screen's orange header.
-            headerLeft: () => <HeaderBackButton color={colors.white} />,
+            ...platformBackButton(colors.white),
           }}
         />
         <Stack.Screen
@@ -187,8 +200,7 @@ function RootNavigator() {
           options={{
             title: "",
             headerTransparent: true,
-            headerBackVisible: false,
-            headerLeft: () => <HeaderBackButton color={colors.black} />,
+            ...platformBackButton(colors.black),
           }}
         />
         <Stack.Screen
@@ -197,8 +209,7 @@ function RootNavigator() {
             title: "",
             headerShown: true,
             headerTransparent: true,
-            headerBackVisible: false,
-            headerLeft: () => <HeaderBackButton color={colors.black} />,
+            ...platformBackButton(colors.black),
           }}
         />
         <Stack.Screen
@@ -207,8 +218,7 @@ function RootNavigator() {
             title: "",
             headerShown: true,
             headerTransparent: true,
-            headerBackVisible: false,
-            headerLeft: () => <HeaderBackButton color={colors.black} />,
+            ...platformBackButton(colors.black),
           }}
         />
       </Stack>

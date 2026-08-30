@@ -4,11 +4,14 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import * as colors from "../utils/colors";
 
-// One back control for both platforms. The native one differs by design —
-// iOS draws a chevron (plus the previous screen's title unless suppressed),
-// Android draws a bare Material arrow — so rendering our own is the only way
-// to make them identical. `arrow-back` from MaterialIcons is the exact glyph
-// Android uses natively, and that font is already in the bundle.
+// The header back control for iOS only. iOS's native control draws a chevron
+// plus the previous screen's title, which varies screen to screen; this draws
+// a bare Material arrow instead so it looks the same everywhere. Android keeps
+// its own native header back button (see platformBackButton in app/_layout.js),
+// so this component is not wired up there.
+//
+// `arrow-back` from MaterialIcons is the exact glyph Android uses natively, and
+// that font is already in the bundle.
 //
 // Pass as `headerLeft`; native-stack supplies `tintColor` from the screen's
 // headerTintColor, so the icon follows whatever each header already sets.
