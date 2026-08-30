@@ -8,11 +8,11 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import sharedStyles from "../components/styles";
+import ScreenGradient from "../components/ScreenGradient";
 import * as colors from "../utils/colors";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -37,8 +37,13 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const routeNavigation = useNavigation();
   const navigation = navigationProp ?? routeNavigation;
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { firebaseUid, userPhone, getAuthToken, emailVerified, refreshVerification } =
-    useAuth();
+  const {
+    firebaseUid,
+    userPhone,
+    getAuthToken,
+    emailVerified,
+    refreshVerification,
+  } = useAuth();
   const router = useRouter();
   const needsAccount = !firebaseUid;
   const needsVerification = Boolean(firebaseUid) && !emailVerified;
@@ -92,9 +97,7 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
         }
       } catch (error) {
         if (!cancelled) {
-          setQuoteError(
-            error.message || "Could not load your order summary.",
-          );
+          setQuoteError(error.message || "Could not load your order summary.");
         }
       } finally {
         if (!cancelled) {
@@ -352,15 +355,9 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   };
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-      edges={["left", "right", "bottom"]}
-    >
+    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
       <View style={styles.checkoutContainer}>
-        <LinearGradient
-          colors={colors.gradients.greenLight}
-          style={styles.screen}
-        >
+        <ScreenGradient style={styles.screen}>
           <KeyboardAwareScrollView
             enableOnAndroid
             keyboardShouldPersistTaps="handled"
@@ -503,7 +500,7 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
               </Text>
             </Pressable>
           </KeyboardAwareScrollView>
-        </LinearGradient>
+        </ScreenGradient>
       </View>
     </SafeAreaView>
   );
@@ -520,7 +517,6 @@ const styles = {
     },
     checkoutContainer: {
       flex: 1,
-      backgroundColor: colors.white,
       width: "100%",
       maxWidth: CARD_MAX_WIDTH,
       alignSelf: "center",

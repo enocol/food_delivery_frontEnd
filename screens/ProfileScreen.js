@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
@@ -24,6 +23,7 @@ import {
 import useRootCartHeader from "../components/useRootCartHeader";
 import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
+import ScreenGradient from "../components/ScreenGradient";
 import * as colors from "../utils/colors";
 
 export default function ProfileScreen({ navigation }) {
@@ -126,10 +126,7 @@ export default function ProfileScreen({ navigation }) {
   // top inset via headerHeight, so SafeAreaView must not add it again.
   return (
     <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
-      <LinearGradient
-        colors={colors.gradients.warmCream}
-        style={styles.screenBody}
-      >
+      <ScreenGradient>
         <Modal
           visible={isLocationModalVisible}
           transparent
@@ -205,7 +202,7 @@ export default function ProfileScreen({ navigation }) {
             )}
           </View>
         </ScrollView>
-      </LinearGradient>
+      </ScreenGradient>
     </SafeAreaView>
   );
 }
@@ -213,13 +210,6 @@ export default function ProfileScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
-    // Replaces the shared `gradientBackground`, whose marginTop: -40 was a
-    // hardcoded cancel for top safe-area padding this screen no longer adds.
-    // That constant only matched iOS notch insets and pulled the body up under
-    // the header on Android, where the inset is ~23dp.
-    screenBody: {
-      flex: 1,
-    },
     homeHeaderLocationContainer: {
       paddingLeft: 16,
       maxWidth: Platform.OS === "ios" ? "80%" : "60%",

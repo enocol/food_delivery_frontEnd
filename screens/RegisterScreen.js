@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { LinearGradient } from "expo-linear-gradient";
 import {
   ActivityIndicator,
   Alert,
@@ -19,6 +18,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCompactScreen } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import PasswordInput from "../components/PasswordInput";
+import ScreenGradient from "../components/ScreenGradient";
 import { useRouter } from "expo-router";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -181,8 +181,7 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
             resizeMode="contain"
             style={[styles.authHeroImage, { height: heroImageHeight }]}
           />
-          <LinearGradient
-            colors={colors.gradients.warmCream}
+          <ScreenGradient
             style={[
               styles.authGradientBackground,
               isCompactScreen ? styles.authGradientBackgroundCompact : null,
@@ -304,7 +303,7 @@ export default function RegisterScreen({ onGoToSignIn, navigation }) {
                 </Pressable>
               </View>
             </View>
-          </LinearGradient>
+          </ScreenGradient>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -329,8 +328,6 @@ const styles = {
       marginBottom: 10,
     },
     authGradientBackground: {
-      flex: 1,
-      marginTop: 0,
       paddingTop: 8,
     },
     authGradientBackgroundCompact: {

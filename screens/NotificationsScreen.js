@@ -1,5 +1,4 @@
 import React, { useCallback } from "react";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
@@ -7,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import NotificationCard from "../components/NotificationCard";
 import useRootCartHeader from "../components/useRootCartHeader";
 import sharedStyles from "../components/styles";
+import ScreenGradient from "../components/ScreenGradient";
 import { useNotifications } from "../context/NotificationsContext";
 import { useTransparentHeaderOffset } from "../utils/responsive";
 import * as colors from "../utils/colors";
@@ -43,8 +43,7 @@ export default function NotificationsScreen({ navigation: navigationProp }) {
 
   return (
     <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
-      <LinearGradient
-        colors={colors.gradients.warmCream}
+      <ScreenGradient
         style={[styles.gradientBackground, { paddingTop: headerOffset }]}
       >
         {notifications.length ? (
@@ -102,7 +101,7 @@ export default function NotificationsScreen({ navigation: navigationProp }) {
             </Text>
           </View>
         )}
-      </LinearGradient>
+      </ScreenGradient>
     </SafeAreaView>
   );
 }
@@ -115,7 +114,6 @@ const styles = {
       backgroundColor: colors.white,
     },
     gradientBackground: {
-      flex: 1,
       paddingHorizontal: 16,
     },
     actionsRow: {

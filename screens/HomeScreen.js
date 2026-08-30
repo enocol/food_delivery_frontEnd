@@ -49,6 +49,7 @@ import HomeSearchBar from "../components/HomeSearchBar";
 import HomeFoodFilter from "../components/HomeFoodFilter";
 // import HomeGreetingBanner from "../components/HomeGreetingBanner";
 import FloatingBasketButton from "../components/FloatingBasketButton";
+import ScreenGradient from "../components/ScreenGradient";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -636,7 +637,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
   // SafeAreaView add it again would double-count it.
   return (
     <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
-      <View style={styles.homeBody}>
+      <ScreenGradient>
         <Modal
           visible={isClosedModalVisible}
           transparent
@@ -935,7 +936,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
           bottom={Math.max(insets.bottom + 68, 68)}
           variant="compact"
         />
-      </View>
+      </ScreenGradient>
       <StatusBar style="auto" />
     </SafeAreaView>
   );
@@ -1083,13 +1084,6 @@ const styles = {
       fontSize: 13,
       color: colors.textMid,
       lineHeight: 19,
-    },
-    // Replaces the shared `gradientBackground`, whose marginTop: -40 was a
-    // hardcoded cancel for the top safe-area padding this screen no longer
-    // applies. That constant only matched iOS notch insets and pulled the body
-    // up under the header on Android, where the inset is ~23dp.
-    homeBody: {
-      flex: 1,
     },
     homeHeaderLocationContainer: {
       paddingLeft: 16,

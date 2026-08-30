@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, memo, useState } from "react";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import {
   FlatList,
@@ -18,6 +17,7 @@ import { clearPostAuthRedirect } from "../utils/postAuthRedirect";
 import useRootCartHeader from "../components/useRootCartHeader";
 import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
+import ScreenGradient from "../components/ScreenGradient";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import * as colors from "../utils/colors";
 import { formatXaf } from "../utils/formatXaf";
@@ -539,10 +539,7 @@ export default function OrdersScreen({ navigation }) {
   // headerHeight, so letting SafeAreaView add it again double-counts it.
   return (
     <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
-      <LinearGradient
-        colors={colors.gradients.warmCream}
-        style={styles.screenBody}
-      >
+      <ScreenGradient>
         <Modal
           visible={isLocationModalVisible}
           transparent
@@ -577,7 +574,7 @@ export default function OrdersScreen({ navigation }) {
           </Pressable>
         </Modal>
         {renderContent()}
-      </LinearGradient>
+      </ScreenGradient>
     </SafeAreaView>
   );
 }
@@ -585,13 +582,6 @@ export default function OrdersScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
-    // Replaces the shared `gradientBackground`, whose marginTop: -40 was a
-    // hardcoded cancel for top safe-area padding this screen no longer adds.
-    // That constant only matched iOS notch insets and pulled the body up under
-    // the header on Android, where the inset is ~23dp.
-    screenBody: {
-      flex: 1,
-    },
     homeHeaderLocationContainer: {
       paddingLeft: 16,
       maxWidth: Platform.OS === "ios" ? "80%" : "60%",

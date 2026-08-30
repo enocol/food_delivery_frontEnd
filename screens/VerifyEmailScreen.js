@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
   Alert,
@@ -13,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { consumePostAuthRedirect } from "../utils/postAuthRedirect";
 import sharedStyles from "../components/styles";
+import ScreenGradient from "../components/ScreenGradient";
 import * as colors from "../utils/colors";
 
 export default function VerifyEmailScreen() {
@@ -93,7 +93,7 @@ export default function VerifyEmailScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <LinearGradient colors={colors.gradients.warmCream} style={styles.body}>
+      <ScreenGradient style={styles.body}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
             <Ionicons name="mail-outline" size={34} color={colors.primary} />
@@ -133,7 +133,7 @@ export default function VerifyEmailScreen() {
             <Text style={styles.linkText}>Use a different account</Text>
           </Pressable>
         </View>
-      </LinearGradient>
+      </ScreenGradient>
     </SafeAreaView>
   );
 }
@@ -142,7 +142,6 @@ const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
     body: {
-      flex: 1,
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: 20,

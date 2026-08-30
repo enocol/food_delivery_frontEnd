@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -19,6 +18,7 @@ import * as colors from "../utils/colors";
 import { useAuth } from "../context/AuthContext";
 import { useCompactScreen } from "../utils/responsive";
 import sharedStyles from "../components/styles";
+import ScreenGradient from "../components/ScreenGradient";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -87,8 +87,7 @@ export default function ForgotPasswordScreen({ onGoToSignIn, navigation }) {
             resizeMode="contain"
             style={[styles.authHeroImage, { height: heroImageHeight }]}
           />
-          <LinearGradient
-            colors={colors.gradients.warmCream}
+          <ScreenGradient
             style={[
               styles.authGradientBackground,
               isCompactScreen ? styles.authGradientBackgroundCompact : null,
@@ -179,7 +178,7 @@ export default function ForgotPasswordScreen({ onGoToSignIn, navigation }) {
                 )}
               </View>
             </View>
-          </LinearGradient>
+          </ScreenGradient>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -205,8 +204,6 @@ const styles = {
       zIndex: 0,
     },
     authGradientBackground: {
-      flex: 1,
-      marginTop: 0,
       paddingTop: 8,
     },
     authGradientBackgroundCompact: {
