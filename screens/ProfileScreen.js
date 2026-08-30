@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,6 +23,9 @@ import useRootCartHeader from "../components/useRootCartHeader";
 import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import ScreenGradient from "../components/ScreenGradient";
+import HeaderDeliveryLocation, {
+  headerDeliveryLocationContainerStyle,
+} from "../components/HeaderDeliveryLocation";
 import * as colors from "../utils/colors";
 
 export default function ProfileScreen({ navigation }) {
@@ -39,19 +41,12 @@ export default function ProfileScreen({ navigation }) {
 
   const renderHeaderLocation = useCallback(
     () => (
-      <Pressable
+      <HeaderDeliveryLocation
+        label={locationLabel}
         onPress={() => setIsLocationModalVisible(true)}
-        style={styles.homeHeaderLocationWrap}
-      >
-        <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
-        <View style={styles.homeHeaderLocationRow}>
-          <Ionicons name="location" size={25} color={colors.white} />
-          <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
-            {locationLabel}
-          </Text>
-          <Ionicons name="chevron-down" size={25} color={colors.white} />
-        </View>
-      </Pressable>
+        // Transparent-header tab: nudge the block down to sit on the header.
+        style={styles.headerLocationOffset}
+      />
     ),
     [locationLabel],
   );
@@ -61,7 +56,7 @@ export default function ProfileScreen({ navigation }) {
     headerHeight,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
-    headerLeftContainerStyle: styles.homeHeaderLocationContainer,
+    headerLeftContainerStyle: headerDeliveryLocationContainerStyle,
   });
 
   const loadCurrentLocation = useCallback(async () => {
@@ -210,30 +205,8 @@ export default function ProfileScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
-    homeHeaderLocationContainer: {
-      paddingLeft: 16,
-      maxWidth: Platform.OS === "ios" ? "80%" : "60%",
-    },
-    homeHeaderLocationWrap: {
-      justifyContent: "center",
+    headerLocationOffset: {
       marginTop: 10,
-    },
-    homeHeaderLocationLabel: {
-      fontFamily: "Poppins_700Bold",
-      fontSize: 15,
-      color: colors.white,
-      marginBottom: 2,
-    },
-    homeHeaderLocationRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    homeHeaderLocationText: {
-      fontFamily: "Poppins_800ExtraBold",
-      flexShrink: 1,
-      fontSize: 14,
-      color: colors.white,
     },
     homeLocationModalBackdrop: {
       flex: 1,

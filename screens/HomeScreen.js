@@ -18,7 +18,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Platform,
 } from "react-native";
 import {
   SafeAreaView,
@@ -50,6 +49,9 @@ import HomeFoodFilter from "../components/HomeFoodFilter";
 // import HomeGreetingBanner from "../components/HomeGreetingBanner";
 import FloatingBasketButton from "../components/FloatingBasketButton";
 import ScreenGradient from "../components/ScreenGradient";
+import HeaderDeliveryLocation, {
+  headerDeliveryLocationContainerStyle,
+} from "../components/HeaderDeliveryLocation";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -214,20 +216,11 @@ export default function HomeScreen({ navigation: navigationProp }) {
 
   const renderHeaderLocation = useCallback(
     () => (
-      <Pressable
+      <HeaderDeliveryLocation
+        label={deliveryLocation}
         onPress={() => setIsLocationModalVisible(true)}
         onLayout={onHeaderContentLayout}
-        style={styles.homeHeaderLocationWrap}
-      >
-        <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
-        <View style={styles.homeHeaderLocationRow}>
-          <Ionicons name="location" size={25} color={colors.white} />
-          <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
-            {deliveryLocation}
-          </Text>
-          <Ionicons name="chevron-down" size={25} color={colors.white} />
-        </View>
-      </Pressable>
+      />
     ),
     [deliveryLocation, onHeaderContentLayout],
   );
@@ -236,7 +229,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
     headerHeight,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
-    headerLeftContainerStyle: styles.homeHeaderLocationContainer,
+    headerLeftContainerStyle: headerDeliveryLocationContainerStyle,
   });
 
   useEffect(() => {
@@ -1084,32 +1077,6 @@ const styles = {
       fontSize: 13,
       color: colors.textMid,
       lineHeight: 19,
-    },
-    homeHeaderLocationContainer: {
-      paddingLeft: 16,
-      maxWidth: Platform.OS === "ios" ? "80%" : "60%",
-    },
-    homeHeaderLocationWrap: {
-      // No marginTop: the header now reserves equal clearance above and below
-      // this block, and a margin here would skew it back down off centre.
-      justifyContent: "center",
-    },
-    homeHeaderLocationLabel: {
-      fontFamily: "Poppins_700Bold",
-      fontSize: 15,
-      color: colors.white,
-      marginBottom: 2,
-    },
-    homeHeaderLocationRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    homeHeaderLocationText: {
-      fontFamily: "Poppins_800ExtraBold",
-      flexShrink: 1,
-      fontSize: 14,
-      color: colors.white,
     },
     closedModalBackdrop: {
       flex: 1,

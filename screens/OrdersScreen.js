@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Platform,
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +17,9 @@ import useRootCartHeader from "../components/useRootCartHeader";
 import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import ScreenGradient from "../components/ScreenGradient";
+import HeaderDeliveryLocation, {
+  headerDeliveryLocationContainerStyle,
+} from "../components/HeaderDeliveryLocation";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
 import * as colors from "../utils/colors";
 import { formatXaf } from "../utils/formatXaf";
@@ -301,19 +303,12 @@ export default function OrdersScreen({ navigation }) {
 
   const renderHeaderLocation = useCallback(
     () => (
-      <Pressable
+      <HeaderDeliveryLocation
+        label={deliveryLocation}
         onPress={() => setIsLocationModalVisible(true)}
-        style={styles.homeHeaderLocationWrap}
-      >
-        <Text style={styles.homeHeaderLocationLabel}>Delivery to:</Text>
-        <View style={styles.homeHeaderLocationRow}>
-          <Ionicons name="location" size={25} color={colors.white} />
-          <Text style={styles.homeHeaderLocationText} numberOfLines={1}>
-            {deliveryLocation}
-          </Text>
-          <Ionicons name="chevron-down" size={25} color={colors.white} />
-        </View>
-      </Pressable>
+        // Transparent-header tab: nudge the block down to sit on the header.
+        style={styles.headerLocationOffset}
+      />
     ),
     [deliveryLocation],
   );
@@ -323,7 +318,7 @@ export default function OrdersScreen({ navigation }) {
     headerHeight,
     headerBackgroundColor: "#ff5a1f",
     headerLeft: renderHeaderLocation,
-    headerLeftContainerStyle: styles.homeHeaderLocationContainer,
+    headerLeftContainerStyle: headerDeliveryLocationContainerStyle,
   });
   // headerTransparent (set on OrdersTab) floats the header over the body,
   // so it doesn't auto-reserve space the way HomeTab's solid header does -
@@ -582,30 +577,8 @@ export default function OrdersScreen({ navigation }) {
 const styles = {
   ...sharedStyles,
   ...StyleSheet.create({
-    homeHeaderLocationContainer: {
-      paddingLeft: 16,
-      maxWidth: Platform.OS === "ios" ? "80%" : "60%",
-    },
-    homeHeaderLocationWrap: {
-      justifyContent: "center",
+    headerLocationOffset: {
       marginTop: 10,
-    },
-    homeHeaderLocationLabel: {
-      fontFamily: "Poppins_700Bold",
-      fontSize: 15,
-      color: colors.white,
-      marginBottom: 2,
-    },
-    homeHeaderLocationRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    homeHeaderLocationText: {
-      fontFamily: "Poppins_800ExtraBold",
-      flexShrink: 1,
-      fontSize: 14,
-      color: colors.white,
     },
     homeLocationModalBackdrop: {
       flex: 1,
