@@ -133,8 +133,9 @@ const styles = {
     },
     bulkActions: {
       flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 10,
+      // flexWrap: "wrap",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
     listContent: {
       paddingBottom: 24,

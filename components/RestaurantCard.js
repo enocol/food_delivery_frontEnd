@@ -59,7 +59,7 @@ const RestaurantCard = React.memo(function RestaurantCard({
   const deliveryText =
     Number(item.deliveryFee) > 0
       ? `${formatXaf(Number(item.deliveryFee))} delivery`
-      : "Free delivery";
+      : "Delivery will be calculated at checkout";
 
   return (
     <TouchableOpacity
@@ -107,21 +107,33 @@ const RestaurantCard = React.memo(function RestaurantCard({
         </View>
 
         <View style={styles.metaRow}>
-          <Ionicons name="star" size={18} color={colors.amberLight} />
-          <Text style={styles.ratingText}>{ratingValue.toFixed(1)}</Text>
-          {ratingCount > 0 && (
+          <View style={styles.metaSubGroup}>
+            <Ionicons name="star" size={18} color={colors.amberLight} />
+            <Text style={styles.ratingText}>{ratingValue.toFixed(1)}</Text>
+          </View>
+          {/* {ratingCount > 0 && (
             <Text style={styles.ratingCountText}>({ratingCount})</Text>
-          )}
-          <Text style={styles.dot}>·</Text>
-          <Text style={[styles.metaText, styles.cuisineText]} numberOfLines={1}>
-            {cuisineText}
-          </Text>
+          )} */}
+
+          <View style={styles.metaSubGroup}>
+            <Ionicons
+              name="bag-handle-outline"
+              size={17}
+              color={colors.textIconMuted}
+            />
+            <Text
+              style={[styles.metaText, styles.cuisineText]}
+              numberOfLines={1}
+            >
+              {cuisineText}
+            </Text>
+          </View>
         </View>
 
         {/* The reference fits these three on one line; this copy is longer in
             French/XAF, so the row still wraps rather than truncating. */}
         <View style={styles.metaRowWrap}>
-          <View style={styles.metaGroup}>
+          <View style={styles.metaSubGroup}>
             <Ionicons
               name="time-outline"
               size={17}
@@ -129,8 +141,8 @@ const RestaurantCard = React.memo(function RestaurantCard({
             />
             <Text style={styles.metaText}>{etaText}</Text>
           </View>
-          <Text style={styles.dot}>·</Text>
-          <View style={styles.metaGroup}>
+          {/* <Text style={styles.dot}>·</Text> */}
+          <View style={styles.metaSubGroup}>
             <Ionicons
               name="bicycle-outline"
               size={17}
@@ -138,15 +150,7 @@ const RestaurantCard = React.memo(function RestaurantCard({
             />
             <Text style={styles.metaText}>{deliveryText}</Text>
           </View>
-          <Text style={styles.dot}>·</Text>
-          <View style={styles.metaGroup}>
-            <Ionicons
-              name="bag-handle-outline"
-              size={17}
-              color={colors.textIconMuted}
-            />
-            <Text style={styles.metaText}>No min. order</Text>
-          </View>
+          {/* <Text style={styles.dot}>·</Text> */}
         </View>
       </View>
     </TouchableOpacity>
@@ -220,20 +224,27 @@ const styles = StyleSheet.create({
     color: colors.textRestaurant,
   },
   metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "nowrap",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    flexWrap: "wrap",
   },
   metaRowWrap: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-start",
     flexWrap: "wrap",
     rowGap: 6,
   },
   metaGroup: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-start",
     gap: 5,
+  },
+
+  metaSubGroup: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
   },
   ratingText: {
     marginLeft: 6,

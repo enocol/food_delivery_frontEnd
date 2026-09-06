@@ -324,7 +324,7 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
       setStatusMessage("Order saved successfully.");
       Alert.alert(
         "Order placed",
-        `Payment confirmed and order saved.\nOrder ID: ${orderRecord.id || orderRecord.orderRef}\nTransaction: ${paymentResult.transactionId}`,
+        `Payment confirmed and order saved.\nOrder ID: ${orderRecord?.id || orderRef}\nTransaction: ${paymentResult.transactionId}`,
       );
       navigation.navigate("MainTabs");
     } catch (error) {
@@ -511,14 +511,13 @@ const styles = {
   ...StyleSheet.create({
     safeArea: {
       flex: 1,
-      marginHorizontal: 12,
+      // marginHorizontal: 12,
       borderRadius: 18,
-      padding: 14,
     },
     checkoutContainer: {
       flex: 1,
       width: "100%",
-      maxWidth: CARD_MAX_WIDTH,
+      // maxWidth: CARD_MAX_WIDTH,
       alignSelf: "center",
     },
     checkoutScreenContent: {

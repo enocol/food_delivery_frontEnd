@@ -42,14 +42,6 @@ export default function NotificationCard({ item, onDelete, onMarkAsRead }) {
         <Text style={styles.notificationBody}>{item.body}</Text>
       ) : null}
 
-      {orderRef ? (
-        <View style={styles.notificationMetaPill}>
-          <Text style={styles.notificationMetaText}>
-            Order #{String(orderRef)}
-          </Text>
-        </View>
-      ) : null}
-
       <View style={styles.notificationActions}>
         {!item.read ? (
           <Pressable
