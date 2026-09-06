@@ -102,7 +102,9 @@ export default function FloatingBasketButton({
           color={colors.white}
         />
         {variant !== "compact" ? (
-          <Text style={styles.buttonText}>View Basket</Text>
+          <Text style={styles.buttonText} numberOfLines={1}>
+            View Basket
+          </Text>
         ) : null}
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{displayCount}</Text>
@@ -118,8 +120,9 @@ const styles = StyleSheet.create({
     zIndex: 30,
   },
   hostDefault: {
-    left: "30%",
-    right: "30%",
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
   hostCompact: {
     right: 14,
@@ -140,6 +143,7 @@ const styles = StyleSheet.create({
   },
   buttonDefault: {
     paddingVertical: 14,
+    paddingHorizontal: 22,
   },
   buttonCompact: {
     width: 52,
