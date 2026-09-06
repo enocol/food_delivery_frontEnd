@@ -5,7 +5,7 @@
     "scheme": "mboloeats",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/splash-icon.png",
+    "icon": "./assets/icon-mbolo-orange.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
@@ -18,9 +18,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FDFDFD",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#ff5a1f",
+        "foregroundImage": "./assets/android-icon-foreground-orange.png",
+        "monochromeImage": "./assets/android-icon-monochrome-orange.png"
       },
       "googleServicesFile": "./google-services.json",
       "package": "com.anonymous.mboloeats",
