@@ -64,6 +64,11 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
     0,
   );
 
+  // The quote effect below only fetches for a signed-in user with a non-empty
+  // cart, so gating on it here too keeps the "Place Order" button usable for
+  // guests (sign-in prompt) and empty carts, which never get a quote.
+  const isQuotePending = itemCount > 0 && !needsAccount && !quote;
+
   // Fetches the priced order summary (restaurant, per-item price, delivery
   // fee, total) as soon as the customer lands on checkout. The endpoint reads
   // the cart server-side from the auth token, but still requires a delivery
@@ -484,10 +489,12 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
             <Pressable
               style={[
                 styles.checkoutScreenCta,
-                isProcessing ? styles.checkoutScreenCtaDisabled : null,
+                isProcessing || isQuotePending
+                  ? styles.checkoutScreenCtaDisabled
+                  : null,
               ]}
               onPress={placeOrder}
-              disabled={isProcessing}
+              disabled={isProcessing || isQuotePending}
             >
               <Text style={styles.checkoutScreenCtaText}>
                 {isProcessing
