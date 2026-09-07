@@ -38,7 +38,11 @@ const LOGO_SETTLE_SPRING = { damping: 11, stiffness: 130, mass: 0.9 };
 export default function AnimatedSplash({ onFinish, onLayout }) {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const logoOffscreenX = -(screenWidth / 2 + LOGO_SIZE / 2 + LOGO_OFFSCREEN_MARGIN);
+  const logoOffscreenX = -(
+    screenWidth / 2 +
+    LOGO_SIZE / 2 +
+    LOGO_OFFSCREEN_MARGIN
+  );
 
   // Kept in a ref so a re-render of the parent can never restart the sequence
   // partway through.
@@ -211,6 +215,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.8,
     textTransform: "uppercase",
-    color: colors.textHeading,
+    color: colors.white,
   },
 });

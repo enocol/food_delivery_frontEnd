@@ -31,6 +31,7 @@ const styles = {
       paddingHorizontal: 5,
       borderWidth: 1,
       borderColor: colors.white,
+      backgroundColor: colors.black,
     },
     notificationBadgeText: {
       color: colors.white,
