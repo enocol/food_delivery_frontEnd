@@ -30,20 +30,14 @@ import {
 const PAYMENT_METHODS = [
   { id: "mtn-momo", label: "MTN MoMo" },
   { id: "orange-mobile-money", label: "Orange Money" },
-  { id: "cash", label: "Cash on Delivery" },
 ];
 
 export default function CheckoutScreen({ navigation: navigationProp }) {
   const routeNavigation = useNavigation();
   const navigation = navigationProp ?? routeNavigation;
   const { cartItems, cartTotal, clearCart } = useCart();
-  const {
-    firebaseUid,
-    userPhone,
-    getAuthToken,
-    emailVerified,
-    refreshVerification,
-  } = useAuth();
+  const { firebaseUid, getAuthToken, emailVerified, refreshVerification } =
+    useAuth();
   const router = useRouter();
   const needsAccount = !firebaseUid;
   const needsVerification = Boolean(firebaseUid) && !emailVerified;
@@ -51,6 +45,13 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
     useState("mtn-momo");
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  // The wallet paying and the person meeting the rider are usually the same,
+  // so this mirrors the payment number until the customer edits it - ordering
+  // on someone else's behalf is the case that needs them to differ.
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactPhoneEdited, setContactPhoneEdited] = useState(false);
+  const [contactPhoneError, setContactPhoneError] = useState("");
+  const [deliveryNotes, setDeliveryNotes] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [userLocation, setUserLocation] = useState(null);
@@ -218,48 +219,43 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
       return;
     }
 
-    if (selectedPaymentMethod !== "cash") {
-      const validation = validateCameroonPhone(
-        mobileMoneyPhone,
-        selectedPaymentMethod,
-      );
-      if (!validation.isValid) {
-        setPhoneError(validation.message);
-        return;
-      }
+    const validation = validateCameroonPhone(
+      mobileMoneyPhone,
+      selectedPaymentMethod,
+    );
+    if (!validation.isValid) {
+      setPhoneError(validation.message);
+      return;
+    }
+
+    // Called with no payment method, so this checks the number's shape only -
+    // the line the rider calls has no reason to match the wallet's network.
+    const contactValidation = validateCameroonPhone(contactPhone);
+    if (!contactValidation.isValid) {
+      setContactPhoneError(contactValidation.message);
+      return;
     }
 
     const orderRef = `ORDER-${Date.now()}`;
     const normalizedPhone = mobileMoneyPhone.replace(/\D/g, "");
+    const contactPhoneE164 = `+237${contactPhone
+      .replace(/\D/g, "")
+      .replace(/^237/, "")}`;
 
     try {
       setPhoneError("");
+      setContactPhoneError("");
       setIsProcessing(true);
-      setStatusMessage("Starting payment...");
 
-      let paymentResult;
+      const provider = selectedPaymentMethod === "mtn-momo" ? "mtn" : "orange";
+      setStatusMessage(`Sending ${provider.toUpperCase()} payment request...`);
 
-      if (selectedPaymentMethod === "cash") {
-        paymentResult = {
-          ok: true,
-          provider: "cash",
-          transactionId: `COD-${Date.now()}`,
-          paidAt: null,
-        };
-      } else {
-        const provider =
-          selectedPaymentMethod === "mtn-momo" ? "mtn" : "orange";
-        setStatusMessage(
-          `Sending ${provider.toUpperCase()} payment request...`,
-        );
-
-        paymentResult = await requestMobileMoneyPayment({
-          provider,
-          phone: normalizedPhone,
-          amountXaf: cartTotal,
-          orderRef,
-        });
-      }
+      const paymentResult = await requestMobileMoneyPayment({
+        provider,
+        phone: normalizedPhone,
+        amountXaf: cartTotal,
+        orderRef,
+      });
 
       if (!paymentResult.ok) {
         Alert.alert(
@@ -304,11 +300,10 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
         paymentMethodLabel,
         payment: paymentResult,
         customerPhone: normalizedPhone || null,
-        notifyPhone:
-          userPhone ||
-          (normalizedPhone
-            ? `+237${normalizedPhone.replace(/^237/, "")}`
-            : null),
+        // Who the rider calls, kept separate from the wallet that was charged.
+        contactPhone: contactPhoneE164,
+        deliveryNotes: deliveryNotes.trim() || null,
+        notifyPhone: contactPhoneE164,
         deliveryAddress,
         totals: {
           itemCount,
@@ -432,9 +427,9 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
                     style={styles.paymentOptionRow}
                     onPress={() => {
                       setSelectedPaymentMethod(method.id);
-                      if (method.id === "cash") {
-                        setPhoneError("");
-                      }
+                      // The number's network has to match the new provider, so
+                      // any error raised against the previous one is stale.
+                      setPhoneError("");
                     }}
                   >
                     <View
@@ -454,32 +449,77 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
                 );
               })}
 
-              {selectedPaymentMethod !== "cash" ? (
-                <>
-                  <TextInput
-                    value={mobileMoneyPhone}
-                    onChangeText={(value) => {
-                      setMobileMoneyPhone(formatCameroonPhoneInput(value));
-                      if (phoneError) {
-                        setPhoneError("");
-                      }
-                    }}
-                    placeholder="Phone number (e.g. +237 6XX XXX XXX)"
-                    placeholderTextColor={colors.placeholder}
-                    keyboardType="phone-pad"
-                    style={styles.paymentPhoneInput}
-                  />
-                  {detectNetworkFromPhone(mobileMoneyPhone) ? (
-                    <Text style={styles.paymentNetworkHint}>
-                      Detected network:{" "}
-                      {detectNetworkFromPhone(mobileMoneyPhone)}
-                    </Text>
-                  ) : null}
-                  {phoneError ? (
-                    <Text style={styles.paymentPhoneError}>{phoneError}</Text>
-                  ) : null}
-                </>
+              <Text style={styles.fieldLabel}>Mobile money number</Text>
+              <TextInput
+                value={mobileMoneyPhone}
+                onChangeText={(value) => {
+                  const formatted = formatCameroonPhoneInput(value);
+                  setMobileMoneyPhone(formatted);
+                  if (!contactPhoneEdited) {
+                    setContactPhone(formatted);
+                    setContactPhoneError("");
+                  }
+                  if (phoneError) {
+                    setPhoneError("");
+                  }
+                }}
+                placeholder="Phone number (e.g. +237 6XX XXX XXX)"
+                placeholderTextColor={colors.placeholder}
+                keyboardType="phone-pad"
+                style={styles.paymentPhoneInput}
+              />
+              {detectNetworkFromPhone(mobileMoneyPhone) ? (
+                <Text style={styles.paymentNetworkHint}>
+                  Detected network: {detectNetworkFromPhone(mobileMoneyPhone)}
+                </Text>
               ) : null}
+              {phoneError ? (
+                <Text style={styles.paymentPhoneError}>{phoneError}</Text>
+              ) : null}
+            </View>
+
+            <View style={styles.paymentPickerCard}>
+              <Text style={styles.paymentPickerTitle}>Delivery contact</Text>
+
+              <Text style={styles.fieldLabel}>
+                Number the rider should call
+              </Text>
+              <TextInput
+                value={contactPhone}
+                onChangeText={(value) => {
+                  setContactPhone(formatCameroonPhoneInput(value));
+                  setContactPhoneEdited(true);
+                  if (contactPhoneError) {
+                    setContactPhoneError("");
+                  }
+                }}
+                placeholder="Phone number (e.g. +237 6XX XXX XXX)"
+                placeholderTextColor={colors.placeholder}
+                keyboardType="phone-pad"
+                style={styles.paymentPhoneInput}
+              />
+              <Text style={styles.fieldHint}>
+                Change this if someone else is receiving the order.
+              </Text>
+              {contactPhoneError ? (
+                <Text style={styles.paymentPhoneError}>
+                  {contactPhoneError}
+                </Text>
+              ) : null}
+
+              <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+                Delivery notes (optional)
+              </Text>
+              <TextInput
+                value={deliveryNotes}
+                onChangeText={setDeliveryNotes}
+                placeholder="Landmark, gate colour, floor, who to ask for..."
+                placeholderTextColor={colors.placeholder}
+                multiline
+                numberOfLines={3}
+                maxLength={300}
+                style={[styles.paymentPhoneInput, styles.notesInput]}
+              />
             </View>
 
             {statusMessage ? (
@@ -683,6 +723,24 @@ const styles = {
       fontSize: 14,
       color: colors.textPaymentLabel,
       fontWeight: "700",
+    },
+    fieldLabel: {
+      marginTop: 10,
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.textHeading,
+    },
+    fieldLabelSpaced: {
+      marginTop: 18,
+    },
+    fieldHint: {
+      marginTop: 6,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    notesInput: {
+      minHeight: 76,
+      textAlignVertical: "top",
     },
     paymentPhoneInput: {
       marginTop: 8,
