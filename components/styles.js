@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
   },
   gradientBackground: {
     flex: 1,
-    marginTop: -40,
+    marginTop: 40,
   },
   emptyTitle: {
     fontFamily: "Poppins_800ExtraBold",
