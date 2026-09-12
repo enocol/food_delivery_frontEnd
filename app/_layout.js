@@ -214,9 +214,18 @@ function RootNavigator() {
         <Stack.Screen
           name="Checkout"
           options={{
-            title: "",
+            title: "Checkout",
             headerShown: true,
+            headerStyle: {
+              backgroundColor: "#ff5a1f",
+            },
             headerTransparent: true,
+            headerTitleStyle: {
+              color: "#fff",
+              fontSize: 20,
+              fontWeight: "bold",
+            },
+            // White to match the title on this screen's orange header.
             ...platformBackButton(colors.black),
           }}
         />

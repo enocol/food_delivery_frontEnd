@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Keyboard,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -21,11 +23,19 @@ import { requestMobileMoneyPayment } from "../apis/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
 import { getCurrentLocation } from "../utils/locationService";
 import { setPostAuthRedirect } from "../utils/postAuthRedirect";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import {
   useTransparentHeaderOffset,
   CARD_MAX_WIDTH,
 } from "../utils/responsive";
+
+// Footer's own height: 12 top padding + the 54pt pill + 12 bottom padding.
+// The scroll view reserves this much (plus the bottom inset) so its last card
+// can always be scrolled clear of the pinned bar.
+const FOOTER_CLEARANCE = 78;
 
 const PAYMENT_METHODS = [
   { id: "mtn-momo", label: "MTN MoMo" },
@@ -59,6 +69,32 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState("");
   const headerOffset = useTransparentHeaderOffset();
+  const insets = useSafeAreaInsets();
+  // The pinned footer steps aside while typing. On Android the window resizes,
+  // so it would otherwise sit squashed on top of the keyboard; on iOS the
+  // keyboard covers it anyway. Hiding it is consistent on both.
+  const [isKeyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    // iOS gets the "will" events so the footer leaves in step with the
+    // keyboard; Android only reports "did".
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, () =>
+      setKeyboardOpen(true),
+    );
+    const hideSub = Keyboard.addListener(hideEvent, () =>
+      setKeyboardOpen(false),
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const itemCount = Object.values(cartItems).reduce(
     (sum, item) => sum + item.qty,
@@ -355,16 +391,30 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
+    // "bottom" is deliberately not an edge: the pinned footer applies that
+    // inset itself, so its white reaches the screen edge instead of leaving a
+    // gradient strip beneath it.
+    <SafeAreaView style={styles.safeArea} edges={["left", "right"]}>
       <View style={styles.checkoutContainer}>
         <ScreenGradient style={styles.screen}>
           <KeyboardAwareScrollView
             enableOnAndroid
             keyboardShouldPersistTaps="handled"
             extraScrollHeight={24}
+            // Takes the space left over by the pinned footer. Without this the
+            // scroll view sizes to its content and pushes the footer off-screen
+            // instead of stopping short of it.
+            style={styles.scrollArea}
             contentContainerStyle={[
               styles.checkoutScreenContent,
-              { paddingTop: headerOffset },
+              {
+                paddingTop: headerOffset,
+                // Clears the pinned footer so the last card is not trapped
+                // behind it; no clearance needed once the footer steps aside.
+                paddingBottom: isKeyboardOpen
+                  ? 28
+                  : FOOTER_CLEARANCE + insets.bottom,
+              },
             ]}
           >
             <View style={styles.paymentPickerCard}>
@@ -525,28 +575,40 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
             {statusMessage ? (
               <Text style={styles.checkoutStatusText}>{statusMessage}</Text>
             ) : null}
-
-            <Pressable
-              style={[
-                styles.checkoutScreenCta,
-                isProcessing || isQuotePending
-                  ? styles.checkoutScreenCtaDisabled
-                  : null,
-              ]}
-              onPress={placeOrder}
-              disabled={isProcessing || isQuotePending}
-            >
-              <Text style={styles.checkoutScreenCtaText}>
-                {isProcessing
-                  ? "Processing..."
-                  : needsAccount
-                    ? "Sign in to order"
-                    : needsVerification
-                      ? "Verify email to order"
-                      : "Place Order"}
-              </Text>
-            </Pressable>
           </KeyboardAwareScrollView>
+
+          {/* Sibling of the scroll view, not a child, so it stays put while
+              the content moves underneath it. */}
+          {isKeyboardOpen ? null : (
+            <View
+              style={[
+                styles.ctaFooter,
+                { paddingBottom: insets.bottom + 12 },
+              ]}
+            >
+              <Pressable
+                style={[
+                  styles.checkoutScreenCta,
+                  isProcessing || isQuotePending
+                    ? styles.checkoutScreenCtaDisabled
+                    : null,
+                ]}
+                onPress={placeOrder}
+                disabled={isProcessing || isQuotePending}
+                accessibilityRole="button"
+              >
+                <Text style={styles.checkoutScreenCtaText} numberOfLines={1}>
+                  {isProcessing
+                    ? "Processing..."
+                    : needsAccount
+                      ? "Sign in to order"
+                      : needsVerification
+                        ? "Verify email to order"
+                        : "Place Order"}
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </ScreenGradient>
       </View>
     </SafeAreaView>
@@ -654,21 +716,45 @@ const styles = {
       fontFamily: "Poppins_800ExtraBold",
       color: colors.textAmberButton,
     },
+    scrollArea: {
+      flex: 1,
+    },
+    // Pinned bar behind the CTA. White, as the content scrolling beneath it
+    // needs an opaque surface to disappear under.
+    ctaFooter: {
+      paddingTop: 12,
+      paddingHorizontal: 16,
+      backgroundColor: colors.white,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderLight,
+      shadowColor: colors.textDark,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      elevation: 12,
+    },
     checkoutScreenCta: {
-      marginHorizontal: 8,
-      marginTop: 6,
-      borderRadius: 14,
-      backgroundColor: colors.successDark,
+      // The footer supplies the horizontal inset now, so the button simply
+      // stretches to its content width.
+      marginTop: 0,
+      // Half the height, so it stays a true stadium if the height grows.
+      borderRadius: 999,
+      // Matches the cart's "Go to checkout" pill: one primary action, one look.
+      backgroundColor: "#ff5a1f",
+      minHeight: 54,
       paddingVertical: 14,
+      paddingHorizontal: 20,
       alignItems: "center",
+      justifyContent: "center",
     },
     checkoutScreenCtaDisabled: {
+      // Not lower: white text on a paler fill stops being readable.
       opacity: 0.6,
     },
     checkoutScreenCtaText: {
       fontFamily: "Poppins_800ExtraBold",
       color: colors.white,
-      fontSize: 15,
+      fontSize: 17,
     },
     checkoutStatusText: {
       marginHorizontal: 10,
