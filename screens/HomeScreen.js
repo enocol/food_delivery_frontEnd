@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import {
   Animated,
   Easing,
@@ -89,7 +90,8 @@ export default function HomeScreen({ navigation: navigationProp }) {
   const routeNavigation = useNavigation();
   const navigation = navigationProp ?? routeNavigation;
   const insets = useSafeAreaInsets();
-  const { cartCount, openCartSheet } = useCart();
+  const router = useRouter();
+  const { cartCount } = useCart();
   const { firebaseUid, user } = useAuth();
   const customerName =
     user?.displayName?.trim()?.split(/\s+/)?.[0] ||
@@ -870,7 +872,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
 
         <FloatingBasketButton
           count={cartCount}
-          onPress={openCartSheet}
+          onPress={() => router.navigate("/Cart")}
           bottom={Math.max(insets.bottom + 68, 68)}
           variant="compact"
         />

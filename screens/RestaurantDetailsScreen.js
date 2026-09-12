@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import {
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import {
   Alert,
   Animated,
@@ -52,7 +56,8 @@ export default function RestaurantDetailsScreen({ route }) {
     Platform.OS === "android"
       ? Math.max(insets.top, StatusBar.currentHeight || 0)
       : insets.top;
-  const { addToCart, cartCount, openCartSheet } = useCart();
+  const router = useRouter();
+  const { addToCart, cartCount } = useCart();
   const [restaurant, setRestaurant] = useState(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -342,7 +347,7 @@ export default function RestaurantDetailsScreen({ route }) {
 
         <FloatingBasketButton
           count={cartCount}
-          onPress={openCartSheet}
+          onPress={() => router.navigate("/Cart")}
           bottom={Math.max(insets.bottom + 16, 16)}
         />
 

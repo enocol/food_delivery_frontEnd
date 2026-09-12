@@ -199,7 +199,6 @@ export function CartProvider({ children }) {
   const [cartId, setCartId] = useState(null);
   const [cartItems, setCartItems] = useState({});
   const [cartLoading, setCartLoading] = useState(false);
-  const [isCartSheetOpen, setCartSheetOpen] = useState(false);
 
   const resetLocalCart = useCallback(() => {
     setCartId(null);
@@ -608,10 +607,11 @@ export function CartProvider({ children }) {
     [cartItems, ensureCart, firebaseUid, isGuest],
   );
 
+  // Closing the cart screen afterwards is the caller's job now that the route,
+  // not this context, owns whether the cart is on screen.
   const clearCart = useCallback(async () => {
     if (isGuest) {
       setCartItems({});
-      setCartSheetOpen(false);
       return;
     }
 
@@ -620,21 +620,11 @@ export function CartProvider({ children }) {
       const payload = await clearRemoteCart(token, cartId, firebaseUid);
       if (payload?.items) {
         setCartItems(toItemMap(payload));
-        setCartSheetOpen(false);
         return;
       }
     }
     setCartItems({});
-    setCartSheetOpen(false);
   }, [cartId, firebaseUid, getAuthToken, isGuest]);
-
-  const openCartSheet = useCallback(() => {
-    setCartSheetOpen(true);
-  }, []);
-
-  const closeCartSheet = useCallback(() => {
-    setCartSheetOpen(false);
-  }, []);
 
   const cartCount = useMemo(
     () => Object.values(cartItems).reduce((sum, item) => sum + item.qty, 0),
@@ -657,7 +647,6 @@ export function CartProvider({ children }) {
       cartCount,
       cartTotal,
       cartLoading,
-      isCartSheetOpen,
       // Phase 3 (the checkout gate) and any "sign in to save your cart"
       // affordance both need to know this.
       isGuest,
@@ -665,8 +654,6 @@ export function CartProvider({ children }) {
       increaseQty,
       decreaseQty,
       clearCart,
-      openCartSheet,
-      closeCartSheet,
       refreshCart: loadCartFromServer,
     }),
     [
@@ -677,13 +664,10 @@ export function CartProvider({ children }) {
       cartLoading,
       cartTotal,
       clearCart,
-      closeCartSheet,
       decreaseQty,
-      isCartSheetOpen,
       isGuest,
       increaseQty,
       loadCartFromServer,
-      openCartSheet,
     ],
   );
 

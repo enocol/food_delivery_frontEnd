@@ -14,11 +14,10 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import AnimatedSplash from "../components/AnimatedSplash";
-import CartBottomSheet from "../components/CartBottomSheet";
 import HeaderBackButton from "../components/HeaderBackButton";
 import NetworkStatusBanner from "../components/NetworkStatusBanner";
 import { AuthProvider, useAuth } from "../context/AuthContext";
-import { CartProvider, useCart } from "../context/CartContext";
+import { CartProvider } from "../context/CartContext";
 import { LocationProvider } from "../context/LocationContext";
 import { NetworkStatusProvider } from "../context/NetworkStatusContext";
 import {
@@ -65,7 +64,6 @@ function RootNavigator() {
   const segments = useSegments();
   const { user, authLoading, emailVerified } = useAuth();
   const previousUserRef = useRef(user);
-  const { closeCartSheet, isCartSheetOpen } = useCart();
   const { saveExpoNotification } = useNotifications();
 
   useEffect(() => {
@@ -222,20 +220,28 @@ function RootNavigator() {
             ...platformBackButton(colors.black),
           }}
         />
+        {/* Guests reach this too: they build carts before they have accounts. */}
+        <Stack.Screen
+          name="Cart"
+          options={{
+            title: "Basket",
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: "#ff5a1f",
+            },
+            // Deliberately NOT transparent: this screen's background is a
+            // near-white gradient, so a transparent header would drop the
+            // white title onto white. Solid also means the header reserves
+            // its own height, so the body needs no per-device top offset.
+            headerTitleStyle: {
+              color: "#fff",
+              fontSize: 20,
+              fontWeight: "bold",
+            },
+            ...platformBackButton(colors.white),
+          }}
+        />
       </Stack>
-      {/* Mounted for guests too: they build carts before they have accounts. */}
-      <CartBottomSheet
-        visible={isCartSheetOpen}
-        onClose={closeCartSheet}
-        onCheckout={() => {
-          closeCartSheet();
-          router.navigate("/Checkout");
-        }}
-        onOrderNow={() => {
-          closeCartSheet();
-          router.navigate("/MainTabs/HomeTab");
-        }}
-      />
       {/* Sibling of the navigator so it floats above whatever screen is up. */}
       <NetworkStatusBanner />
     </>
