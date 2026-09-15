@@ -9,7 +9,6 @@ import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useRouter } from "expo-router";
 import {
   Animated,
   Easing,
@@ -24,9 +23,9 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import useRootCartHeader from "../components/useRootCartHeader";
+import useDeliveryLocationHeader from "../components/useDeliveryLocationHeader";
 import { useMeasuredHeaderHeight } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import { SkeletonBlock } from "../components/LoadingPlaceholder";
@@ -43,12 +42,8 @@ import RestaurantCard from "../components/RestaurantCard";
 import HomeSearchBar from "../components/HomeSearchBar";
 import HomeFoodFilter from "../components/HomeFoodFilter";
 // import HomeGreetingBanner from "../components/HomeGreetingBanner";
-import FloatingBasketButton from "../components/FloatingBasketButton";
 import ScreenGradient from "../components/ScreenGradient";
-import HeaderDeliveryLocation, {
-  headerDeliveryLocationContainerStyle,
-} from "../components/HeaderDeliveryLocation";
-import { useDeliveryLocation } from "../context/LocationContext";
+import { headerDeliveryLocationContainerStyle } from "../components/HeaderDeliveryLocation";
 
 function getFilterTerms(food) {
   return Array.from(new Set([food, ...(FILTER_ALIASES[food] || [])]))
@@ -90,8 +85,6 @@ export default function HomeScreen({ navigation: navigationProp }) {
   const routeNavigation = useNavigation();
   const navigation = navigationProp ?? routeNavigation;
   const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const { cartCount } = useCart();
   const { firebaseUid, user } = useAuth();
   const customerName =
     user?.displayName?.trim()?.split(/\s+/)?.[0] ||
@@ -105,8 +98,6 @@ export default function HomeScreen({ navigation: navigationProp }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [error, setError] = useState("");
-  const { deliveryLocation } = useDeliveryLocation();
-  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const [isClosedModalVisible, setIsClosedModalVisible] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [isAiModalVisible, setIsAiModalVisible] = useState(false);
@@ -210,21 +201,16 @@ export default function HomeScreen({ navigation: navigationProp }) {
   // during render, so onHeaderContentLayout must already be initialised.
   const { headerHeight, onHeaderContentLayout } = useMeasuredHeaderHeight();
 
-  const renderHeaderLocation = useCallback(
-    () => (
-      <HeaderDeliveryLocation
-        label={deliveryLocation}
-        onPress={() => setIsLocationModalVisible(true)}
-        onLayout={onHeaderContentLayout}
-      />
-    ),
-    [deliveryLocation, onHeaderContentLayout],
-  );
+  // Solid-header tab: no offset needed, but the block is measured so the
+  // header reserves exactly the height its content takes.
+  const { headerLeft, locationModal } = useDeliveryLocationHeader({
+    onLayout: onHeaderContentLayout,
+  });
 
   useRootCartHeader(navigation, "", {
     headerHeight,
     headerBackgroundColor: "#ff5a1f",
-    headerLeft: renderHeaderLocation,
+    headerLeft,
     headerLeftContainerStyle: headerDeliveryLocationContainerStyle,
   });
 
@@ -600,39 +586,7 @@ export default function HomeScreen({ navigation: navigationProp }) {
           </View>
         </Modal>
 
-        <Modal
-          visible={isLocationModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsLocationModalVisible(false)}
-        >
-          <Pressable
-            style={styles.homeLocationModalBackdrop}
-            onPress={() => setIsLocationModalVisible(false)}
-          >
-            <Pressable style={styles.homeLocationModalCard} onPress={() => {}}>
-              <View style={styles.homeLocationModalHeader}>
-                <Text style={styles.homeLocationModalTitle}>
-                  Delivery location
-                </Text>
-                <Pressable
-                  style={styles.homeLocationModalCloseButton}
-                  onPress={() => setIsLocationModalVisible(false)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="close" size={22} color={colors.white} />
-                </Pressable>
-              </View>
-
-              <View style={styles.homeLocationModalRow}>
-                <Ionicons name="location" size={18} color={colors.orange} />
-                <Text style={styles.homeLocationModalText}>
-                  {deliveryLocation}
-                </Text>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
+        {locationModal}
 
         <Modal
           visible={isFilterModalVisible}
@@ -869,13 +823,6 @@ export default function HomeScreen({ navigation: navigationProp }) {
             )
           }
         />
-
-        <FloatingBasketButton
-          count={cartCount}
-          onPress={() => router.navigate("/Cart")}
-          bottom={Math.max(insets.bottom + 68, 68)}
-          variant="compact"
-        />
       </ScreenGradient>
       <StatusBar style="auto" />
     </SafeAreaView>
@@ -1103,18 +1050,6 @@ const styles = {
       fontFamily: "Poppins_800ExtraBold",
       fontSize: 18,
       color: colors.textDark,
-    },
-    homeLocationModalRow: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 8,
-    },
-    homeLocationModalText: {
-      fontFamily: "Poppins_400Regular",
-      flex: 1,
-      fontSize: 15,
-      lineHeight: 22,
-      color: colors.textMid,
     },
     restaurantList: {
       paddingBottom: 120,

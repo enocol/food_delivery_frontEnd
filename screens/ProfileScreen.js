@@ -1,8 +1,6 @@
-import React, { useCallback, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import React from "react";
 import {
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,40 +13,28 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { clearPostAuthRedirect } from "../utils/postAuthRedirect";
 import { formatXaf } from "../utils/formatXaf";
-import { useDeliveryLocation } from "../context/LocationContext";
 import useRootCartHeader from "../components/useRootCartHeader";
+import useDeliveryLocationHeader from "../components/useDeliveryLocationHeader";
 import { useRootHeaderHeight, CARD_MAX_WIDTH } from "../utils/responsive";
 import sharedStyles from "../components/styles";
 import ScreenGradient from "../components/ScreenGradient";
-import HeaderDeliveryLocation, {
-  headerDeliveryLocationContainerStyle,
-} from "../components/HeaderDeliveryLocation";
+import { headerDeliveryLocationContainerStyle } from "../components/HeaderDeliveryLocation";
 import * as colors from "../utils/colors";
 
 export default function ProfileScreen({ navigation }) {
   const { cartTotal } = useCart();
   const { user, signOutUser, authActionLoading } = useAuth();
   const router = useRouter();
-  const { deliveryLocation } = useDeliveryLocation();
-  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
-
-  const renderHeaderLocation = useCallback(
-    () => (
-      <HeaderDeliveryLocation
-        label={deliveryLocation}
-        onPress={() => setIsLocationModalVisible(true)}
-        // Transparent-header tab: nudge the block down to sit on the header.
-        style={styles.headerLocationOffset}
-      />
-    ),
-    [deliveryLocation],
-  );
+  // Transparent-header tab, so the block is nudged down to sit on the header.
+  const { headerLeft, locationModal } = useDeliveryLocationHeader({
+    style: styles.headerLocationOffset,
+  });
 
   const headerHeight = useRootHeaderHeight();
   useRootCartHeader(navigation, "Profile", {
     headerHeight,
     headerBackgroundColor: "#ff5a1f",
-    headerLeft: renderHeaderLocation,
+    headerLeft,
     headerLeftContainerStyle: headerDeliveryLocationContainerStyle,
   });
 
@@ -79,39 +65,7 @@ export default function ProfileScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <ScreenGradient>
-        <Modal
-          visible={isLocationModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsLocationModalVisible(false)}
-        >
-          <Pressable
-            style={styles.homeLocationModalBackdrop}
-            onPress={() => setIsLocationModalVisible(false)}
-          >
-            <Pressable style={styles.homeLocationModalCard} onPress={() => {}}>
-              <View style={styles.homeLocationModalHeader}>
-                <Text style={styles.homeLocationModalTitle}>
-                  Delivery location
-                </Text>
-                <Pressable
-                  style={styles.homeLocationModalCloseButton}
-                  onPress={() => setIsLocationModalVisible(false)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="close" size={22} color={colors.white} />
-                </Pressable>
-              </View>
-
-              <View style={styles.homeLocationModalRow}>
-                <Ionicons name="location" size={18} color={colors.orange} />
-                <Text style={styles.homeLocationModalText}>
-                  {deliveryLocation}
-                </Text>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
+        {locationModal}
 
         <ScrollView
           contentContainerStyle={[
@@ -164,61 +118,6 @@ const styles = {
   ...StyleSheet.create({
     headerLocationOffset: {
       marginTop: 10,
-    },
-    homeLocationModalBackdrop: {
-      flex: 1,
-      backgroundColor: colors.overlays.locationBackdrop,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 20,
-    },
-    homeLocationModalCard: {
-      width: "100%",
-      maxWidth: 420,
-      backgroundColor: colors.bgWarm,
-      borderRadius: 22,
-      padding: 20,
-      borderWidth: 1,
-      borderColor: colors.borderModalWarm,
-    },
-    homeLocationModalHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 14,
-    },
-    homeLocationModalCloseButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: colors.black,
-      borderWidth: 1,
-      borderColor: colors.black,
-    },
-    homeLocationModalTitle: {
-      fontFamily: "Poppins_800ExtraBold",
-      fontSize: 18,
-      color: colors.textDark,
-    },
-    homeLocationModalRow: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 8,
-    },
-    homeLocationModalText: {
-      fontFamily: "Poppins_400Regular",
-      flex: 1,
-      fontSize: 15,
-      lineHeight: 22,
-      color: colors.textMid,
-    },
-    homeLocationModalCoords: {
-      marginTop: 10,
-      fontFamily: "Poppins_400Regular",
-      fontSize: 13,
-      color: colors.textMuted,
     },
     profileWrap: {
       paddingBottom: 40,
