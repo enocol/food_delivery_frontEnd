@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import { Platform, Vibration } from "react-native";
+import { Alert, Platform, Vibration } from "react-native";
 import { useAuth } from "./AuthContext";
 import { playCartTickSound } from "../utils/cartFeedback";
 import { normalizeImageForState } from "../utils/imageSource";
@@ -157,6 +157,37 @@ async function writeGuestCart(items) {
 function getCartRestaurantId(items) {
   const first = Object.values(items)[0];
   return first ? first.restaurantId : null;
+}
+
+function getCartRestaurantName(items) {
+  const first = Object.values(items)[0];
+  return first?.restaurantName || null;
+}
+
+// Switching restaurants empties the basket, which used to happen silently and
+// without warning. Asking first turns an unrecoverable surprise into a choice.
+function confirmReplaceBasket(currentRestaurantName) {
+  const where = currentRestaurantName
+    ? `Your basket has items from ${currentRestaurantName}.`
+    : "Your basket has items from another restaurant.";
+
+  return new Promise((resolve) => {
+    Alert.alert(
+      "Start a new basket?",
+      `${where} You can only order from one restaurant at a time, so adding this item will empty your basket.`,
+      [
+        { text: "Keep my basket", style: "cancel", onPress: () => resolve(false) },
+        {
+          text: "Start a new basket",
+          style: "destructive",
+          onPress: () => resolve(true),
+        },
+      ],
+      // Dismissing by tapping outside on Android keeps the basket, matching
+      // the cancel action rather than silently resolving as a confirmation.
+      { cancelable: true, onDismiss: () => resolve(false) },
+    );
+  });
 }
 
 // The same shape the server path falls back to when a response carries no
@@ -411,15 +442,25 @@ export function CartProvider({ children }) {
       const nextQuantity = Math.max(1, Number(quantity) || 1);
       const nextRestaurantId = restaurant?.id ?? null;
 
+      // Decided up front, before anything is cleared or sent, so declining
+      // leaves the basket exactly as it was on both paths.
+      const currentRestaurantId = getCartRestaurantId(cartItems);
+      const isDifferentRestaurant =
+        currentRestaurantId != null &&
+        nextRestaurantId != null &&
+        String(currentRestaurantId) !== String(nextRestaurantId);
+
+      if (isDifferentRestaurant) {
+        const confirmed = await confirmReplaceBasket(
+          getCartRestaurantName(cartItems),
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
       if (isGuest) {
         setCartItems((current) => {
-          const currentRestaurantId = getCartRestaurantId(current);
-          // Adding from a different restaurant starts a fresh cart instead
-          // of merging - an order can only contain one restaurant's items.
-          const isDifferentRestaurant =
-            currentRestaurantId != null &&
-            nextRestaurantId != null &&
-            String(currentRestaurantId) !== String(nextRestaurantId);
           const base = isDifferentRestaurant ? {} : current;
           return addItemLocally(base, item, restaurant, nextQuantity);
         });
@@ -428,12 +469,6 @@ export function CartProvider({ children }) {
       }
 
       const { token, activeCartId } = await ensureCart();
-
-      const currentRestaurantId = getCartRestaurantId(cartItems);
-      const isDifferentRestaurant =
-        currentRestaurantId != null &&
-        nextRestaurantId != null &&
-        String(currentRestaurantId) !== String(nextRestaurantId);
 
       if (isDifferentRestaurant) {
         try {
