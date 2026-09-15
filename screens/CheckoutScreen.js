@@ -15,14 +15,23 @@ import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import sharedStyles from "../components/styles";
 import ScreenGradient from "../components/ScreenGradient";
+import DeliveryNotesSheet from "../components/DeliveryNotesSheet";
+import DeliveryMapPreview from "../components/DeliveryMapPreview";
 import * as colors from "../utils/colors";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useDeliveryLocation } from "../context/LocationContext";
 import { createOrder, fetchOrderQuote } from "../apis/orderApi";
 import { requestMobileMoneyPayment } from "../apis/fakePaymentApi";
 import { formatXaf } from "../utils/formatXaf";
 import { getCurrentLocation } from "../utils/locationService";
 import { setPostAuthRedirect } from "../utils/postAuthRedirect";
+import { useCheckoutDraft } from "../context/CheckoutDraftContext";
+import {
+  formatCameroonPhoneInput,
+  paymentMethodLabel,
+  validateCameroonPhone,
+} from "../utils/cameroonPhone";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -32,28 +41,48 @@ import {
   CARD_MAX_WIDTH,
 } from "../utils/responsive";
 
-// Footer's own height: 12 top padding + the 54pt pill + 12 bottom padding.
-// The scroll view reserves this much (plus the bottom inset) so its last card
-// can always be scrolled clear of the pinned bar.
-const FOOTER_CLEARANCE = 78;
-
-const PAYMENT_METHODS = [
-  { id: "mtn-momo", label: "MTN MoMo" },
-  { id: "orange-mobile-money", label: "Orange Money" },
-];
+// First-frame fallback only - the footer reports its real height on layout.
+// 12 top padding + the total row + the 54pt pill + 12 bottom padding, which
+// the scroll view reserves so its last card clears the pinned bar.
+const FOOTER_CLEARANCE = 115;
 
 export default function CheckoutScreen({ navigation: navigationProp }) {
   const routeNavigation = useNavigation();
   const navigation = navigationProp ?? routeNavigation;
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { firebaseUid, getAuthToken, emailVerified, refreshVerification } =
-    useAuth();
+  const {
+    user,
+    userEmail,
+    firebaseUid,
+    getAuthToken,
+    emailVerified,
+    refreshVerification,
+  } = useAuth();
+  // Already resolved once for the header labels elsewhere in the app, so the
+  // address and coordinates are read from here rather than looked up again.
+  // Aliased: `deliveryAddress` already means the coordinate payload sent to
+  // the backend further down, and this is the reverse-geocoded street address.
+  const {
+    deliveryLocation,
+    deliveryAddress: locationAddress,
+    deliveryCoords,
+    refreshLocation,
+  } = useDeliveryLocation();
   const router = useRouter();
   const needsAccount = !firebaseUid;
   const needsVerification = Boolean(firebaseUid) && !emailVerified;
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState("mtn-momo");
-  const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
+  // The wallet is chosen on /SelectPaymentMethod and the note in a sheet, but
+  // both live in the draft so they survive a restart and clear together once
+  // the order is placed. No default payment method, so the row starts empty
+  // and Place Order stays disabled until the customer picks one.
+  const {
+    paymentMethod,
+    paymentPhone,
+    hasPaymentMethod,
+    deliveryNotes,
+    setDeliveryNotes,
+    clearCheckoutDraft,
+  } = useCheckoutDraft();
   const [phoneError, setPhoneError] = useState("");
   // The wallet paying and the person meeting the rider are usually the same,
   // so this mirrors the payment number until the customer edits it - ordering
@@ -61,7 +90,7 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   const [contactPhone, setContactPhone] = useState("");
   const [contactPhoneEdited, setContactPhoneEdited] = useState(false);
   const [contactPhoneError, setContactPhoneError] = useState("");
-  const [deliveryNotes, setDeliveryNotes] = useState("");
+  const [isNotesSheetOpen, setNotesSheetOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [userLocation, setUserLocation] = useState(null);
@@ -74,6 +103,9 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   // so it would otherwise sit squashed on top of the keyboard; on iOS the
   // keyboard covers it anyway. Hiding it is consistent on both.
   const [isKeyboardOpen, setKeyboardOpen] = useState(false);
+  // Measured rather than assumed: the footer grew a total row, and a constant
+  // that drifts out of date leaves the last card trapped behind the bar.
+  const [footerHeight, setFooterHeight] = useState(0);
 
   useEffect(() => {
     // iOS gets the "will" events so the footer leaves in step with the
@@ -96,6 +128,16 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
     };
   }, []);
 
+  // The payment number is typed on another screen now, so instead of mirroring
+  // it keystroke by keystroke, the contact number is seeded from it on return -
+  // still only while the customer has not typed their own.
+  useEffect(() => {
+    if (paymentPhone && !contactPhoneEdited) {
+      setContactPhone(paymentPhone);
+      setContactPhoneError("");
+    }
+  }, [contactPhoneEdited, paymentPhone]);
+
   const itemCount = Object.values(cartItems).reduce(
     (sum, item) => sum + item.qty,
     0,
@@ -105,6 +147,36 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
   // cart, so gating on it here too keeps the "Place Order" button usable for
   // guests (sign-in prompt) and empty carts, which never get a quote.
   const isQuotePending = itemCount > 0 && !needsAccount && !quote;
+
+  // The account holds a display name from sign-up and the email it was created
+  // with; the local part of the email stands in when the name was never set.
+  const customerName =
+    user?.displayName?.trim() ||
+    (userEmail ? userEmail.split("@")[0] : "") ||
+    "Guest";
+
+  // Street first, town underneath - the same split the rider reads it in. The
+  // one-line label is the fallback for when reverse geocoding returned nothing
+  // structured, or nothing at all.
+  const addressTitle =
+    locationAddress?.street || locationAddress?.name || deliveryLocation;
+  const addressMeta =
+    [locationAddress?.city, locationAddress?.region]
+      .filter(Boolean)
+      .join(", ") ||
+    [locationAddress?.country, locationAddress?.postalCode]
+      .filter(Boolean)
+      .join(" ");
+
+  // Checkout resolves its own fix for the quote, which is the fresher of the
+  // two; the session-wide one covers the window before that call returns.
+  const mapCoords = userLocation || deliveryCoords;
+
+  // Guests and unverified users keep a live button - it routes them to sign in
+  // or verify - so only the ready-to-pay case is gated on having a wallet.
+  const needsPaymentMethod =
+    !needsAccount && !needsVerification && !hasPaymentMethod;
+  const isCtaDisabled = isProcessing || isQuotePending || needsPaymentMethod;
 
   // Fetches the priced order summary (restaurant, per-item price, delivery
   // fee, total) as soon as the customer lands on checkout. The endpoint reads
@@ -154,74 +226,6 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const formatCameroonPhoneInput = (rawValue) => {
-    const digits = rawValue.replace(/\D/g, "");
-    const hasCountryCode = digits.startsWith("237");
-    const local = hasCountryCode ? digits.slice(3, 12) : digits.slice(0, 9);
-
-    if (!local) {
-      return hasCountryCode ? "+237 " : "";
-    }
-
-    const p1 = local.slice(0, 3);
-    const p2 = local.slice(3, 6);
-    const p3 = local.slice(6, 9);
-    const grouped = [p1, p2, p3].filter(Boolean).join(" ");
-
-    return hasCountryCode ? `+237 ${grouped}` : grouped;
-  };
-
-  const validateCameroonPhone = (rawPhone, paymentMethod) => {
-    const digits = rawPhone.replace(/\D/g, "");
-    const local = digits.startsWith("237") ? digits.slice(3) : digits;
-    const isValid = /^6\d{8}$/.test(local);
-
-    if (!isValid) {
-      return {
-        isValid: false,
-        message:
-          "Enter a valid Cameroon number (e.g. 6XXXXXXXX or +2376XXXXXXXX).",
-      };
-    }
-
-    if (paymentMethod === "mtn-momo" && !/^6[5-8]/.test(local)) {
-      return {
-        isValid: false,
-        message:
-          "MTN MoMo requires an MTN line (typically starting with 65, 66, 67, or 68).",
-      };
-    }
-
-    if (paymentMethod === "orange-mobile-money" && !/^69/.test(local)) {
-      return {
-        isValid: false,
-        message:
-          "Orange Money requires an Orange line (typically starting with 69).",
-      };
-    }
-
-    return { isValid: true };
-  };
-
-  const detectNetworkFromPhone = (rawPhone) => {
-    const digits = rawPhone.replace(/\D/g, "");
-    const local = digits.startsWith("237") ? digits.slice(3) : digits;
-
-    if (!/^6\d{8}$/.test(local)) {
-      return null;
-    }
-
-    if (/^69/.test(local)) {
-      return "Orange";
-    }
-
-    if (/^6[5-8]/.test(local)) {
-      return "MTN";
-    }
-
-    return "Unknown";
-  };
-
   const placeOrder = async () => {
     if (isProcessing) {
       return;
@@ -255,10 +259,14 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
       return;
     }
 
-    const validation = validateCameroonPhone(
-      mobileMoneyPhone,
-      selectedPaymentMethod,
-    );
+    // The number was already validated on the selection screen; re-checking
+    // here guards the case where it never happened at all.
+    if (!hasPaymentMethod) {
+      setPhoneError("Choose how you would like to pay.");
+      return;
+    }
+
+    const validation = validateCameroonPhone(paymentPhone, paymentMethod);
     if (!validation.isValid) {
       setPhoneError(validation.message);
       return;
@@ -273,7 +281,7 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
     }
 
     const orderRef = `ORDER-${Date.now()}`;
-    const normalizedPhone = mobileMoneyPhone.replace(/\D/g, "");
+    const normalizedPhone = paymentPhone.replace(/\D/g, "");
     const contactPhoneE164 = `+237${contactPhone
       .replace(/\D/g, "")
       .replace(/^237/, "")}`;
@@ -283,7 +291,7 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
       setContactPhoneError("");
       setIsProcessing(true);
 
-      const provider = selectedPaymentMethod === "mtn-momo" ? "mtn" : "orange";
+      const provider = paymentMethod === "mtn-momo" ? "mtn" : "orange";
       setStatusMessage(`Sending ${provider.toUpperCase()} payment request...`);
 
       const paymentResult = await requestMobileMoneyPayment({
@@ -325,15 +333,11 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
         }
       }
 
-      const paymentMethodLabel =
-        PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod)?.label ||
-        selectedPaymentMethod;
-
       const orderRecord = await createOrder(token, firebaseUid, {
         orderRef,
-        paymentMethod: selectedPaymentMethod,
-        paymentMethodCode: selectedPaymentMethod,
-        paymentMethodLabel,
+        paymentMethod,
+        paymentMethodCode: paymentMethod,
+        paymentMethodLabel: paymentMethodLabel(paymentMethod),
         payment: paymentResult,
         customerPhone: normalizedPhone || null,
         // Who the rider calls, kept separate from the wallet that was charged.
@@ -356,11 +360,16 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
       });
 
       clearCart();
+      // The draft has served its purpose, so the wallet and note are dropped
+      // from storage too - this is the one point where they stop persisting.
+      await clearCheckoutDraft();
 
       setStatusMessage("Order saved successfully.");
       Alert.alert(
         "Order placed",
-        `Payment confirmed and order saved.\nOrder ID: ${orderRecord?.id || orderRef}\nTransaction: ${paymentResult.transactionId}`,
+        `Payment confirmed and order saved.\nOrder ID: ${
+          orderRecord?.id || orderRef
+        }\nTransaction: ${paymentResult.transactionId}`,
       );
       navigation.navigate("MainTabs");
     } catch (error) {
@@ -411,118 +420,164 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
                 paddingTop: headerOffset,
                 // Clears the pinned footer so the last card is not trapped
                 // behind it; no clearance needed once the footer steps aside.
+                // The measured height already includes the footer's own
+                // bottom inset, so it is not added again here.
                 paddingBottom: isKeyboardOpen
                   ? 28
-                  : FOOTER_CLEARANCE + insets.bottom,
+                  : footerHeight || FOOTER_CLEARANCE + insets.bottom,
               },
             ]}
           >
+            {/* Who the order is for and where it is going, before anything
+                that can be changed further down. */}
             <View style={styles.paymentPickerCard}>
-              <Text style={styles.paymentPickerTitle}>Order summary</Text>
-              {quoteLoading ? (
-                <Text style={styles.checkoutMetaText}>
-                  Loading order summary...
-                </Text>
-              ) : quoteError ? (
-                <Text style={styles.paymentPhoneError}>{quoteError}</Text>
-              ) : quote ? (
-                <>
-                  <Text style={styles.quoteRestaurantName}>
-                    {quote.restaurant?.name}
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconTile}>
+                  <Ionicons name="person-outline" size={20} color="#ff5a1f" />
+                </View>
+
+                <View style={styles.detailRowText}>
+                  <Text style={styles.detailRowTitle} numberOfLines={1}>
+                    {customerName}
                   </Text>
-                  {quote.items.map((item) => (
-                    <View style={styles.quoteItemRow} key={item.menuItemId}>
-                      <Text style={styles.quoteItemName}>
-                        {item.quantity}x {item.name}
-                      </Text>
-                      <Text style={styles.quoteItemPrice}>
-                        {formatXaf(item.unitPrice)}
-                      </Text>
-                    </View>
-                  ))}
+                  <Text style={styles.detailRowMeta} numberOfLines={1}>
+                    {userEmail || "Sign in to confirm your order"}
+                  </Text>
+                </View>
+              </View>
 
-                  <View style={styles.quoteDivider} />
+              <View style={styles.detailDivider} />
 
-                  <View style={styles.quoteSummaryRow}>
-                    <Text style={styles.checkoutMetaText}>Subtotal</Text>
-                    <Text style={styles.checkoutMetaText}>
-                      {formatXaf(quote.subtotal)}
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconTile}>
+                  <Ionicons name="location-outline" size={20} color="#ff5a1f" />
+                </View>
+
+                <View style={styles.detailRowText}>
+                  <Text style={styles.detailRowTitle} numberOfLines={2}>
+                    {addressTitle}
+                  </Text>
+                  {addressMeta ? (
+                    <Text style={styles.detailRowMeta} numberOfLines={1}>
+                      {addressMeta}
                     </Text>
-                  </View>
-                  <View style={styles.quoteSummaryRow}>
-                    <Text style={styles.checkoutMetaText}>Delivery fee</Text>
-                    <Text style={styles.checkoutMetaText}>
-                      {formatXaf(quote.deliveryFee)}
+                  ) : null}
+                </View>
+
+                {/* A stale or failed fix is the one thing the customer can
+                    actually fix from here, so the row offers a retry rather
+                    than a chevron to nowhere. */}
+                <Pressable
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Refresh delivery location"
+                  onPress={refreshLocation}
+                >
+                  <Ionicons
+                    name="refresh"
+                    size={19}
+                    color={colors.textHeading}
+                  />
+                </Pressable>
+              </View>
+
+              <DeliveryMapPreview
+                latitude={mapCoords?.latitude}
+                longitude={mapCoords?.longitude}
+                style={styles.detailMap}
+              />
+            </View>
+
+            <View style={styles.paymentPickerCard}>
+              <Pressable
+                style={styles.notesRow}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  deliveryNotes
+                    ? `Delivery notes: ${deliveryNotes}. Edit`
+                    : "Add delivery notes"
+                }
+                onPress={() => setNotesSheetOpen(true)}
+              >
+                <Ionicons
+                  name="document-text-outline"
+                  size={26}
+                  color="#ff5a1f"
+                />
+
+                <View style={styles.notesRowText}>
+                  {deliveryNotes ? (
+                    <>
+                      <Text style={styles.notesRowTitle} numberOfLines={1}>
+                        Delivery notes
+                      </Text>
+                      <Text style={styles.notesRowMeta} numberOfLines={2}>
+                        {deliveryNotes}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.notesRowPlaceholder}>
+                      Add delivery notes
                     </Text>
-                  </View>
-                  <View style={styles.quoteSummaryRow}>
-                    <Text style={styles.quoteTotalLabel}>Total</Text>
-                    <Text style={styles.quoteTotalValue}>
-                      {formatXaf(quote.total)}
-                    </Text>
-                  </View>
-                </>
-              ) : null}
+                  )}
+                </View>
+
+                <Ionicons
+                  name={deliveryNotes ? "pencil" : "add-circle-outline"}
+                  size={deliveryNotes ? 20 : 26}
+                  color={colors.textHeading}
+                />
+              </Pressable>
             </View>
 
             <View style={styles.paymentPickerCard}>
               <Text style={styles.paymentPickerTitle}>
-                Choose payment method
+                How would you like to pay?
               </Text>
-              {PAYMENT_METHODS.map((method) => {
-                const isSelected = selectedPaymentMethod === method.id;
-                return (
-                  <Pressable
-                    key={method.id}
-                    style={styles.paymentOptionRow}
-                    onPress={() => {
-                      setSelectedPaymentMethod(method.id);
-                      // The number's network has to match the new provider, so
-                      // any error raised against the previous one is stale.
-                      setPhoneError("");
-                    }}
-                  >
-                    <View
-                      style={[
-                        styles.paymentRadioOuter,
-                        isSelected ? styles.paymentRadioOuterActive : null,
-                      ]}
-                    >
-                      {isSelected ? (
-                        <View style={styles.paymentRadioInner} />
-                      ) : null}
-                    </View>
-                    <Text style={styles.paymentOptionLabel}>
-                      {method.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
 
-              <Text style={styles.fieldLabel}>Mobile money number</Text>
-              <TextInput
-                value={mobileMoneyPhone}
-                onChangeText={(value) => {
-                  const formatted = formatCameroonPhoneInput(value);
-                  setMobileMoneyPhone(formatted);
-                  if (!contactPhoneEdited) {
-                    setContactPhone(formatted);
-                    setContactPhoneError("");
-                  }
-                  if (phoneError) {
-                    setPhoneError("");
-                  }
-                }}
-                placeholder="Phone number (e.g. +237 6XX XXX XXX)"
-                placeholderTextColor={colors.placeholder}
-                keyboardType="phone-pad"
-                style={styles.paymentPhoneInput}
-              />
-              {detectNetworkFromPhone(mobileMoneyPhone) ? (
-                <Text style={styles.paymentNetworkHint}>
-                  Detected network: {detectNetworkFromPhone(mobileMoneyPhone)}
-                </Text>
-              ) : null}
+              <Pressable
+                style={styles.paymentSummaryRow}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  hasPaymentMethod
+                    ? `Payment method, ${paymentMethodLabel(
+                        paymentMethod,
+                      )} ${paymentPhone}. Change`
+                    : "Select payment method"
+                }
+                onPress={() => router.navigate("/SelectPaymentMethod")}
+              >
+                <View style={styles.paymentWalletTile}>
+                  <Ionicons name="wallet" size={19} color={colors.white} />
+                </View>
+
+                <View style={styles.paymentSummaryText}>
+                  {hasPaymentMethod ? (
+                    <>
+                      <Text
+                        style={styles.paymentSummaryTitle}
+                        numberOfLines={1}
+                      >
+                        {paymentMethodLabel(paymentMethod)}
+                      </Text>
+                      <Text style={styles.paymentSummaryMeta} numberOfLines={1}>
+                        {paymentPhone}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.paymentSummaryPlaceholder}>
+                      Select payment method
+                    </Text>
+                  )}
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={colors.textHeading}
+                />
+              </Pressable>
+
               {phoneError ? (
                 <Text style={styles.paymentPhoneError}>{phoneError}</Text>
               ) : null}
@@ -556,20 +611,48 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
                   {contactPhoneError}
                 </Text>
               ) : null}
+            </View>
 
-              <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
-                Delivery notes (optional)
-              </Text>
-              <TextInput
-                value={deliveryNotes}
-                onChangeText={setDeliveryNotes}
-                placeholder="Landmark, gate colour, floor, who to ask for..."
-                placeholderTextColor={colors.placeholder}
-                multiline
-                numberOfLines={3}
-                maxLength={300}
-                style={[styles.paymentPhoneInput, styles.notesInput]}
-              />
+            <View style={styles.paymentPickerCard}>
+              <Text style={styles.paymentPickerTitle}>Order summary</Text>
+              {quoteLoading ? (
+                <Text style={styles.checkoutMetaText}>
+                  Loading order summary, please wait...
+                </Text>
+              ) : quoteError ? (
+                <Text style={styles.paymentPhoneError}>{quoteError}</Text>
+              ) : quote ? (
+                <>
+                  <Text style={styles.quoteRestaurantName}>
+                    {quote.restaurant?.name}
+                  </Text>
+                  {quote.items.map((item) => (
+                    <View style={styles.quoteItemRow} key={item.menuItemId}>
+                      <Text style={styles.quoteItemName}>
+                        {item.quantity}x {item.name}
+                      </Text>
+                      <Text style={styles.quoteItemPrice}>
+                        {formatXaf(item.unitPrice)}
+                      </Text>
+                    </View>
+                  ))}
+
+                  <View style={styles.quoteDivider} />
+
+                  <View style={styles.quoteSummaryRow}>
+                    <Text style={styles.checkoutMetaText}>Subtotal</Text>
+                    <Text style={styles.checkoutMetaText}>
+                      {formatXaf(quote.subtotal)}
+                    </Text>
+                  </View>
+                  <View style={styles.quoteSummaryRow}>
+                    <Text style={styles.checkoutMetaText}>Delivery fee</Text>
+                    <Text style={styles.checkoutMetaText}>
+                      {formatXaf(quote.deliveryFee)}
+                    </Text>
+                  </View>
+                </>
+              ) : null}
             </View>
 
             {statusMessage ? (
@@ -581,20 +664,28 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
               the content moves underneath it. */}
           {isKeyboardOpen ? null : (
             <View
-              style={[
-                styles.ctaFooter,
-                { paddingBottom: insets.bottom + 12 },
-              ]}
+              onLayout={(event) =>
+                setFooterHeight(event.nativeEvent.layout.height)
+              }
+              style={[styles.ctaFooter, { paddingBottom: insets.bottom + 12 }]}
             >
+              {/* Stays in the layout before the quote lands, so the pinned
+                  footer does not change height under the customer's thumb.
+                  The dash is honest: the delivery fee is priced server-side,
+                  so there is no total to show until the quote returns. */}
+              <View style={[styles.quoteSummaryRow, styles.footerTotalRow]}>
+                <Text style={styles.quoteTotalLabel}>Total</Text>
+                <Text style={styles.quoteTotalValue}>
+                  {quote ? formatXaf(quote.total) : "—"}
+                </Text>
+              </View>
               <Pressable
                 style={[
                   styles.checkoutScreenCta,
-                  isProcessing || isQuotePending
-                    ? styles.checkoutScreenCtaDisabled
-                    : null,
+                  isCtaDisabled ? styles.checkoutScreenCtaDisabled : null,
                 ]}
                 onPress={placeOrder}
-                disabled={isProcessing || isQuotePending}
+                disabled={isCtaDisabled}
                 accessibilityRole="button"
               >
                 <Text style={styles.checkoutScreenCtaText} numberOfLines={1}>
@@ -611,6 +702,16 @@ export default function CheckoutScreen({ navigation: navigationProp }) {
           )}
         </ScreenGradient>
       </View>
+
+      <DeliveryNotesSheet
+        visible={isNotesSheetOpen}
+        value={deliveryNotes}
+        onClose={() => setNotesSheetOpen(false)}
+        onSave={(note) => {
+          setDeliveryNotes(note);
+          setNotesSheetOpen(false);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -672,52 +773,27 @@ const styles = {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginTop: 6,
+      marginVertical: 6,
     },
     quoteTotalLabel: {
-      fontSize: 15,
-      fontWeight: "800",
+      fontFamily: "Poppins_400Regular",
       color: colors.textHeading,
+      fontSize: 12,
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
     },
     quoteTotalValue: {
       fontSize: 15,
       fontWeight: "800",
       color: colors.success,
     },
-    checkoutBar: {
-      position: "absolute",
-      left: 12,
-      right: 12,
-      bottom: 16,
-      backgroundColor: colors.successDark,
-      borderRadius: 16,
-      padding: 14,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    checkoutLabel: {
-      fontFamily: "Poppins_400Regular",
-      color: colors.successText,
-      fontSize: 12,
-    },
-    checkoutTotal: {
-      fontFamily: "Poppins_800ExtraBold",
-      color: colors.white,
-      fontSize: 20,
-    },
-    checkoutButton: {
-      backgroundColor: colors.amberLight,
-      borderRadius: 10,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-    },
-    checkoutText: {
-      fontFamily: "Poppins_800ExtraBold",
-      color: colors.textAmberButton,
-    },
     scrollArea: {
       flex: 1,
+    },
+    // quoteSummaryRow's own marginTop is enough above; this is the gap down
+    // to the button, which otherwise sits flush against the total.
+    footerTotalRow: {
+      marginBottom: 10,
     },
     // Pinned bar behind the CTA. White, as the content scrolling beneath it
     // needs an opaque surface to disappear under.
@@ -781,34 +857,112 @@ const styles = {
       color: colors.textHeading,
       marginBottom: 10,
     },
-    paymentOptionRow: {
+    // Name/email and address rows at the top of checkout. Shares the row
+    // metrics of the payment and notes rows below so the four read as one
+    // column, with a tinted tile instead of the payment row's solid one.
+    detailRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 8,
+      paddingVertical: 10,
+      minHeight: 56,
     },
-    paymentRadioOuter: {
-      width: 20,
-      height: 20,
+    detailIconTile: {
+      width: 38,
+      height: 38,
       borderRadius: 10,
-      borderWidth: 2,
-      borderColor: colors.borderGreen,
+      backgroundColor: colors.bgPaymentOption,
+      borderWidth: 1,
+      borderColor: colors.borderPaymentOption,
       alignItems: "center",
       justifyContent: "center",
-      marginRight: 10,
     },
-    paymentRadioOuterActive: {
-      borderColor: colors.primary,
+    detailRowText: {
+      flex: 1,
+      minWidth: 0,
+      marginLeft: 12,
+      marginRight: 8,
     },
-    paymentRadioInner: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      backgroundColor: colors.primary,
+    detailRowTitle: {
+      fontFamily: "Poppins_800ExtraBold",
+      fontSize: 15,
+      color: colors.textHeading,
     },
-    paymentOptionLabel: {
-      fontSize: 14,
+    detailRowMeta: {
+      fontSize: 13,
+      color: colors.textCartRestaurant,
+      marginTop: 2,
+    },
+    detailDivider: {
+      height: 1,
+      backgroundColor: colors.borderLight,
+    },
+    detailMap: {
+      marginTop: 10,
+    },
+    // Collapsed row standing in for the old inline notes field. The plus
+    // becomes a pencil once a note exists, so the affordance matches what the
+    // tap will actually do.
+    notesRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 10,
+      minHeight: 56,
+    },
+    notesRowText: {
+      flex: 1,
+      minWidth: 0,
+      marginLeft: 14,
+      marginRight: 8,
+    },
+    notesRowPlaceholder: {
+      fontSize: 15,
       color: colors.textPaymentLabel,
-      fontWeight: "700",
+    },
+    notesRowTitle: {
+      fontFamily: "Poppins_800ExtraBold",
+      fontSize: 15,
+      color: colors.textHeading,
+    },
+    notesRowMeta: {
+      fontSize: 13,
+      color: colors.textCartRestaurant,
+      marginTop: 2,
+    },
+    // Collapsed row standing in for the old radio list: wallet tile, the
+    // chosen method over its number, and a chevron into /SelectPaymentMethod.
+    paymentSummaryRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 10,
+      minHeight: 56,
+    },
+    paymentWalletTile: {
+      width: 38,
+      height: 38,
+      borderRadius: 10,
+      backgroundColor: "#ff5a1f",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    paymentSummaryText: {
+      flex: 1,
+      minWidth: 0,
+      marginLeft: 12,
+      marginRight: 8,
+    },
+    paymentSummaryPlaceholder: {
+      fontSize: 15,
+      color: colors.textPaymentLabel,
+    },
+    paymentSummaryTitle: {
+      fontFamily: "Poppins_800ExtraBold",
+      fontSize: 15,
+      color: colors.textHeading,
+    },
+    paymentSummaryMeta: {
+      fontSize: 13,
+      color: colors.textCartRestaurant,
+      marginTop: 2,
     },
     fieldLabel: {
       marginTop: 10,
@@ -816,17 +970,10 @@ const styles = {
       fontWeight: "700",
       color: colors.textHeading,
     },
-    fieldLabelSpaced: {
-      marginTop: 18,
-    },
     fieldHint: {
       marginTop: 6,
       fontSize: 12,
       color: colors.textMuted,
-    },
-    notesInput: {
-      minHeight: 76,
-      textAlignVertical: "top",
     },
     paymentPhoneInput: {
       marginTop: 8,
@@ -843,12 +990,6 @@ const styles = {
       marginTop: 6,
       fontSize: 12,
       color: colors.dangerText,
-      fontWeight: "700",
-    },
-    paymentNetworkHint: {
-      marginTop: 6,
-      fontSize: 12,
-      color: colors.success,
       fontWeight: "700",
     },
   }),

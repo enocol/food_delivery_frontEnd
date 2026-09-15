@@ -16,6 +16,11 @@ import { whenAppReady } from "../utils/appReady";
 // Single source of truth for the "Delivery to: ..." label shown in the Home,
 // Orders, and Profile headers. Loaded once per session; the screens just read
 // `deliveryLocation`. `refreshLocation` re-runs the lookup on demand.
+//
+// The coordinates and the structured address are published alongside the label
+// because checkout needs them in their own right - the address broken into
+// lines, and the coordinates to centre the map preview - and re-running the
+// lookup there would prompt a second time for the same answer.
 
 const LocationContext = createContext(null);
 
@@ -31,6 +36,8 @@ function formatAddress(address) {
 
 export function LocationProvider({ children }) {
   const [deliveryLocation, setDeliveryLocation] = useState(FETCHING_LABEL);
+  const [deliveryAddress, setDeliveryAddress] = useState(null);
+  const [deliveryCoords, setDeliveryCoords] = useState(null);
   const isFetchingRef = useRef(false);
 
   const refreshLocation = useCallback(async () => {
@@ -41,12 +48,21 @@ export function LocationProvider({ children }) {
 
     try {
       const coords = await getCurrentLocation();
+      setDeliveryCoords({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+
       const address = await getLocationAddress(
         coords.latitude,
         coords.longitude,
       );
+      setDeliveryAddress(address);
       setDeliveryLocation(formatAddress(address) || FALLBACK_LABEL);
     } catch {
+      // The coordinates are left as they were: a failed refresh usually means
+      // the fix timed out, and the last known position still beats nothing.
+      setDeliveryAddress(null);
       setDeliveryLocation(UNAVAILABLE_LABEL);
     } finally {
       isFetchingRef.current = false;
@@ -70,8 +86,13 @@ export function LocationProvider({ children }) {
   }, [refreshLocation]);
 
   const value = useMemo(
-    () => ({ deliveryLocation, refreshLocation }),
-    [deliveryLocation, refreshLocation],
+    () => ({
+      deliveryLocation,
+      deliveryAddress,
+      deliveryCoords,
+      refreshLocation,
+    }),
+    [deliveryAddress, deliveryCoords, deliveryLocation, refreshLocation],
   );
 
   return (
@@ -85,9 +106,7 @@ export function useDeliveryLocation() {
   const context = useContext(LocationContext);
 
   if (!context) {
-    throw new Error(
-      "useDeliveryLocation must be used within LocationProvider",
-    );
+    throw new Error("useDeliveryLocation must be used within LocationProvider");
   }
 
   return context;

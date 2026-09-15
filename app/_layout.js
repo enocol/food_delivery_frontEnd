@@ -19,6 +19,7 @@ import NetworkStatusBanner from "../components/NetworkStatusBanner";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { CartProvider } from "../context/CartContext";
 import { LocationProvider } from "../context/LocationContext";
+import { CheckoutDraftProvider } from "../context/CheckoutDraftContext";
 import { NetworkStatusProvider } from "../context/NetworkStatusContext";
 import {
   NotificationsProvider,
@@ -229,6 +230,23 @@ function RootNavigator() {
             ...platformBackButton(colors.black),
           }}
         />
+        <Stack.Screen
+          name="SelectPaymentMethod"
+          options={{
+            title: "Select payment method",
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: "#ff5a1f",
+            },
+            headerTitleStyle: {
+              color: "#fff",
+              fontSize: 18,
+              fontWeight: "bold",
+            },
+            // iOS keeps the custom arrow, Android its native tinted one.
+            ...platformBackButton(colors.white),
+          }}
+        />
         {/* Guests reach this too: they build carts before they have accounts. */}
         <Stack.Screen
           name="Cart"
@@ -294,7 +312,9 @@ export default function RootLayout() {
           <NotificationsProvider>
             <CartProvider>
               <LocationProvider>
-                <RootNavigator />
+                <CheckoutDraftProvider>
+                  <RootNavigator />
+                </CheckoutDraftProvider>
               </LocationProvider>
             </CartProvider>
           </NotificationsProvider>
