@@ -75,27 +75,27 @@ const styles = {
     },
     cartSummarySection: {
       marginHorizontal: 14,
-      marginBottom: 16,
+      marginBottom: 5,
     },
-    cartSummaryDivider: {
-      height: 1,
-      backgroundColor: colors.borderSheet,
-      opacity: 0.8,
-      marginBottom: 14,
-    },
-    cartSummaryCard: {
-      backgroundColor: colors.bgWarm,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: colors.borderSheet,
-      paddingVertical: 16,
-      paddingHorizontal: 18,
-      shadowColor: colors.textDark,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.08,
-      shadowRadius: 10,
-      elevation: 4,
-    },
+    // cartSummaryDivider: {
+    //   height: 1,
+    //   backgroundColor: colors.borderSheet,
+    //   opacity: 0.8,
+    //   marginBottom: 14,
+    // },
+    // cartSummaryCard: {
+    //   backgroundColor: colors.bgWarm,
+    //   borderRadius: 18,
+    //   borderWidth: 1,
+    //   borderColor: colors.borderSheet,
+    //   paddingVertical: 16,
+    //   paddingHorizontal: 18,
+    //   shadowColor: colors.textDark,
+    //   shadowOffset: { width: 0, height: 6 },
+    //   shadowOpacity: 0.08,
+    //   shadowRadius: 10,
+    //   elevation: 4,
+    // },
     cartSummaryRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -199,12 +199,12 @@ const styles = {
       color: colors.successDark,
       fontSize: 20,
     },
-    checkoutSummaryHint: {
-      fontFamily: "Poppins_400Regular",
-      fontSize: 12,
-      color: colors.textCartRestaurant,
-      marginTop: 4,
-    },
+    // checkoutSummaryHint: {
+    //   fontFamily: "Poppins_400Regular",
+    //   fontSize: 12,
+    //   color: colors.textCartRestaurant,
+    //   marginTop: 4,
+    // },
     checkoutFooter: {
       paddingTop: 8,
       paddingBottom: 20,
@@ -250,7 +250,7 @@ const styles = {
     },
     orderNowButton: {
       marginTop: 20,
-      backgroundColor: colors.primary,
+      backgroundColor: "#ff5a1f",
       borderRadius: 14,
       paddingVertical: 14,
       paddingHorizontal: 40,
@@ -263,7 +263,15 @@ const styles = {
   }),
 };
 
-export default function CartScreen() {
+// `bottomClearance` is extra room under the pinned footer. Zero when pushed as
+// its own route; inside MainTabs the floating tab bar overlays the bottom of
+// the screen and would otherwise sit on top of the checkout button.
+export default function CartScreen({
+  bottomClearance = 0,
+  // Defaults to the pushed /Cart route's behaviour, since app/Cart.js is a
+  // bare re-export and cannot pass props. The tab opts out.
+  dismissOnClear = true,
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const isCompact = useCompactScreen();
@@ -275,12 +283,19 @@ export default function CartScreen() {
   // it shrinks rather than crowding the name and price beside it.
   const thumbSize = isCompact ? 54 : 66;
 
-  // Emptying the cart leaves nothing to look at, so the sheet closes with it -
-  // behaviour that used to live in CartContext, back when it owned the open
-  // state and could close itself.
+  // Emptying the cart leaves nothing to look at, so the pushed /Cart route
+  // closes with it - behaviour that used to live in CartContext, back when it
+  // owned the open state and could close itself.
+  //
+  // The tab must not do that. canGoBack() is no help in telling them apart:
+  // the tab router answers GO_BACK once another tab has been visited, so it
+  // reports true on the Basket tab and back() would jump to Home. Only the
+  // route knows which one it is, so it says so.
   const handleClearCart = async () => {
     await clearCart();
-    router.back();
+    if (dismissOnClear) {
+      router.back();
+    }
   };
 
   return (
@@ -421,30 +436,34 @@ export default function CartScreen() {
               <View
                 style={[
                   styles.checkoutFooter,
-                  { paddingBottom: Math.max(insets.bottom + 12, 20) },
+                  {
+                    paddingBottom:
+                      Math.max(insets.bottom + 12, 20) + bottomClearance,
+                  },
                 ]}
               >
                 <View style={[styles.cartSummarySection, styles.contentWidth]}>
-                  <View style={styles.cartSummaryDivider} />
-                  <View style={styles.cartSummaryCard}>
-                    <View style={styles.cartSummaryRow}>
-                      <View style={styles.cartSummaryLabels}>
-                        <Text style={styles.checkoutLabel}>Total</Text>
-                        <Text style={styles.checkoutSummaryHint}>
+                  {/* <View style={styles.cartSummaryCard}> */}
+                  <View style={styles.cartSummaryRow}>
+                    <View style={styles.cartSummaryLabels}>
+                      <Text style={styles.checkoutLabel}>Subtotal</Text>
+                      {/* <Text style={styles.checkoutSummaryHint}>
                           {itemCount} {itemCount === 1 ? "item" : "items"} in
                           cart
-                        </Text>
-                      </View>
-                      <Text
-                        style={styles.checkoutTotal}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                        minimumFontScale={0.8}
-                      >
-                        {formatXaf(cartTotal)}
-                      </Text>
+                        </Text> */}
                     </View>
+
+                    {/* Total price for the items in the cart */}
+                    <Text
+                      style={styles.checkoutTotal}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                    >
+                      {formatXaf(cartTotal)}
+                    </Text>
                   </View>
+                  {/* </View> */}
                 </View>
                 <Pressable
                   style={styles.checkoutButton}

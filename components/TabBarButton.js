@@ -15,6 +15,7 @@ export default function TabBarButton({
   iconName,
   color,
   label,
+  badgeCount = 0,
 }) {
   const scale = useSharedValue(0);
   const buttonColor = focused ? "#FFFFFF" : color;
@@ -59,6 +60,15 @@ export default function TabBarButton({
       <View onLayout={onContentLayout} style={styles.contentWrap}>
         <Animated.View style={animatedIconStyle}>
           <Ionicons name={iconName} size={30} color={buttonColor} />
+          {/* Absolutely positioned so it cannot widen contentWrap, whose
+              measured width sizes the tab bar's indicator pill. */}
+          {badgeCount > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText} numberOfLines={1}>
+                {badgeCount > 99 ? "99+" : badgeCount}
+              </Text>
+            </View>
+          ) : null}
         </Animated.View>
         <Animated.View style={animatedTextStyle}>
           <Animated.Text style={[styles.tabLabel, { color: buttonColor }]}>
@@ -83,5 +93,26 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: "Poppins_800ExtraBold",
     fontSize: 10,
+  },
+  // Matches the badge the floating basket button used, so the count reads the
+  // same wherever it appears.
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: -10,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: "#000000",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#ffffff",
+  },
+  badgeText: {
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 10,
+    color: "#ffffff",
   },
 });

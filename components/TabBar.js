@@ -10,6 +10,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // import sharedStyles from "./styles";
 import * as colors from "../utils/colors";
 import TabBarButton from "./TabBarButton";
+import { useTabBarHeight } from "../context/TabBarHeightContext";
+import { useCart } from "../context/CartContext";
 
 // Caps the floating pill's width so it doesn't stretch nearly edge-to-edge
 // on tablets - a no-op on phones, which never reach this width.
@@ -18,6 +20,10 @@ const TAB_BAR_MAX_WIDTH = 480;
 function getIconName(routeName, focused) {
   if (routeName === "HomeTab") {
     return focused ? "home" : "home-outline";
+  }
+
+  if (routeName === "CartTab") {
+    return focused ? "cart" : "cart-outline";
   }
 
   if (routeName === "OrdersTab") {
@@ -45,12 +51,19 @@ export default function TabBar({ state, descriptors, navigation }) {
     : Math.max(60, buttonWidth * 0.74);
   const pillOffsetX = Math.max(0, (buttonWidth - pillWidth) / 2);
   const insets = useSafeAreaInsets();
+  const { reportTabBarHeight } = useTabBarHeight();
+  // The basket tab carries the count now that the floating button is gone from
+  // Home, so the cart is still visible without opening it.
+  const { cartCount } = useCart();
   const { width: windowWidth } = useWindowDimensions();
   const tabBarWidth = Math.min(windowWidth - 40, TAB_BAR_MAX_WIDTH);
 
   const onTabbarLayout = (event) => {
     const { width, height } = event.nativeEvent.layout;
     setDimensions({ width, height });
+    // Published so screens with pinned bottom content can clear the bar
+    // instead of guessing its height.
+    reportTabBarHeight(height);
   };
 
   const handleButtonContentLayout = (routeKey) => (event) => {
@@ -153,6 +166,7 @@ export default function TabBar({ state, descriptors, navigation }) {
               iconName={getIconName(route.name, focused)}
               color={color}
               label={label}
+              badgeCount={route.name === "CartTab" ? cartCount : 0}
             />
           );
         })}
